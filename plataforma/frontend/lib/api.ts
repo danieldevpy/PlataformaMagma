@@ -38,6 +38,12 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
   try {
     res = await fetch(url, {
       headers: { Accept: "application/json", ...init?.headers },
+      // Timeout curto: no build da imagem Docker o backend ainda não
+      // existe (a URL relativa /api não resolve pra nada real nesse
+      // estágio) — sem isso o fetch fica pendurado até o Next matar a
+      // página por timeout de geração estática (doc 04 já prevê fallback,
+      // mas só se a falha for rápida).
+      signal: AbortSignal.timeout(8000),
       ...init,
       next: { revalidate },
     });

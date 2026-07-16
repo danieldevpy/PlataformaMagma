@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   // Build standalone (server.js autocontido) — usado pelo Dockerfile de
   // produção pra copiar só o necessário pra imagem final.
   output: "standalone",
+  // VPS de produção é modesto (build single-worker) — dá mais margem que
+  // o default de 60s antes de desistir de uma página estática.
+  staticPageGenerationTimeout: 180,
   // Evita que o Turbopack suba até um lockfile solto fora do projeto
   // (ex.: ~/package-lock.json) ao inferir a raiz do workspace.
   turbopack: {
