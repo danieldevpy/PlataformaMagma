@@ -98,6 +98,15 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Prefixo aplicado às URLs de mídia devolvidas pela API (ver
+# RelativeMediaImageField em config/drf.py). Vazio em prod: nginx serve
+# frontend e backend na mesma origem, então "/media/..." relativo já
+# resolve certo (e evita o host errado num fetch interno Docker). Em dev
+# (config/settings/dev.py) vira absoluto porque frontend (:3000) e backend
+# (:8000) rodam em portas/origens diferentes sem proxy unificando — uma URL
+# relativa buscaria a imagem no :3000, onde ela não existe.
+MEDIA_URL_BASE = env.str("MEDIA_URL_BASE", default="")
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
