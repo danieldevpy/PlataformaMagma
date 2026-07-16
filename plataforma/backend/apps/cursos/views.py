@@ -36,7 +36,7 @@ class CursoDetalhePublicoView(RetrieveAPIView):
     serializer_class = CursoDetalhePublicoSerializer
     lookup_field = "slug"
     queryset = Curso.objects.filter(status=Curso.Status.PUBLICADO).prefetch_related(
-        "habilidades", "faqs", "fotos", "instrutores", "turmas", "avaliacoes__turma"
+        "habilidades", "faqs", "instrutores", "turmas", "avaliacoes__turma"
     )
 
     def get_object(self):

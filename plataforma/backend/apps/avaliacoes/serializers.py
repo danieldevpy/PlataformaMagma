@@ -3,7 +3,7 @@ from rest_framework import serializers
 from config.drf import RelativeMediaModelSerializer
 
 from apps.avaliacoes.models import Avaliacao, ConviteAvaliacao
-from apps.cursos.models import Curso, Turma
+from apps.cursos.models import Curso, FotoCurso, Turma
 from apps.cursos.serializers import FotoCursoPublicaSerializer
 
 
@@ -28,9 +28,14 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         return convite.turma.codigo if convite.turma else None
 
     def get_fotos(self, convite):
-        return FotoCursoPublicaSerializer(
-            convite.curso.fotos.all(), many=True, context=self.context
-        ).data
+        # Prioriza as fotos de formatura da turma do aluno (mais pessoal,
+        # mostra a turma dele especificamente); sem turma no convite ou sem
+        # fotos cadastradas pra ela, cai pras fotos genéricas do curso (as
+        # mesmas usadas na LP — ver CursoDetalhePublicoSerializer.get_fotos).
+        fotos = convite.turma.fotos.all() if convite.turma else FotoCurso.objects.none()
+        if not fotos:
+            fotos = convite.curso.fotos.filter(turma__isnull=True)
+        return FotoCursoPublicaSerializer(fotos, many=True, context=self.context).data
 
 
 class AvaliacaoPainelSerializer(RelativeMediaModelSerializer):

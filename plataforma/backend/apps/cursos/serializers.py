@@ -120,7 +120,7 @@ class CursoListaPublicaSerializer(RelativeMediaModelSerializer):
 class CursoDetalhePublicoSerializer(RelativeMediaModelSerializer):
     habilidades = HabilidadePublicaSerializer(many=True, read_only=True)
     faqs = PerguntaFrequentePublicaSerializer(many=True, read_only=True)
-    fotos = FotoCursoPublicaSerializer(many=True, read_only=True)
+    fotos = serializers.SerializerMethodField()
     instrutores = InstrutorPublicoSerializer(many=True, read_only=True)
     turma_destaque = serializers.SerializerMethodField()
     avaliacoes = serializers.SerializerMethodField()
@@ -160,6 +160,13 @@ class CursoDetalhePublicoSerializer(RelativeMediaModelSerializer):
         if turma is None:
             return None
         return TurmaDestaquePublicaSerializer(turma, context=self.context).data
+
+    def get_fotos(self, curso):
+        # Só as genéricas (sem turma) — fotos de formatura de uma turma
+        # específica ficam reservadas ao carrossel do convite de avaliação
+        # (ver ConviteAvaliacaoPublicoSerializer).
+        fotos = curso.fotos.filter(turma__isnull=True)
+        return FotoCursoPublicaSerializer(fotos, many=True, context=self.context).data
 
     def get_avaliacoes(self, curso):
         aprovadas = curso.avaliacoes.filter(status=Avaliacao.Status.APROVADA)[:6]

@@ -34,7 +34,7 @@ class ConviteAvaliacaoPublicoView(APIView):
     def _buscar(self, token):
         return (
             ConviteAvaliacao.objects.select_related("curso", "turma")
-            .prefetch_related("curso__fotos")
+            .prefetch_related("turma__fotos")
             .filter(token=token)
             .first()
         )

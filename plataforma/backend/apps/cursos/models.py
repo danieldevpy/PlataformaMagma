@@ -65,11 +65,16 @@ class Habilidade(ConteudoRastreavel, ComTimestamps):
 
 
 class FotoCurso(ConteudoRastreavel, ComTimestamps):
-    """Carrossel de fotos da turma — usado na tela de avaliação pós-curso
-    (magic link, ver docs/plataforma/05-avaliacoes-magic-link.md) e
-    reaproveitável futuramente na própria LP do curso."""
+    """Fotos de curso — duas finalidades pela presença ou não de `turma`:
+    sem turma, é a galeria genérica usada na LP do curso; com turma, é a
+    foto de formatura daquela turma específica, priorizada no carrossel do
+    magic link de avaliação (ver docs/plataforma/05-avaliacoes-magic-link.md)
+    quando o convite tiver turma associada."""
 
     curso = models.ForeignKey(Curso, related_name="fotos", on_delete=models.CASCADE)
+    turma = models.ForeignKey(
+        "Turma", related_name="fotos", null=True, blank=True, on_delete=models.CASCADE
+    )
     ordem = models.PositiveSmallIntegerField(default=0)
     imagem = models.ImageField(upload_to="cursos/galeria/")
     legenda = models.CharField(max_length=120, blank=True)
