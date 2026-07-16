@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend-django",
+      "runtimeExecutable": "plataforma/backend/.venv/bin/python",
+      "runtimeArgs": ["plataforma/backend/manage.py", "runserver", "127.0.0.1:8001"],
+      "port": 8001
+    },
+    {
+      "name": "static-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8899"],
+      "port": 8899
+    }
+  ]
+}

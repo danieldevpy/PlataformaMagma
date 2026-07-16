@@ -1,0 +1,28 @@
+/* ============================================================
+   FONTS BRIDGE — plataforma/frontend
+   tokens.css e lp.css referenciam as famílias 'Archivo', 'Inter'
+   e 'Great Vibes' por nome literal (não são fontes do sistema).
+   Aqui elas são carregadas via next/font/google (self-hosted) em
+   app/layout.tsx, que expõe --font-archivo / --font-inter /
+   --font-great-vibes no <html>. Este arquivo redireciona as
+   variáveis que tokens.css/lp.css já usam para essas fontes reais.
+   Precisa ser importado DEPOIS de tokens.css e lp.css.
+   ============================================================ */
+
+:root {
+  /* usadas por lp.css (h1-h4, .btn, .eyebrow, .announce, etc.) */
+  --font-d: var(--font-archivo), sans-serif;
+  --font-b: var(--font-inter), system-ui, sans-serif;
+
+  /* usadas por design-system/tokens/tokens.css */
+  --font-display: var(--font-archivo), sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-script: var(--font-great-vibes), cursive;
+}
+
+/* lp.css:185 grava 'Great Vibes' como literal (não via var) no
+   selo do certificado — precisa de override explícito para
+   resolver para a fonte self-hosted. */
+.cert-mini .script {
+  font-family: var(--font-script);
+}

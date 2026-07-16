@@ -1,0 +1,71 @@
+/* ============================================================
+   MAGMA CURSOS — DESIGN TOKENS v2.0
+   Fonte única de verdade para qualquer interface da marca.
+   Importe este arquivo antes de qualquer CSS de componente.
+   Espelhado em tokens.json (formato W3C Design Tokens).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Great+Vibes&display=swap');
+
+:root {
+  /* ---- Cores da marca ---- */
+  --navy-deep: #101c38;   /* fundo escuro principal */
+  --navy:      #1b2a4d;   /* institucional — títulos, wordmark */
+  --navy-soft: #24365e;   /* gradientes e superfícies */
+  --ink:       #212a3d;   /* texto sobre fundo claro */
+  --muted:     #5b6476;   /* texto secundário */
+  --gold:      #b8933f;   /* credencial, valor */
+  --gold-light:#dcb96a;   /* destaque sobre escuro, hover */
+  --gold-pale: #f0e3c4;   /* faixas suaves */
+  --gold-deep: #8a6a1f;   /* extremos de gradiente metálico */
+  --red:       #c8102e;   /* urgência — símbolo, selos. Nunca fundo de seção */
+  --vida-blue: #1d4f91;   /* azul da Estrela da Vida — exclusivo do símbolo */
+  --graphite:  #232c3d;   /* contorno do hexágono do símbolo */
+  --paper:     #faf8f4;   /* fundo claro padrão */
+  --sand:      #eceae4;   /* fundo neutro alternativo */
+  --white:     #ffffff;
+  --success:   #2e8b57;
+  --whatsapp:  #25d366;
+
+  /* ---- Gradientes ---- */
+  --grad-gold-metal: linear-gradient(135deg, #a07f2e, var(--gold-light) 55%, var(--gold));
+  --grad-gold-ribbon: linear-gradient(90deg, var(--gold-deep), var(--gold-light), var(--gold-deep));
+  --grad-hero: radial-gradient(1100px 520px at 78% -10%, #31456f 0%, var(--navy) 45%, var(--navy-deep) 100%);
+  --grad-navy-card: linear-gradient(160deg, var(--navy), var(--navy-soft));
+
+  /* ---- Tipografia ---- */
+  --font-display: 'Archivo', sans-serif;          /* títulos/rótulos/botões 500–900 */
+  --font-body: 'Inter', system-ui, sans-serif;    /* corpo 400–700 */
+  --font-script: 'Great Vibes', cursive;          /* EXCLUSIVO: "Certificado" */
+  --font-mono: ui-monospace, 'SF Mono', monospace;/* códigos de credencial */
+
+  /* ---- Raios ---- */
+  --radius-sm: 8px;
+  --radius-md: 10px;   /* botões */
+  --radius-lg: 14px;   /* cards */
+  --radius-xl: 16px;
+  --radius-pill: 40px;
+
+  /* ---- Sombras ---- */
+  --shadow-card: 0 10px 30px rgba(16, 28, 56, .10);
+  --shadow-float: 0 20px 50px rgba(16, 28, 56, .18);
+  --shadow-gold: 0 6px 18px rgba(184, 147, 63, .35);
+
+  /* ---- Espaçamento ---- */
+  --section-y: 88px;
+  --card-pad: 30px;
+  --container: 1140px;
+}
+
+/* ---- Texturas reutilizáveis ---- */
+/* Trama de hexágonos dourados para fundos escuros (hero, artes sociais) */
+.magma-hex-texture::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpath d='M30 0 60 0 75 26 60 52 30 52 15 26Z' fill='none' stroke='rgba(220,185,106,0.06)' stroke-width='1'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Fita dourada de topo de página */
+.magma-topline { height: 5px; background: var(--grad-gold-ribbon); }

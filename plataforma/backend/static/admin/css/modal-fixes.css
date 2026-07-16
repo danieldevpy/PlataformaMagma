@@ -1,0 +1,345 @@
+/* ============================================================
+   MAGMA CURSOS — MODAL FIXES (iframe + renderização)
+   Solução para os problemas de overflow e display de modais
+   do Django Admin com Jazzmin (related_modal_active=True)
+   ============================================================ */
+
+/* IMPORTANTE: Este arquivo complementa magma-admin.css com fixes
+   específicos para iframes e renderização de modais */
+
+/* ---- Backdrop/Overlay ---- */
+.modal-backdrop,
+.modal-backdrop.in,
+.modal-backdrop.show {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+  display: block !important;
+  z-index: 1040 !important;
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+
+/* ---- Modal Container ---- */
+.modal {
+  display: flex !important;
+  z-index: 1050;
+}
+
+.modal.fade.in,
+.modal.fade.show {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.modal-dialog {
+  display: flex !important;
+  flex-direction: column;
+  width: auto !important;
+  margin: auto !important;
+  max-width: 600px;
+  max-height: 90vh;
+  height: auto;
+  position: relative;
+}
+
+.modal-dialog.modal-lg {
+  max-width: 900px !important;
+}
+
+.modal-dialog.modal-sm {
+  max-width: 400px !important;
+}
+
+/* ---- Modal Content ---- */
+.modal-content {
+  display: flex !important;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: var(--shadow-float);
+  background: var(--white);
+  max-height: 90vh;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* ---- Modal Header ---- */
+.modal-header {
+  flex-shrink: 0 !important;
+  border-bottom: 2px solid var(--gold-pale);
+  padding: 20px 24px !important;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h4,
+.modal-header h5,
+.modal-header .modal-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.modal-header .btn-close,
+.modal-header .close {
+  font-size: 1.4rem;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-header .btn-close:hover,
+.modal-header .close:hover {
+  opacity: 1;
+}
+
+/* ---- Modal Body (CRÍTICO) ---- */
+.modal-body {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  max-height: calc(90vh - 140px);
+  position: relative;
+}
+
+/* Remover limites de tamanho que causam squeeze */
+.modal-body .container,
+.modal-body .content-wrapper,
+.modal-body form,
+.modal-body .form-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 24px !important;
+  box-sizing: border-box;
+  background: var(--white);
+}
+
+/* Iframe dentro do modal */
+.modal-body iframe {
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1;
+  display: block;
+  background: var(--white);
+  min-height: 200px;
+}
+
+/* Scroll customizado */
+.modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sand) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--sand);
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Campos de formulário em modal */
+.modal-body .form-group {
+  margin-bottom: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.modal-body .form-group:last-child {
+  margin-bottom: 0 !important;
+}
+
+.modal-body label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.modal-body input,
+.modal-body select,
+.modal-body textarea,
+.modal-body .form-control,
+.modal-body .form-select,
+.modal-body .vTextField,
+.modal-body .vLargeTextField {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 10px 12px !important;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  border: 1.5px solid var(--sand) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--white) !important;
+  color: var(--ink) !important;
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 0.2rem rgba(184, 147, 63, 0.18) !important;
+}
+
+/* Select2 em modais */
+.modal-body .select2-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.modal-body .select2-container--default .select2-selection--single {
+  width: 100% !important;
+  height: 38px;
+  line-height: 38px;
+  border: 1.5px solid var(--sand) !important;
+}
+
+.modal-body .select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 0.2rem rgba(184, 147, 63, 0.18) !important;
+}
+
+/* ---- Modal Footer ---- */
+.modal-footer {
+  flex-shrink: 0 !important;
+  border-top: 1px solid var(--sand);
+  padding: 16px 24px !important;
+  background: var(--paper);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.modal-footer button,
+.modal-footer input[type="submit"],
+.modal-footer input[type="button"] {
+  padding: 10px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.modal-footer .btn-primary,
+.modal-footer input[type="submit"] {
+  background: var(--grad-gold-metal);
+  border-color: var(--gold);
+  color: var(--navy-deep);
+  box-shadow: var(--shadow-gold);
+}
+
+.modal-footer .btn-primary:hover,
+.modal-footer input[type="submit"]:hover {
+  background: var(--grad-gold-metal);
+  border-color: var(--gold-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(184, 147, 63, 0.45);
+}
+
+.modal-footer .btn-secondary,
+.modal-footer .btn-cancel {
+  background: var(--paper);
+  border: 1px solid var(--sand);
+  color: var(--ink);
+}
+
+.modal-footer .btn-secondary:hover,
+.modal-footer .btn-cancel:hover {
+  background: var(--sand);
+  border-color: var(--sand);
+}
+
+/* ---- Fieldsets ---- */
+fieldset.module {
+  border: none !important;
+  border-radius: var(--radius-md);
+  padding: 0 !important;
+  margin: 0 0 20px 0 !important;
+  background: transparent;
+}
+
+fieldset.module h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--navy);
+  margin: 0 0 16px 0 !important;
+  padding: 0 0 12px 0 !important;
+  border-bottom: 2px solid var(--gold-pale);
+}
+
+/* ---- Erros e Avisos ---- */
+.errorlist {
+  background: #fbe6e9;
+  border-left: 4px solid var(--red);
+  color: #8f0c22;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  list-style: none;
+}
+
+.errorlist li {
+  margin: 0;
+  padding: 0;
+}
+
+.errorlist li::before {
+  content: "⚠ ";
+  margin-right: 6px;
+}
+
+/* ---- Responsividade ---- */
+@media (max-width: 768px) {
+  .modal-dialog {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    max-height: calc(95vh - 140px);
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 16px !important;
+  }
+
+  .modal-body form,
+  .modal-body .container {
+    padding: 16px !important;
+  }
+}

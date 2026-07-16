@@ -1,0 +1,1157 @@
+/* ============================================================
+   MAGMA CURSOS — SKIN DO DJANGO ADMIN (JAZZMIN)
+   Reskin completo do Jazzmin/AdminLTE4/Bootstrap5 usando os tokens
+   oficiais da marca (magma-tokens.css). Não edita arquivos do pacote —
+   só sobrescreve via custom_css, sobrevive a updates do Jazzmin.
+   ============================================================ */
+
+@import url("magma-tokens.css");
+@import url("modal-fixes.css");
+
+/* ---- Base tipográfica e cores globais ---- */
+:root {
+  --bs-body-font-family: var(--font-body);
+  --bs-body-bg: var(--paper);
+  --bs-body-color: var(--ink);
+  --bs-border-radius: var(--radius-md);
+  --bs-border-radius-sm: var(--radius-sm);
+  --bs-border-radius-lg: var(--radius-lg);
+  --bs-border-radius-xl: var(--radius-xl);
+  --bs-link-color: var(--navy);
+  --bs-link-hover-color: var(--gold-deep);
+  --bs-link-color-rgb: 27, 42, 77;
+  --bs-link-hover-color-rgb: 138, 106, 31;
+  --bs-primary: var(--gold);
+  --bs-primary-rgb: 184, 147, 63;
+  --bs-danger: var(--red);
+  --bs-success: var(--success);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+h1, h2, h3, h4, h5, h6,
+.card-title, .content-header h1 {
+  font-family: var(--font-display);
+  color: var(--navy);
+  font-weight: 800;
+}
+
+a { transition: color 0.15s ease; }
+
+/* Fita dourada de topo em toda página autenticada, igual ao header do site */
+.app-wrapper::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--grad-gold-ribbon);
+  z-index: 1045;
+}
+
+/* ============================================================
+   NAVBAR (topo)
+   ============================================================ */
+.app-header.navbar {
+  background: var(--white) !important;
+  border-bottom: 1px solid var(--sand);
+  box-shadow: 0 2px 10px rgba(16, 28, 56, .06);
+  margin-top: 4px;
+}
+
+.app-header .nav-link {
+  color: var(--ink);
+}
+
+.app-header .nav-link:hover,
+.app-header .nav-link:focus {
+  color: var(--gold-deep);
+}
+
+.form-control-navbar {
+  border-color: var(--sand);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.form-control-navbar:focus {
+  border-color: var(--gold);
+  box-shadow: none;
+}
+
+.btn-navbar {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.btn-navbar:hover { background: var(--navy-soft); }
+
+.app-header .dropdown-menu {
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+}
+
+.app-header .dropdown-header {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .72rem;
+}
+
+.app-header .dropdown-item:hover,
+.app-header .dropdown-item:focus {
+  background: var(--gold-pale);
+  color: var(--navy);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+/* !important nas custom properties: a regra nativa [data-bs-theme=dark] .app-sidebar
+   tem mais especificidade que .app-sidebar sozinho (a aside vem com data-bs-theme="dark"
+   fixo no template do Jazzmin), então uma sobrescrita "normal" perde a cascata. */
+.app-sidebar {
+  --bs-secondary-bg: var(--navy-deep) !important;
+  --lte-sidebar-color: rgba(255, 255, 255, .78) !important;
+  --lte-sidebar-hover-color: var(--white) !important;
+  --lte-sidebar-hover-bg: rgba(220, 185, 106, .12) !important;
+  --lte-sidebar-active-color: var(--navy-deep) !important;
+  --lte-sidebar-menu-active-bg: var(--gold) !important;
+  --lte-sidebar-menu-active-color: var(--navy-deep) !important;
+  --lte-sidebar-submenu-color: rgba(255, 255, 255, .65) !important;
+  --lte-sidebar-submenu-hover-color: var(--white) !important;
+  --lte-sidebar-submenu-hover-bg: rgba(220, 185, 106, .12) !important;
+  --lte-sidebar-submenu-active-color: var(--navy-deep) !important;
+  --lte-sidebar-submenu-active-bg: var(--gold-light) !important;
+  --lte-sidebar-header-color: var(--gold-light) !important;
+  background: var(--grad-navy-card) !important;
+  border-right: none;
+}
+
+.sidebar-brand {
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  background: var(--navy-deep);
+}
+
+.sidebar-brand .brand-image.magma-brand-image {
+  max-height: 30px;
+  width: auto;
+  opacity: 1 !important;
+  filter: none;
+}
+
+.sidebar-brand .brand-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: var(--white) !important;
+  opacity: 1 !important;
+}
+
+.app-sidebar .user-panel {
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  padding: 12px 14px;
+}
+
+.app-sidebar .user-panel .info a,
+.app-sidebar .user-panel .info span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--white);
+}
+
+.app-sidebar .user-profile.fa-user-circle {
+  color: var(--gold-light);
+}
+
+.app-sidebar .nav-header {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .68rem;
+  color: var(--lte-sidebar-header-color);
+  padding-top: 14px;
+}
+
+.app-sidebar .nav-link p {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.app-sidebar .nav-item > .nav-link.active,
+.app-sidebar .nav-treeview .nav-link.active {
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-gold);
+}
+
+/* background-color não aceita gradiente: sobrepõe como background-image
+   na mesma especificidade da regra nativa do AdminLTE (sidebar-menu>.nav-item>.nav-link.active) */
+.sidebar-menu > .nav-item > .nav-link.active:not(:hover) {
+  background-image: var(--grad-gold-metal);
+}
+
+.app-sidebar .nav-treeview .nav-link {
+  border-radius: var(--radius-sm);
+}
+
+.app-sidebar .nav-sidebar > .nav-item > .nav-link:hover,
+.app-sidebar .nav-link:hover {
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   CONTEÚDO / BREADCRUMBS
+   ============================================================ */
+.app-content-header {
+  background: transparent;
+  padding-top: 22px;
+}
+
+.app-content-header h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.breadcrumb {
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: .82rem;
+}
+
+.breadcrumb-item a { color: var(--muted); }
+.breadcrumb-item a:hover { color: var(--gold-deep); }
+.breadcrumb-item.active { color: var(--navy); font-weight: 600; }
+.breadcrumb-item + .breadcrumb-item::before { color: var(--muted); }
+
+/* Django clássico: div.breadcrumbs (fallback, caso renderizado fora do block) */
+div.breadcrumbs {
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+  border: none;
+}
+div.breadcrumbs a { color: var(--muted); }
+div.breadcrumbs a:hover { color: var(--gold-deep); }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.card-header {
+  background: var(--white);
+  border-bottom: 2px solid var(--gold-pale);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.card-primary.card-outline {
+  border-top: 3px solid var(--gold);
+}
+
+/* Dashboard: cartões de app/model */
+.small-box,
+.info-box {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* ============================================================
+   BOTÕES
+   ============================================================ */
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.btn-primary {
+  background: var(--grad-gold-metal);
+  border-color: var(--gold);
+  color: var(--navy-deep);
+  box-shadow: var(--shadow-gold);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--grad-gold-metal);
+  border-color: var(--gold-deep);
+  color: var(--navy-deep);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(184, 147, 63, .45);
+}
+
+.btn-primary:active {
+  color: var(--navy-deep) !important;
+}
+
+.btn-outline-secondary {
+  color: var(--navy);
+  border-color: var(--navy);
+  background: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.btn-danger:hover {
+  background: #a80d26;
+  border-color: #a80d26;
+}
+
+.btn-success {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.btn-info {
+  background: var(--vida-blue);
+  border-color: var(--vida-blue);
+  color: var(--white);
+}
+
+.btn-warning {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  color: var(--navy-deep);
+}
+
+.btn-link { color: var(--navy); }
+.btn-link:hover { color: var(--gold-deep); }
+
+/* ============================================================
+   FORMULÁRIOS: inputs, selects, checkboxes, radios
+   ============================================================ */
+.form-control,
+.form-select,
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+.vTextField,
+.vLargeTextField,
+.vURLField,
+.vIntegerField,
+.vDateField,
+.vTimeField {
+  border: 1.5px solid var(--sand) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--ink) !important;
+  background-color: var(--white) !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+input:focus,
+.vTextField:focus,
+.vLargeTextField:focus,
+.vURLField:focus,
+.vIntegerField:focus,
+.vDateField:focus,
+.vTimeField:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 .2rem rgba(184, 147, 63, .18) !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--gold);
+  border-color: var(--gold-deep);
+}
+
+.form-check-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 .2rem rgba(184, 147, 63, .18);
+}
+
+label, .form-label {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.required label::after {
+  content: " *";
+  color: var(--red);
+}
+
+fieldset.module {
+  border-color: var(--sand);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 20px;
+  background: var(--paper);
+}
+
+fieldset.module h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--navy);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--gold-pale);
+}
+
+.form-row {
+  border-color: var(--sand);
+  margin-bottom: 12px;
+}
+
+.form-row > div {
+  margin-bottom: 0;
+}
+
+/* Abas do formulário de edição (horizontal_tabs) */
+.nav-tabs {
+  border-bottom-color: var(--sand);
+}
+
+.nav-tabs .nav-link {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--navy);
+  border-color: var(--sand) var(--sand) var(--white);
+  border-top: 2px solid var(--gold);
+}
+
+/* ============================================================
+   TABELAS / LISTAGENS
+   ============================================================ */
+.table {
+  --bs-table-bg: var(--white);
+  --bs-table-striped-bg: var(--paper);
+  --bs-table-hover-bg: var(--gold-pale);
+  --bs-border-color: var(--sand);
+  color: var(--ink);
+}
+
+.table > thead {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  color: var(--navy);
+  background: var(--sand);
+}
+
+.table > thead th a { color: var(--navy); }
+
+#changelist-form .results,
+#changelist-form table {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--sand);
+}
+
+.paginator {
+  font-family: var(--font-body);
+}
+
+.paginator a {
+  border-radius: var(--radius-sm);
+  color: var(--navy);
+}
+
+.paginator a:hover {
+  background: var(--gold-pale);
+}
+
+.paginator .this-page {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-weight: 700;
+}
+
+.page-item.active .page-link {
+  background: var(--navy);
+  border-color: var(--navy);
+}
+
+.page-link { color: var(--navy); }
+.page-link:hover { color: var(--gold-deep); }
+
+/* Filtros do changelist: sidebar clássica (#changelist-filter, se ativa)
+   e a versão em selects/select2 usada pelo Jazzmin 3 (#change-list-filters) */
+#changelist-filter,
+#change-list-filters {
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  padding: 14px 16px;
+}
+
+#changelist-filter h2,
+#changelist-filter h3,
+#change-list-filters label {
+  font-family: var(--font-display);
+  color: var(--navy);
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+#changelist-filter li.selected a {
+  color: var(--gold-deep);
+  font-weight: 700;
+}
+
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple {
+  border: 1.5px solid var(--sand) !important;
+  border-radius: var(--radius-sm) !important;
+  min-height: calc(2.25rem + 2px);
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--multiple,
+.select2-container--default.select2-container--open .select2-selection--single {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 .2rem rgba(184, 147, 63, .18);
+}
+
+.select2-container--default .select2-selection__choice {
+  background: var(--gold-pale) !important;
+  border-color: var(--gold) !important;
+  color: var(--ink) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.select2-dropdown {
+  border-color: var(--gold) !important;
+  border-radius: var(--radius-sm);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background: var(--gold) !important;
+  color: var(--navy-deep) !important;
+}
+
+#changelist-search .form-control,
+#searchbar {
+  border-radius: var(--radius-sm) !important;
+}
+
+/* Empty states */
+#changelist-form .results + p,
+.paginator + p,
+p.paginator {
+  color: var(--muted);
+}
+
+/* ============================================================
+   ALERTS / MENSAGENS
+   ============================================================ */
+.alert {
+  border: none;
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+}
+
+.alert-success {
+  background: #e8f4ec;
+  border-left-color: var(--success);
+  color: #1f6b41;
+}
+
+.alert-danger,
+.errornote,
+.callout-danger {
+  background: #fbe6e9;
+  border-left-color: var(--red);
+  color: #8f0c22;
+}
+
+.alert-warning {
+  background: var(--gold-pale);
+  border-left-color: var(--gold);
+  color: #6b5220;
+}
+
+.alert-info {
+  background: #e7edf6;
+  border-left-color: var(--vida-blue);
+  color: #163a68;
+}
+
+.messagelist li { border-radius: var(--radius-sm); }
+
+/* ============================================================
+   BADGES / LABELS
+   ============================================================ */
+.badge { font-family: var(--font-display); font-weight: 700; }
+.badge.bg-primary { background: var(--gold) !important; color: var(--navy-deep) !important; }
+.badge.bg-danger { background: var(--red) !important; }
+.badge.bg-success { background: var(--success) !important; }
+.badge.bg-info { background: var(--vida-blue) !important; }
+
+/* ============================================================
+   MODAIS (related_modal_active)
+   ============================================================ */
+.modal-content {
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: var(--shadow-float);
+  background: var(--white);
+}
+
+.modal-header {
+  border-bottom: 2px solid var(--gold-pale);
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy);
+  padding: 20px 24px;
+  background: var(--white);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.modal-header .btn-close {
+  font-size: 1.4rem;
+  opacity: .6;
+  transition: opacity .15s ease;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--sand);
+  padding: 16px 24px;
+  background: var(--paper);
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.modal-footer .btn {
+  padding: 10px 20px;
+  font-size: .9rem;
+}
+
+/* Melhoria no formulário dentro de modais e iframes */
+.modal-body fieldset,
+.modal-body .django-admin-form-container fieldset {
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.modal-body .form-row,
+.modal-body .form-group,
+.modal-body .django-admin-form-container .form-row,
+.modal-body .django-admin-form-container .form-group {
+  margin-bottom: 16px;
+}
+
+.modal-body .form-group:last-child,
+.modal-body .django-admin-form-container .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.modal-body label,
+.modal-body .django-admin-form-container label {
+  font-size: .9rem;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.modal-body .form-control,
+.modal-body .form-select,
+.modal-body textarea,
+.modal-body .django-admin-form-container .form-control,
+.modal-body .django-admin-form-container .form-select,
+.modal-body .django-admin-form-container textarea {
+  font-size: .9rem;
+  padding: 10px 12px;
+  min-height: 38px;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Select2 em modais */
+.modal-body .select2-container,
+.modal-body .django-admin-form-container .select2-container {
+  width: 100% !important;
+}
+
+.modal-body .select2-container--default .select2-selection--single,
+.modal-body .django-admin-form-container .select2-container--default .select2-selection--single {
+  height: 38px;
+  line-height: 38px;
+}
+
+/* Classes customizadas para fieldsets em modais */
+.modal-body .lead-personal,
+.modal-body .lead-course,
+.modal-body .lead-tracking,
+.modal-body .lead-status {
+  background: var(--paper);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.modal-body fieldset.module h2 {
+  font-size: .95rem;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+.modal-body fieldset.module p.help {
+  font-size: .85rem;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* Organização de múltiplos campos em linha */
+.modal-body .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.modal-body .form-row > div {
+  margin-bottom: 0;
+}
+
+.modal-body .form-row .field-full {
+  grid-column: 1 / -1;
+}
+
+/* Submit e botões do modal */
+.modal-footer .btn-primary {
+  min-width: 100px;
+}
+
+.modal-footer .btn-secondary {
+  color: var(--navy);
+}
+
+/* Espaçamento melhorado para inputs em modais */
+.modal-body .form-group > input,
+.modal-body .form-group > select,
+.modal-body .form-group > textarea {
+  margin-top: 6px;
+}
+
+/* Typography refinement em modais */
+.modal-body p {
+  font-size: .9rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.modal-body .help-text {
+  display: block;
+  font-size: .8rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.modal-body .errorlist {
+  background: #fbe6e9;
+  border-left: 4px solid var(--red);
+  color: #8f0c22;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: .85rem;
+  list-style: none;
+}
+
+.modal-body .errorlist li {
+  margin: 0;
+  padding: 0;
+}
+
+.modal-body .errorlist li::before {
+  content: "⚠ ";
+  margin-right: 6px;
+}
+
+/* Botões de ação no footer do modal */
+.modal-footer .btn {
+  min-width: 90px;
+  font-weight: 700;
+}
+
+.modal-footer .btn-primary {
+  box-shadow: var(--shadow-gold);
+}
+
+.modal-footer .btn-secondary {
+  background: var(--paper);
+  border-color: var(--sand);
+  color: var(--ink);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: var(--sand);
+  border-color: var(--sand);
+}
+
+/* Transição suave para animação de modal */
+.modal.fade .modal-dialog {
+  transition: transform .3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* ============================================================
+   FIX ESPECÍFICO: Conteúdo dentro do iframe do modal
+   (Django admin usa iframe para related_modal_active=True)
+   ============================================================ */
+
+/* Remover limites de tamanho que causam overflow */
+.modal body,
+.modal .app-wrapper,
+.modal .django-admin-form-container,
+.modal-body > * {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+/* Garantir que os inputs em qualquer nível se expandam */
+.modal-body input,
+.modal-body select,
+.modal-body textarea,
+.modal-body .form-control,
+.modal-body .form-select {
+  max-width: 100% !important;
+}
+
+/* Fieldsets em modal */
+fieldset.module {
+  margin: 0 0 20px 0 !important;
+  border-radius: var(--radius-md);
+}
+
+/* Remover espaçamento excessivo que causa quebra */
+.modal-body .form-row {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Botões no footer do modal ficar visíveis e funcionais */
+.modal-footer button,
+.modal-footer input[type="submit"] {
+  min-width: auto !important;
+  padding: 10px 20px !important;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.app-footer {
+  background: var(--white);
+  border-top: 1px solid var(--sand);
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+body.login-page {
+  background: var(--grad-hero);
+  position: relative;
+}
+
+body.login-page::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--grad-gold-ribbon);
+  z-index: 10;
+}
+
+.login-page .login-box { width: 380px; }
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.login-logo img {
+  max-width: 190px;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, .35));
+}
+
+.login-logo a b {
+  font-family: var(--font-display);
+  color: var(--white);
+  font-size: 1.3rem;
+}
+
+.login-page .card {
+  border: none;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+}
+
+.login-page .card-body.login-card-body {
+  padding: 34px 30px;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+}
+
+.login-box-msg {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--navy);
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.login-page .input-group-text {
+  background: var(--sand);
+  border: 1.5px solid var(--sand);
+  color: var(--muted);
+}
+
+.login-page .form-control {
+  border: 1.5px solid var(--sand) !important;
+}
+
+.login-page .btn-primary {
+  width: 100%;
+  padding: 13px;
+}
+
+/* ============================================================
+   WIDGETS DO DJANGO: calendário e relógio (DateTimeShortcuts.js anexa
+   esses popups direto no <body>, fora de .app-content — e o CSS deles
+   (widgets.css) entra via form.media, depois do custom_css no <head>.
+   Por isso: !important para garantir precedência independente de
+   posição no DOM ou ordem de carregamento.)
+   ============================================================ */
+.calendarbox,
+.clockbox {
+  border: 1px solid var(--sand) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-float) !important;
+  font-family: var(--font-body) !important;
+}
+
+.calendar caption,
+.calendarbox h2 {
+  background: var(--navy) !important;
+  color: var(--white) !important;
+  font-family: var(--font-display) !important;
+}
+
+.calendar td.selected a {
+  background: var(--gold) !important;
+  color: var(--navy-deep) !important;
+}
+
+.calendar td a:hover {
+  background: var(--gold-pale) !important;
+}
+
+.timelist a {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+.timelist a:hover {
+  background: var(--gold-pale) !important;
+}
+
+.datetimeshortcuts a {
+  color: var(--gold-deep) !important;
+}
+
+.calendar-shortcuts {
+  background: var(--paper) !important;
+  color: var(--muted) !important;
+}
+
+/* ============================================================
+   BUGFIX: Modal rendering, iframe, e overlay/backdrop
+   ============================================================ */
+
+/* Backdrop/Overlay semi-transparente */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 1040 !important;
+  opacity: 1 !important;
+}
+
+.modal-backdrop.show {
+  opacity: 1 !important;
+}
+
+/* Modal container */
+.modal {
+  z-index: 1050;
+}
+
+.modal.show {
+  padding-right: 0 !important;
+}
+
+.modal.fade.show {
+  opacity: 1;
+}
+
+.modal-dialog {
+  max-width: 600px;
+  margin: 1.75rem auto;
+}
+
+.modal-dialog.modal-lg {
+  max-width: 900px;
+}
+
+/* Modal body - FIX para iframe e conteúdo */
+.modal-body {
+  padding: 0;
+  position: relative;
+  min-height: 300px;
+  max-height: 80vh;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Iframe dentro do modal (Django admin related_modal_active) */
+.modal-body iframe {
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 300px;
+  flex: 1;
+  display: block;
+  background: var(--white);
+}
+
+/* Wrapper do formulário dentro do iframe */
+.modal-body .django-admin-form-container,
+.modal-body form {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 24px !important;
+}
+
+/* Remover scrollbars desnecessárias */
+.modal-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sand) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--sand);
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Fix para campos em grid dentro de modais */
+.modal-body .form-row {
+  flex-wrap: wrap;
+}
+
+.modal-body .form-row > div {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+.modal-body .form-row > .col,
+.modal-body .form-row > [class*="col-"] {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.modal-body .form-row > .col:last-child,
+.modal-body .form-row > [class*="col-"]:last-child {
+  padding-right: 0;
+}
+
+.modal-body .form-row > .col:first-child,
+.modal-body .form-row > [class*="col-"]:first-child {
+  padding-left: 0;
+}
+
+/* Garantir que o conteúdo do modal fica responsivo */
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Evitar scroll da página quando modal está aberto */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 991.98px) {
+  .login-page .login-box { width: 92%; }
+}
+
+/* ---- Foco visível (acessibilidade) ---- */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
