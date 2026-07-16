@@ -21,7 +21,9 @@ from apps.nucleo.models import ConteudoRastreavel
 def motivo_invalidez(convite):
     if convite is None:
         return "inexistente"
-    if convite.usado_em is not None:
+    # Link de turma é compartilhado e reutilizável — só expira, nunca "usado"
+    # (usado_em fica sempre None nesse escopo, ver ConviteAvaliacao.usado_em).
+    if convite.escopo == ConviteAvaliacao.Escopo.INDIVIDUAL and convite.usado_em is not None:
         return "usado"
     if convite.expira_em < timezone.now():
         return "expirado"
@@ -70,8 +72,9 @@ class ConviteAvaliacaoPublicoView(APIView):
             status=Avaliacao.Status.PENDENTE,
             conteudo_origem=ConteudoRastreavel.Origem.EDITADO,
         )
-        convite.usado_em = timezone.now()
-        convite.save(update_fields=["usado_em", "atualizado_em"])
+        if convite.escopo == ConviteAvaliacao.Escopo.INDIVIDUAL:
+            convite.usado_em = timezone.now()
+            convite.save(update_fields=["usado_em", "atualizado_em"])
         return Response({"ok": True}, status=status.HTTP_201_CREATED)
 
 

@@ -59,7 +59,21 @@ class MatriculaConvitePublicoView(APIView):
         serializer.is_valid(raise_exception=True)
         dados = serializer.validated_data
 
-        aluno = matricula.aluno or Aluno()
+        # Turma toda: link compartilhado — preencher NUNCA mexe na Matrícula
+        # do link em si (ela continua "em branco", disponível pro próximo
+        # colega da turma abrir e preencher a dele). Em vez disso nasce uma
+        # Matrícula individual nova, com sua própria carteirinha.
+        alvo = (
+            Matricula.objects.create(
+                turma=matricula.turma,
+                enviado_por=matricula.enviado_por,
+                validade_carteirinha_meses=matricula.validade_carteirinha_meses,
+            )
+            if matricula.escopo == Matricula.Escopo.TURMA
+            else matricula
+        )
+
+        aluno = alvo.aluno or Aluno()
         aluno.nome = dados["nome"]
         aluno.cpf = dados["cpf"]
         aluno.data_nascimento = dados["data_nascimento"]
@@ -67,14 +81,12 @@ class MatriculaConvitePublicoView(APIView):
             aluno.foto = dados["foto"]
         aluno.save()
 
-        matricula.aluno = aluno
-        matricula.status = Matricula.Status.ATIVA
-        matricula.preenchida_em = timezone.now()
-        matricula.save(
-            update_fields=["aluno", "status", "preenchida_em", "atualizado_em"]
-        )
+        alvo.aluno = aluno
+        alvo.status = Matricula.Status.ATIVA
+        alvo.preenchida_em = timezone.now()
+        alvo.save(update_fields=["aluno", "status", "preenchida_em", "atualizado_em"])
 
         dados_resposta = MatriculaConvitePublicoSerializer(
-            matricula, context={"request": request}
+            alvo, context={"request": request}
         ).data
         return Response({"valido": True, **dados_resposta}, status=status.HTTP_201_CREATED)

@@ -89,4 +89,15 @@ class CriarConvitePainelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ConviteAvaliacao
-        fields = ["curso", "turma", "nome_aluno"]
+        fields = ["curso", "turma", "escopo", "nome_aluno"]
+
+    def validate(self, attrs):
+        # Individual só faz sentido personalizado — sem nome, viraria um
+        # link de turma disfarçado (sem o benefício de ser reutilizável).
+        if attrs.get("escopo") == ConviteAvaliacao.Escopo.INDIVIDUAL and not attrs.get(
+            "nome_aluno", ""
+        ).strip():
+            raise serializers.ValidationError(
+                {"nome_aluno": "Obrigatório para convite de pessoa específica."}
+            )
+        return attrs

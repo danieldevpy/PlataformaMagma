@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useReveal } from "@/hooks/useReveal";
 import { API_URL } from "@/lib/api";
 import type { ConviteCarteirinha } from "@/lib/types";
 import "@/styles/carteirinha.css";
+
+// Chave de localStorage pra "lembrar" a Matrícula individual que este
+// device já gerou a partir de um link de turma (compartilhado) — assim
+// reabrir o mesmo link não pede os dados de novo nem cria uma segunda
+// carteirinha pra mesma pessoa.
+function chaveLembranca(tokenDoLink: string): string {
+  return `magma:carteirinha:${tokenDoLink}`;
+}
 
 type ConviteValido = Extract<ConviteCarteirinha, { valido: true }>;
 
@@ -41,6 +50,7 @@ export default function CarteirinhaExperience({
   convite: ConviteValido;
 }) {
   useReveal();
+  const router = useRouter();
   const jaRodou = useRef(false);
 
   const aluno = convite.aluno;
@@ -56,6 +66,17 @@ export default function CarteirinhaExperience({
     // listeners abaixo seriam anexados duas vezes (cliques duplicados).
     if (jaRodou.current) return;
     jaRodou.current = true;
+
+    // Link de turma (compartilhado) já preenchido por este device antes?
+    // Manda pro token da carteirinha individual do aluno em vez de
+    // mostrar o formulário em branco de novo.
+    if (!convite.preenchida) {
+      const meuToken = localStorage.getItem(chaveLembranca(token));
+      if (meuToken && meuToken !== token) {
+        router.replace(`/carteirinha/${meuToken}`);
+        return;
+      }
+    }
 
     const $ = <T extends Element = HTMLElement>(sel: string) =>
       document.querySelector<T>(sel);
@@ -504,6 +525,12 @@ export default function CarteirinhaExperience({
 
         try {
           const dados = await submitCarteirinha();
+          if (dados.valido && dados.token !== token) {
+            // Veio de um link de turma: a carteirinha real nasceu num token
+            // novo. Guarda a associação pra próxima visita a este mesmo
+            // link já cair direto na carteirinha do aluno.
+            localStorage.setItem(chaveLembranca(token), dados.token);
+          }
           if (dados.valido && dados.aluno?.foto) {
             targetEl.dataset.imgSrc = dados.aluno.foto;
             targetEl.style.backgroundImage = `url(${dados.aluno.foto})`;

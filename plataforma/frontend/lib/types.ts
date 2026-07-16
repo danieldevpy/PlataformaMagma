@@ -187,6 +187,10 @@ export interface AlunoCarteirinha {
 export type ConviteCarteirinha =
   | {
       valido: true;
+      /** Token da Matrícula que este payload realmente representa — em
+       * links de turma (compartilhados) difere do token da URL depois que
+       * o POST cria uma Matrícula individual nova pro aluno. */
+      token: string;
       curso: string;
       turma_codigo: string;
       codigo_carteirinha: string;

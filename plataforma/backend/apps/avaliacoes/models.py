@@ -14,7 +14,14 @@ def expiracao_padrao():
 
 
 class ConviteAvaliacao(ComTimestamps):
+    class Escopo(models.TextChoices):
+        TURMA = "turma", "Turma toda (link compartilhado)"
+        INDIVIDUAL = "individual", "Pessoa específica"
+
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    escopo = models.CharField(
+        max_length=10, choices=Escopo.choices, default=Escopo.TURMA
+    )
     curso = models.ForeignKey("cursos.Curso", on_delete=models.CASCADE)
     turma = models.ForeignKey(
         "cursos.Turma", null=True, blank=True, on_delete=models.SET_NULL
@@ -24,6 +31,9 @@ class ConviteAvaliacao(ComTimestamps):
         "contas.Usuario", null=True, blank=True, on_delete=models.SET_NULL
     )
     expira_em = models.DateTimeField(default=expiracao_padrao)
+    # Só tem efeito pra escopo=INDIVIDUAL (fecha o link após 1 uso). Em
+    # escopo=TURMA fica sempre None — o link é compartilhado, reutilizável
+    # por qualquer aluno da turma até expirar (ver motivo_invalidez).
     usado_em = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -44,7 +54,9 @@ class Avaliacao(ConteudoRastreavel, ComTimestamps):
         APROVADA = "aprovada", "Aprovada"
         REJEITADA = "rejeitada", "Rejeitada"
 
-    convite = models.OneToOneField(
+    # FK (não OneToOne): um convite de escopo=TURMA é compartilhado e gera
+    # várias avaliações, uma por aluno que respondeu.
+    convite = models.ForeignKey(
         ConviteAvaliacao, null=True, blank=True, on_delete=models.SET_NULL
     )
     curso = models.ForeignKey(

@@ -7,6 +7,7 @@ from apps.avaliacoes.models import Avaliacao, ConviteAvaliacao
 class ConviteAvaliacaoAdmin(admin.ModelAdmin):
     list_display = (
         "token",
+        "escopo",
         "curso",
         "turma",
         "nome_aluno",
@@ -15,9 +16,15 @@ class ConviteAvaliacaoAdmin(admin.ModelAdmin):
         "usado_em",
         "criado_em",
     )
-    list_filter = ("curso",)
+    list_filter = ("escopo", "curso")
     search_fields = ("nome_aluno", "token")
     readonly_fields = ("token", "url")
+    autocomplete_fields = ("curso", "turma")
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.enviado_por_id:
+            obj.enviado_por = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Avaliacao)

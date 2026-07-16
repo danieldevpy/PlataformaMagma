@@ -8,6 +8,13 @@ import "@/styles/avaliacao.css";
 
 type ConviteValido = Extract<ConviteAvaliacao, { valido: true }>;
 
+// Convites de turma (compartilhados) não fecham sozinhos no backend depois
+// de 1 uso — então "lembramos" localmente que este device já avaliou, pra
+// não empurrar o convite de novo numa revisita.
+function chaveJaAvaliado(token: string): string {
+  return `magma:avaliacao:${token}`;
+}
+
 /**
  * Experiência completa de avaliação pós-curso — porta fiel de
  * avaliacao/{index.html,styles.css,script.js} (ver esse diretório para o
@@ -188,6 +195,8 @@ export default function AvaliacaoExperience({
     const starsField = $("#stars")!;
     const rateExpand = $("#rateExpand")!;
     const thanksMsg = $("#thanksMsg")!;
+    // só existe no DOM em convite de turma (nome_aluno vazio — ver JSX)
+    const nomeInput = $<HTMLInputElement>("#nomeAluno");
     const commentInput = $<HTMLTextAreaElement>("#comment")!;
     const cargoInput = $<HTMLInputElement>("#cargoAtual")!;
     const submitBtn = $<HTMLButtonElement>("#submitBtn")!;
@@ -305,6 +314,15 @@ export default function AvaliacaoExperience({
 
     const onSubmitClick = async () => {
       if (!notaSelecionada) return;
+
+      const nome = convite.nome_aluno || nomeInput?.value.trim() || "";
+      if (!nome) {
+        submitError.textContent = "Conte seu nome antes de enviar.";
+        submitError.hidden = false;
+        nomeInput?.focus();
+        return;
+      }
+
       const comentario = commentInput.value.trim();
       if (!comentario) {
         submitError.textContent = "Conte um pouco sobre sua experiência antes de enviar.";
@@ -320,11 +338,12 @@ export default function AvaliacaoExperience({
 
       try {
         await enviarAvaliacao({
-          nome: convite.nome_aluno,
+          nome,
           estrelas: notaSelecionada,
           comentario,
           cargo_atual: cargoInput.value.trim(),
         });
+        localStorage.setItem(chaveJaAvaliado(token), "1");
         ratePanel.hidden = true;
         successView.hidden = false;
         successView.classList.add("in");
@@ -342,7 +361,10 @@ export default function AvaliacaoExperience({
     submitBtn.addEventListener("click", onSubmitClick);
     closeBtn.addEventListener("click", closeAvaliacao);
 
-    const rateRevealTimer = setTimeout(revealAvaliacaoPeek, 3000);
+    // convite de turma reutilizável: se este device já avaliou por aqui,
+    // não insiste — só deixa o carrossel de fotos disponível.
+    const jaAvaliou = localStorage.getItem(chaveJaAvaliado(token)) === "1";
+    const rateRevealTimer = jaAvaliou ? undefined : setTimeout(revealAvaliacaoPeek, 3000);
 
     cleanups.push(() => {
       clearTimeout(rateRevealTimer);
@@ -516,6 +538,23 @@ export default function AvaliacaoExperience({
                   <p className="thanks" id="thanksMsg">
                     Ficamos muito felizes que você tenha participado deste curso ❤️
                   </p>
+
+                  {/* convite de turma (compartilhado): não há nome pré-vinculado,
+                      o próprio aluno se identifica antes de enviar */}
+                  {!convite.nome_aluno && (
+                    <>
+                      <label htmlFor="nomeAluno" className="comment-label">
+                        Seu nome
+                      </label>
+                      <input
+                        type="text"
+                        id="nomeAluno"
+                        maxLength={120}
+                        placeholder="Como você se chama?"
+                        autoComplete="name"
+                      />
+                    </>
+                  )}
 
                   <label htmlFor="comment" className="comment-label">
                     Conte um pouco sobre sua experiência

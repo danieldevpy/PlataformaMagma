@@ -14,6 +14,10 @@ class AlunoCarteirinhaSerializer(RelativeMediaModelSerializer):
 class MatriculaConvitePublicoSerializer(serializers.Serializer):
     """Retrato do convite (preenchido ou não) para a tela da carteirinha."""
 
+    # Exposto pra o frontend saber o token da Matrícula individual gerada a
+    # partir de um link de turma (resposta do POST difere do token da URL
+    # nesse caso) e guardar localmente pra "lembrar" o aluno em revisitas.
+    token = serializers.CharField()
     curso = serializers.CharField(source="turma.curso.nome")
     turma_codigo = serializers.CharField(source="turma.codigo")
     codigo_carteirinha = serializers.CharField()

@@ -7,6 +7,7 @@ from apps.educacional.models import Aluno, Matricula
 class MatriculaAdmin(admin.ModelAdmin):
     list_display = (
         "token",
+        "escopo",
         "turma",
         "aluno",
         "status",
@@ -15,7 +16,7 @@ class MatriculaAdmin(admin.ModelAdmin):
         "expira_em",
         "criado_em",
     )
-    list_filter = ("status", "turma__curso")
+    list_filter = ("escopo", "status", "turma__curso")
     search_fields = ("token", "aluno__nome", "codigo_carteirinha")
     autocomplete_fields = ("turma", "aluno")
     readonly_fields = (
@@ -27,6 +28,7 @@ class MatriculaAdmin(admin.ModelAdmin):
     )
     fields = (
         "turma",
+        "escopo",
         "status",
         "aluno",
         "enviado_por",

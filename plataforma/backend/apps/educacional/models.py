@@ -42,7 +42,13 @@ class Matricula(ComTimestamps):
     """Reserva de vaga numa Turma + convite (magic link) de carteirinha
     digital. O gestor cria a Matrícula (pelo Django Admin, escolhendo a
     Turma) antes de o aluno existir; `aluno` só é preenchido quando ele
-    acessa o link e completa a carteirinha."""
+    acessa o link e completa a carteirinha.
+
+    `escopo` decide como o link se comporta: TURMA é um link único
+    compartilhado com a turma toda — cada aluno que preenche gera sua
+    própria Matrícula/Aluno/carteirinha nova (esta linha nunca é
+    preenchida, fica reutilizável até expirar). INDIVIDUAL é o
+    comportamento de sempre: esta própria linha é preenchida uma vez."""
 
     class Status(models.TextChoices):
         CONVIDADO = "convidado", "Convidado (aguardando preenchimento)"
@@ -50,7 +56,14 @@ class Matricula(ComTimestamps):
         CONCLUIDA = "concluida", "Concluída"
         CANCELADA = "cancelada", "Cancelada"
 
+    class Escopo(models.TextChoices):
+        TURMA = "turma", "Turma toda (link compartilhado)"
+        INDIVIDUAL = "individual", "Pessoa específica"
+
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    escopo = models.CharField(
+        max_length=10, choices=Escopo.choices, default=Escopo.TURMA
+    )
     turma = models.ForeignKey(
         "cursos.Turma", on_delete=models.CASCADE, related_name="matriculas"
     )
