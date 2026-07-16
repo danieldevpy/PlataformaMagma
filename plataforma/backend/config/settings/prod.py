@@ -6,6 +6,14 @@ DEBUG = False
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
+# O SSR do Next faz fetch na API pela rede interna do Docker
+# (INTERNAL_API_URL=http://backend:8000 no docker-compose.prod.yml), então a
+# request chega com Host "backend". Garantimos esse nome aqui pra não exigir
+# que o operador o liste no .env — se você renomear o serviço no compose,
+# ajuste também aqui.
+if "backend" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("backend")
+
 DATABASES = {
     "default": dj_database_url.parse(env.str("DATABASE_URL"))
 }

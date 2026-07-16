@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
+from config.drf import RelativeMediaModelSerializer
+
 from apps.educacional.models import Aluno
 
 
-class AlunoCarteirinhaSerializer(serializers.ModelSerializer):
+class AlunoCarteirinhaSerializer(RelativeMediaModelSerializer):
     class Meta:
         model = Aluno
         fields = ["nome", "cpf", "data_nascimento", "foto"]

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from config.drf import RelativeMediaModelSerializer
+
 from apps.avaliacoes.models import Avaliacao
 from apps.cursos.models import (
     AnotacaoTurma,
@@ -32,13 +34,13 @@ class PerguntaFrequentePublicaSerializer(serializers.ModelSerializer):
         fields = ["ordem", "pergunta", "resposta"]
 
 
-class FotoCursoPublicaSerializer(serializers.ModelSerializer):
+class FotoCursoPublicaSerializer(RelativeMediaModelSerializer):
     class Meta:
         model = FotoCurso
         fields = ["ordem", "imagem", "legenda"]
 
 
-class InstrutorPublicoSerializer(serializers.ModelSerializer):
+class InstrutorPublicoSerializer(RelativeMediaModelSerializer):
     class Meta:
         model = Instrutor
         fields = ["nome", "registro", "especializacao", "foto"]
@@ -94,7 +96,7 @@ class AvaliacaoPublicaSerializer(serializers.ModelSerializer):
         return avaliacao.turma.codigo if avaliacao.turma else None
 
 
-class CursoListaPublicaSerializer(serializers.ModelSerializer):
+class CursoListaPublicaSerializer(RelativeMediaModelSerializer):
     turma_destaque = serializers.SerializerMethodField()
 
     class Meta:
@@ -115,7 +117,7 @@ class CursoListaPublicaSerializer(serializers.ModelSerializer):
         return {"codigo": turma.codigo, "status": turma.status}
 
 
-class CursoDetalhePublicoSerializer(serializers.ModelSerializer):
+class CursoDetalhePublicoSerializer(RelativeMediaModelSerializer):
     habilidades = HabilidadePublicaSerializer(many=True, read_only=True)
     faqs = PerguntaFrequentePublicaSerializer(many=True, read_only=True)
     fotos = FotoCursoPublicaSerializer(many=True, read_only=True)

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Ambiente de produção — containers (nginx + Next.js + Django/gunicorn +
-# MySQL) via docker-compose.prod.yml. Único ponto de entrada é a porta 80
-# do nginx: funciona acessando http://<EXTERNAL_IP>/ ou http://<DOMAIN>/.
+# Ambiente de produção — containers (Next.js + Django/gunicorn + MySQL) via
+# docker-compose.prod.yml. O nginx roda no HOST da VPS (não é container),
+# termina o TLS e faz proxy pros containers publicados no loopback:
+#   /api e /dj-admin -> 127.0.0.1:8000  |  resto -> 127.0.0.1:3000
+# Ver nginx/nginx.conf (config de referência pra copiar em /etc/nginx).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,17 +40,27 @@ echo "==> Status"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps
 
 DOMAIN="$(grep -E '^DOMAIN=' "$ENV_FILE" | cut -d= -f2-)"
-EXTERNAL_IP="$(grep -E '^EXTERNAL_IP=' "$ENV_FILE" | cut -d= -f2-)"
 HTTPS_ENABLED="$(grep -E '^DJANGO_HTTPS_ENABLED=' "$ENV_FILE" | cut -d= -f2-)"
 SCHEME="http"
 [ "$HTTPS_ENABLED" = "true" ] && SCHEME="https"
 
 echo ""
-echo "Acesse:"
-echo "  http://${EXTERNAL_IP}/          (teste direto pelo IP da VPS)"
-echo "  ${SCHEME}://${DOMAIN}/          (quando o DNS já apontar pra cá)"
-echo "  .../dj-admin/  -> admin do Django"
-echo "  .../api/       -> API"
+echo "Containers no ar (portas só no loopback 127.0.0.1):"
+echo "  backend  -> 127.0.0.1:8000"
+echo "  frontend -> 127.0.0.1:3000"
+echo ""
+echo "O acesso público é pelo nginx do HOST. Se ainda não configurou:"
+echo "  1. Ajuste os caminhos em nginx/nginx.conf pros diretórios abaixo e"
+echo "     copie pra /etc/nginx/sites-available/ (veja o cabeçalho do arquivo)."
+echo "       static -> ${SCRIPT_DIR}/staticfiles/"
+echo "       media  -> ${SCRIPT_DIR}/media/"
+echo "  2. sudo nginx -t && sudo systemctl reload nginx"
+echo "  3. sudo certbot --nginx -d ${DOMAIN}   (emitir/renovar o TLS)"
+echo ""
+echo "Depois, acesse:"
+echo "  ${SCHEME}://${DOMAIN}/            -> site (Next.js)"
+echo "  ${SCHEME}://${DOMAIN}/dj-admin/   -> admin do Django"
+echo "  ${SCHEME}://${DOMAIN}/api/        -> API"
 echo ""
 echo "Logs em tempo real: docker compose --env-file $ENV_FILE -f $COMPOSE_FILE logs -f"
 echo "Parar tudo:         docker compose --env-file $ENV_FILE -f $COMPOSE_FILE down"

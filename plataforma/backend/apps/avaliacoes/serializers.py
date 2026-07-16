@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from config.drf import RelativeMediaModelSerializer
+
 from apps.avaliacoes.models import Avaliacao, ConviteAvaliacao
 from apps.cursos.models import Curso, Turma
 from apps.cursos.serializers import FotoCursoPublicaSerializer
@@ -31,7 +33,7 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         ).data
 
 
-class AvaliacaoPainelSerializer(serializers.ModelSerializer):
+class AvaliacaoPainelSerializer(RelativeMediaModelSerializer):
     curso = serializers.SlugRelatedField(slug_field="slug", read_only=True)
     curso_nome = serializers.CharField(source="curso.nome", read_only=True)
     turma_codigo = serializers.SerializerMethodField()
