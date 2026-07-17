@@ -272,3 +272,6 @@ footer.site{background:var(--navy-deep);color:#fff;padding:56px 0 0}
   .hero-inner{grid-template-columns:1fr;padding:56px 0 64px}
   .section{padding:64px 0}
 }
+@media(max-width:600px){
+  .hero{padding:20px}
+}
