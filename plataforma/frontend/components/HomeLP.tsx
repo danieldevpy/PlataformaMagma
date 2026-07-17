@@ -358,10 +358,12 @@ export default function HomeLP({
       <section className="section instrutor">
         <div className="wrap">
           <div className="foto-frame">
-            <p>
-              [ Foto profissional do instrutor — usar imagem em alta resolução
-              com fundo neutro ]
-            </p>
+            {/* eslint-disable-next-line @next/next/no-img-element -- mesma convenção do InstructorSection */}
+            <img
+              src="/assets/instrutor-dea.jpg"
+              alt="João Bello, instrutor de APH, segurando um DEA de treinamento"
+              loading="lazy"
+            />
           </div>
           <div>
             <span className="eyebrow">Coordenação técnica</span>
