@@ -23,6 +23,7 @@
 
 ## EM ANDAMENTO
 
+- **Spec 001 — suíte de testes** (`specs/001-suite-de-testes/`): plano completo pronto (spec+plan+tasks, T1–T7 em 3 ondas); aguardando Daniel disparar a Onda 0 (T1 fundação). É pré-requisito recomendado antes das features da campanha.
 - **Campanha digital 08/08** — objetivo nº 1. Studio + acervo prontos para produzir conteúdo; Social Maker em concepção (`docs/subsistemas/07-social-maker.md`, `07b-social-maker-manus.md`, `agente-social-maker-contexto.md`).
 - **Teste manual no browser** do Acervo (upload em massa real, dedup em lote, Studio→postagem→ZIP) — smoke test via test client passou; falta o exercício real.
 
@@ -34,6 +35,7 @@
 4. Itens de mídia enviados antes do dedup não têm `meta.nome_original` (não entram na checagem; sem backfill, não crítico).
 5. Painel do gestor fora do Django Admin (docs 06) — futuro; por ora o Admin é o painel.
 6. Porta 8000 local costuma estar ocupada por outra app — `init-dev.sh` já lida/atenção ao subir.
+7. **Correção de registro (2026-07-18):** a v0.1 NÃO tem testes automatizados persistidos — o "smoke test" do subsistema 09 foi execução única em sessão, não está no repo. Rede de segurança planejada na spec 001. A futura spec do seed (doc 08) herda a obrigação de testar idempotência (ver `specs/001-suite-de-testes/plan.md` §final).
 
 ## METAS (repensadas na baseline v0.1)
 
