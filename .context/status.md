@@ -23,8 +23,10 @@
 
 ## EM ANDAMENTO
 
+- **n8n integrado (setup inicial pronto, 2026-07-18)**: dev via `init-dev.sh --n8n`; prod no compose oficial. Falta o setup único de prod (DNS do subdomínio + `.env.prod` + bloco nginx + certbot — checklist em `plataforma/n8n/README.md`) e, depois, a spec do agente de WhatsApp.
 - **Spec 001 — suíte de testes** (`specs/001-suite-de-testes/`): plano completo pronto (spec+plan+tasks, T1–T7 em 3 ondas); aguardando Daniel disparar a Onda 0 (T1 fundação). É pré-requisito recomendado antes das features da campanha.
 - **Campanha digital 08/08** — objetivo nº 1. Studio + acervo prontos para produzir conteúdo; Social Maker em concepção (`docs/subsistemas/07-social-maker.md`, `07b-social-maker-manus.md`, `agente-social-maker-contexto.md`).
+- **Studio 2.0** — plano mestre escrito (`docs/subsistemas/10-studio-2.0.md`): motor de templates declarativo multi-formato, 6 templates, IA embutida por capacidades (texto/imagem/vídeo, config progressiva, complemento nunca requisito), Camada de Ações agent-first (bot WhatsApp/n8n/Manus). Próximo passo: specs `002..007` (ordem no §9 do doc; 002+003 = caminho crítico da campanha).
 - **Teste manual no browser** do Acervo (upload em massa real, dedup em lote, Studio→postagem→ZIP) — smoke test via test client passou; falta o exercício real.
 
 ## PENDÊNCIAS / QUESTÕES ABERTAS
