@@ -1,0 +1,129 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magma Studio — Turma {{ turma.codigo }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'midia/studio.css' %}" />
+</head>
+<body>
+  <script>
+    window.MAGMA_CSRF = "{{ csrf_token }}";
+    window.MAGMA_API_BASE = "{{ api_base }}";
+    window.MAGMA_TURMA = {
+      id: {{ turma.id }},
+      codigo: "{{ turma.codigo|escapejs }}",
+      curso: "{{ turma.curso|escapejs }}"
+    };
+  </script>
+
+  <!-- ===================== COLUNA 1 — ACERVO ===================== -->
+  <aside class="picker-col">
+    <div class="brand">
+      <span class="brand__mark" id="brandMark"></span>
+      <div class="brand__txt">
+        <strong>Magma Studio</strong>
+        <small>Turma {{ turma.codigo }}</small>
+      </div>
+    </div>
+    <a class="brand__back" href="../acervo/">← Mesa de Luz (acervo)</a>
+
+    <div class="picker">
+      <div class="picker__head">
+        <span>Fotos do acervo</span>
+        <small id="pickerCount">0 selecionadas</small>
+      </div>
+      <div class="picker__grid" id="pickerGrid"></div>
+      <p class="picker__empty" id="pickerEmpty" hidden>
+        Nenhuma foto no acervo ainda. Envie fotos na Mesa de Luz da turma.
+      </p>
+    </div>
+  </aside>
+
+  <div class="gutter" data-target="picker" title="Arraste para ajustar"></div>
+
+  <!-- ===================== COLUNA 2 — CONTROLES ===================== -->
+  <section class="panel">
+    <header class="panel__head">
+      <h1>Formação de Turma</h1>
+      <p>Escolha as fotos do acervo à esquerda — o carrossel é montado no padrão da marca.</p>
+    </header>
+
+    <div class="field-grid">
+      <label class="field">
+        <span>Nº da turma</span>
+        <input id="fTurma" type="text" maxlength="5" />
+      </label>
+      <label class="field">
+        <span>Frase de fechamento</span>
+        <input id="fFrase" type="text" value="Parabéns à nossa turma!" />
+      </label>
+      <label class="field">
+        <span>Instagram</span>
+        <input id="fInsta" type="text" value="@magma_curso" />
+      </label>
+      <label class="field">
+        <span>WhatsApp</span>
+        <input id="fZap" type="text" value="(21) 97100-5197" />
+      </label>
+      <label class="field field--full">
+        <span>Legenda do post</span>
+        <textarea id="fLegenda"></textarea>
+        <small>Aceita edição livre — vai junto na criação da postagem.</small>
+      </label>
+    </div>
+
+    <div class="photos" id="photoList" hidden>
+      <div class="photos__head">
+        <span>Fotos selecionadas</span>
+        <small id="photoHint">★ = foto exclusiva do fechamento</small>
+      </div>
+      <ul id="photoItems"></ul>
+    </div>
+  </section>
+
+  <div class="gutter" data-target="panel" title="Arraste para ajustar"></div>
+
+  <!-- ===================== COLUNA 3 — PREVIEW + POSTAGENS ===================== -->
+  <main class="stage">
+    <div class="stage__top">
+      <div class="slides" id="slides"></div>
+    </div>
+
+    <div class="variants" id="variantBar" hidden>
+      <span class="variants__label">Variante deste slide</span>
+      <div class="variants__opts" id="variantOpts"></div>
+    </div>
+
+    <div class="stage__preview">
+      <div class="canvas-wrap">
+        <canvas id="preview" width="1080" height="1080"></canvas>
+      </div>
+      <p class="stage__empty" id="stageEmpty">Selecione fotos do acervo para montar o carrossel ←</p>
+    </div>
+
+    <div class="stage__actions">
+      <button id="btnDownOne" class="btn btn--ghost" disabled>Baixar esta</button>
+      <button id="btnCreatePost" class="btn btn--gold" disabled>Criar postagem</button>
+    </div>
+
+    <section class="postagens">
+      <div class="postagens__head">
+        <h2>Postagens da turma</h2>
+        <p>Rascunho → Pronta → Publicada. Cada carrossel criado aparece aqui.</p>
+      </div>
+      <p class="postagens__empty" id="postagensEmpty">Nenhuma postagem criada ainda.</p>
+      <div class="postagens__list" id="postagensList"></div>
+    </section>
+  </main>
+
+  <div class="confetti-layer" id="confettiLayer"></div>
+
+  <script src="{% static 'midia/templates-engine.js' %}"></script>
+  <script src="{% static 'midia/studio.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{# Botões de acesso à Mesa de Luz (Acervo) e ao Studio da turma — só fazem
+   sentido com o objeto já salvo (ver docs/subsistemas/
+   09-acervo-studio-postagem.md). Mantém o restante do bloco (History/View
+   on site) via block.super — compatível com Jazzmin. #}
+{% block object-tools-items %}
+    {{ block.super }}
+    {% if original %}
+        <a class="btn w-100 btn-outline-secondary btn-sm"
+           href="{% url opts|admin_urlname:'acervo' original.pk %}">🎬 Acervo</a>
+        <a class="btn w-100 btn-outline-secondary btn-sm"
+           href="{% url opts|admin_urlname:'studio' original.pk %}">🎨 Studio</a>
+    {% endif %}
+{% endblock %}

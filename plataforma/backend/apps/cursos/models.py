@@ -166,6 +166,12 @@ class Turma(ConteudoRastreavel, ComTimestamps):
         Instrutor, null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    # Consentimento de uso de imagem da turma — controla se as mídias do
+    # acervo (apps.midia) podem circular (ver docs/subsistemas/
+    # 09-acervo-studio-postagem.md). Toggle feito na Mesa de Luz.
+    consentimento_midia = models.BooleanField(default=False)
+    consentimento_midia_em = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         verbose_name = "Turma"
         verbose_name_plural = "Turmas"

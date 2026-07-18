@@ -5,6 +5,20 @@ from django.db import models
 from rest_framework import serializers
 
 
+def url_media_relativa(campo):
+    """Mesma lógica de :class:`RelativeMediaImageField`, mas utilizável fora
+    de um ``ModelSerializer`` — útil em ``SerializerMethodField`` quando o
+    campo exposto na API não tem o mesmo nome do campo do model (ex.:
+    ``arquivo_url``/``thumb_url`` em ``apps.midia``, onde ``arquivo`` é um
+    ``FileField`` genérico, não um ``ImageField``)."""
+    if not campo:
+        return None
+    try:
+        return f"{settings.MEDIA_URL_BASE}{campo.url}"
+    except ValueError:
+        return None
+
+
 class RelativeMediaImageField(serializers.ImageField):
     """ImageField que serializa a URL do arquivo prefixada por
     ``settings.MEDIA_URL_BASE`` (ex.: ``/media/cursos/hero/x.jpg`` em prod,
@@ -24,12 +38,7 @@ class RelativeMediaImageField(serializers.ImageField):
     """
 
     def to_representation(self, value):
-        if not value:
-            return None
-        try:
-            return f"{settings.MEDIA_URL_BASE}{value.url}"
-        except ValueError:
-            return None
+        return url_media_relativa(value)
 
 
 class RelativeMediaModelSerializer(serializers.ModelSerializer):

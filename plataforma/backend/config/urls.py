@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/", include("apps.avaliacoes.urls")),
     path("api/", include("apps.leads.urls")),
     path("api/", include("apps.educacional.urls")),
+    path("api/", include("apps.midia.urls")),
 ]
 
 if settings.DEBUG:

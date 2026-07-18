@@ -1,0 +1,111 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mesa de Luz — {{ turma.codigo }} · Acervo de Mídia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'midia/acervo.css' %}" />
+</head>
+<body class="mesa">
+  <!-- ===================== CABEÇALHO ===================== -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__mark" id="brandMark" aria-hidden="true"></span>
+      <div class="topbar__title">
+        <strong id="tituloCurso">{{ turma.curso }}</strong>
+        <span id="tituloTurma">Turma {{ turma.codigo }} · Mesa de Luz</span>
+      </div>
+    </div>
+
+    <div class="topbar__stats" id="contadores" aria-live="polite" aria-label="Contagem de itens do acervo">
+      <span class="stat-skel">carregando acervo…</span>
+    </div>
+
+    <div class="topbar__actions">
+      <button
+        type="button"
+        id="btnConsentimento"
+        class="consent-toggle"
+        aria-pressed="false"
+        aria-label="Alternar consentimento de uso de imagem da turma"
+      >
+        <span class="consent-toggle__dot" aria-hidden="true"></span>
+        <span class="consent-toggle__txt">Consentimento de imagem: verificando…</span>
+      </button>
+      <a class="btn btn--ghost" href="../studio/">Abrir Studio →</a>
+    </div>
+  </header>
+
+  <!-- ===================== CONTEÚDO ===================== -->
+  <main class="content">
+    <section class="uploader" id="uploader" aria-label="Enviar mídia">
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden />
+      <div class="uploader__inner">
+        <span class="uploader__ic" aria-hidden="true">＋</span>
+        <strong>Arraste fotos e vídeos aqui</strong>
+        <small>ou clique para escolher — JPG, PNG, MP4 (máx. 1&nbsp;GB por arquivo)</small>
+      </div>
+    </section>
+
+    <section class="queue" id="queue" hidden aria-live="polite" aria-label="Fila de envio"></section>
+
+    <section class="grid-wrap">
+      <div class="grid" id="grid" role="list" aria-label="Itens do acervo"></div>
+
+      <div class="empty-state" id="emptyState" hidden>
+        <span class="empty-state__ic" aria-hidden="true">🗂️</span>
+        <strong>Nenhuma mídia ainda</strong>
+        <p>Envie as primeiras fotos ou vídeos da turma logo acima.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== BARRA DE SELEÇÃO ===================== -->
+  <div class="bulkbar" id="bulkBar" hidden role="toolbar" aria-label="Ações em lote">
+    <span class="bulkbar__count" id="bulkCount">0 selecionados</span>
+    <div class="bulkbar__actions">
+      <button type="button" class="bulkbtn" data-bulk-tag="destaque" aria-label="Marcar selecionados como destaque">⭐ Destaque</button>
+      <button type="button" class="bulkbtn" data-bulk-tag="capa" aria-label="Marcar selecionado como capa">🖼️ Capa</button>
+      <button type="button" class="bulkbtn" data-bulk-tag="avaliacao" aria-label="Marcar selecionados para avaliação">💬 Avaliação</button>
+      <button type="button" class="bulkbtn bulkbtn--danger" id="bulkRemove" aria-label="Remover itens selecionados">Remover</button>
+      <button type="button" class="bulkbtn bulkbtn--ghost" id="bulkClear" aria-label="Limpar seleção">Limpar</button>
+    </div>
+  </div>
+
+  <!-- ===================== LIGHTBOX ===================== -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button type="button" class="lightbox__close" id="lightboxClose" aria-label="Fechar visualização">✕</button>
+    <div class="lightbox__stage" id="lightboxStage"></div>
+  </div>
+
+  <!-- ===================== CONFIRMAÇÃO ===================== -->
+  <div class="confirm" id="confirmDialog" hidden role="alertdialog" aria-modal="true" aria-labelledby="confirmMsg">
+    <div class="confirm__box">
+      <p id="confirmMsg"></p>
+      <div class="confirm__actions">
+        <button type="button" class="btn btn--ghost" id="confirmCancel">Cancelar</button>
+        <button type="button" class="btn btn--danger" id="confirmOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TOASTS ===================== -->
+  <div class="toasts" id="toasts" aria-live="assertive" aria-atomic="true"></div>
+
+  <script>
+    window.MAGMA_CSRF = "{{ csrf_token }}";
+    window.MAGMA_API_BASE = "{{ api_base|default:'/api/midia' }}";
+    window.MAGMA_TURMA = {
+      id: {{ turma.id }},
+      codigo: "{{ turma.codigo|escapejs }}",
+      curso: "{{ turma.curso|escapejs }}",
+      consentimento: {{ turma.consentimento_midia|yesno:"true,false" }}
+    };
+  </script>
+  <script src="{% static 'midia/acervo.js' %}"></script>
+</body>
+</html>

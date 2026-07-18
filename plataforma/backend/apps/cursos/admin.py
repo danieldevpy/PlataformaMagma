@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.middleware.csrf import get_token
+from django.shortcuts import get_object_or_404, render
+from django.urls import path
 
 from apps.cursos.models import (
     AnotacaoTurma,
@@ -106,6 +109,42 @@ class TurmaAdmin(admin.ModelAdmin):
     search_fields = ("codigo", "curso__nome")
     inlines = (AnotacaoTurmaInline,)
     actions = ("gerar_link_carteirinha_turma", "gerar_link_carteirinha_individual")
+
+    def get_urls(self):
+        # Páginas staff (Mesa de Luz e Studio) servidas DENTRO do namespace
+        # do admin — nginx de prod só roteia /(api|dj-admin)/ pro Django, e
+        # aqui a autenticação já vem de graça via admin_site.admin_view (ver
+        # docs/subsistemas/09-acervo-studio-postagem.md).
+        urls_customizadas = [
+            path(
+                "<int:turma_id>/acervo/",
+                self.admin_site.admin_view(self.acervo_view),
+                name="cursos_turma_acervo",
+            ),
+            path(
+                "<int:turma_id>/studio/",
+                self.admin_site.admin_view(self.studio_view),
+                name="cursos_turma_studio",
+            ),
+        ]
+        return urls_customizadas + super().get_urls()
+
+    def _contexto_pagina_midia(self, request, turma_id):
+        turma = get_object_or_404(Turma, pk=turma_id)
+        return {
+            **self.admin_site.each_context(request),
+            "turma": turma,
+            "api_base": "/api/midia",
+            "csrf_token": get_token(request),
+        }
+
+    def acervo_view(self, request, turma_id):
+        contexto = self._contexto_pagina_midia(request, turma_id)
+        return render(request, "midia/acervo.html", contexto)
+
+    def studio_view(self, request, turma_id):
+        contexto = self._contexto_pagina_midia(request, turma_id)
+        return render(request, "midia/studio.html", contexto)
 
     @admin.action(description="Gerar link de carteirinha (turma toda — compartilhado)")
     def gerar_link_carteirinha_turma(self, request, queryset):
