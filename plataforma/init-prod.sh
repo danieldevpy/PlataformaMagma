@@ -26,7 +26,7 @@ fi
 
 # Barra o deploy se algum placeholder óbvio do .example não foi trocado —
 # evita subir produção com senha/secret padrão.
-if grep -Eq '(troque-esta-senha|gere-uma-chave-forte-aqui|gere-um-segredo-aqui|203\.0\.113\.10)' "$ENV_FILE"; then
+if grep -Eq '(troque-esta-senha|gere-uma-chave-forte-aqui|gere-um-segredo-aqui|gere-uma-chave-n8n-aqui|203\.0\.113\.10)' "$ENV_FILE"; then
   echo "$ENV_FILE ainda tem valores de exemplo (senha/secret/IP placeholder)." >&2
   echo "Edite $ENV_FILE com os valores reais da VPS antes de subir produção." >&2
   exit 1
@@ -48,6 +48,7 @@ echo ""
 echo "Containers no ar (portas só no loopback 127.0.0.1):"
 echo "  backend  -> 127.0.0.1:8000"
 echo "  frontend -> 127.0.0.1:3000"
+echo "  n8n      -> 127.0.0.1:5678"
 echo ""
 echo "O acesso público é pelo nginx do HOST. Se ainda não configurou:"
 echo "  1. Ajuste os caminhos em nginx/nginx.conf pros diretórios abaixo e"
@@ -57,10 +58,13 @@ echo "       media  -> ${SCRIPT_DIR}/media/"
 echo "  2. sudo nginx -t && sudo systemctl reload nginx"
 echo "  3. sudo certbot --nginx -d ${DOMAIN}   (emitir/renovar o TLS)"
 echo ""
+N8N_DOMAIN="$(grep -E '^N8N_DOMAIN=' "$ENV_FILE" | cut -d= -f2-)"
+
 echo "Depois, acesse:"
 echo "  ${SCHEME}://${DOMAIN}/            -> site (Next.js)"
 echo "  ${SCHEME}://${DOMAIN}/dj-admin/   -> admin do Django"
 echo "  ${SCHEME}://${DOMAIN}/api/        -> API"
+echo "  ${SCHEME}://${N8N_DOMAIN:-n8n.$DOMAIN}/  -> n8n (requer DNS + certbot do subdomínio; ver nginx/nginx.conf)"
 echo ""
 echo "Logs em tempo real: docker compose --env-file $ENV_FILE -f $COMPOSE_FILE logs -f"
 echo "Parar tudo:         docker compose --env-file $ENV_FILE -f $COMPOSE_FILE down"

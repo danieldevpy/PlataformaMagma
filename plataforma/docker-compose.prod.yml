@@ -42,7 +42,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   frontend:
     build:
@@ -62,7 +62,43 @@ services:
     depends_on:
       - backend
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+
+  # n8n (automações / agente WhatsApp). Banco: SQLite interno no volume —
+  # o n8n NÃO suporta MySQL (só SQLite/Postgres), então não reaproveita o db
+  # acima; para o volume de automações atual, SQLite dá conta. Se um dia
+  # houver muito workflow simultâneo, migrar pra um Postgres dedicado.
+  # Editor exposto só no loopback; o público chega via nginx do host em
+  # https://N8N_DOMAIN (ver nginx/nginx.conf). Workflows chamam a API da
+  # plataforma pela rede interna: http://backend:8000/api/...
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    environment:
+      N8N_HOST: ${N8N_DOMAIN}
+      N8N_PROTOCOL: https
+      # URL pública dos webhooks (é o que o WhatsApp/Meta vai chamar).
+      WEBHOOK_URL: https://${N8N_DOMAIN}/
+      N8N_EDITOR_BASE_URL: https://${N8N_DOMAIN}/
+      # Chave FIXA que criptografa as credenciais salvas no n8n. Perder =
+      # recadastrar todas as credenciais. Nunca trocar depois do 1º deploy.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_PROXY_HOPS: "1"
+      N8N_RUNNERS_ENABLED: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      TZ: America/Sao_Paulo
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "127.0.0.1:5678:5678"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
 volumes:
   mysql_data:
+  n8n_data:

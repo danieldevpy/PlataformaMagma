@@ -9,6 +9,7 @@
 | Subir | `plataforma/init-dev.sh` | `plataforma/init-prod.sh` + `docker-compose.prod.yml` |
 | Banco | SQLite (`db.sqlite3`, fora do git) | MySQL (PyMySQL + cryptography) |
 | Web | runserver + next dev (porta 8000 local costuma estar ocupada por outra app) | nginx no HOST da VPS → containers em portas loopback |
+| n8n | `init-dev.sh --n8n` → container avulso, http://localhost:5678 | serviço no compose de prod, público em `https://n8n.<dominio>` via nginx do host — ver `plataforma/n8n/README.md` |
 | Mídia | `backend/media/` (fora do git), URLs relativas | volume + nginx; **pendente aplicar `client_max_body_size 1g` no host** |
 
 ## Seed-first (constituição §1)

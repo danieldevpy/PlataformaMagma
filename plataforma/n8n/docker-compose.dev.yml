@@ -1,0 +1,41 @@
+# n8n em DESENVOLVIMENTO — container único, banco SQLite interno (default do
+# n8n, guardado no volume). Sobe junto com o resto do dev via:
+#   ../init-dev.sh --n8n
+# ou sozinho:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Editor: http://localhost:5678 (primeiro acesso cria a conta do dono).
+# Para os workflows chamarem o Django dev (runserver no host), use dentro do
+# n8n a URL http://host.docker.internal:8000/api/... (mapeada abaixo).
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: magma-n8n-dev
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      # Dev roda em http://localhost — sem cookie secure.
+      N8N_SECURE_COOKIE: "false"
+      # Webhooks de teste apontam pro próprio localhost (pra WhatsApp real,
+      # que exige URL pública, teste direto em prod ou use um túnel).
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_RUNNERS_ENABLED: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      TZ: America/Sao_Paulo
+    volumes:
+      - n8n_dev_data:/home/node/.n8n
+    extra_hosts:
+      # Permite o container enxergar o Django dev rodando no host (porta 8000).
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  n8n_dev_data:
