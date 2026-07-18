@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "project": "Novo deck",
+    "brand": "MAGMA Cursos",
+    "date": "17/07/2026",
+    "output_file": "meu_deck.pptx"
+  },
+  "slides": [
+    {
+      "component": "cover",
+      "eyebrow": "TREINAMENTO",
+      "title": "Título da Capa",
+      "subtitle": "Subtítulo descritivo do curso.",
+      "image": ""
+    },
+    {
+      "component": "split",
+      "eyebrow": "SEÇÃO",
+      "title": "Título",
+      "blocks": [
+        {
+          "type": "h",
+          "text": "Subtítulo"
+        },
+        {
+          "type": "p",
+          "text": "sasasasasa"
+        },
+        {
+          "type": "p",
+          "text": "ssssss"
+        },
+        {
+          "type": "p",
+          "text": "aaa"
+        },
+        {
+          "type": "hint",
+          "text": "asasasasasas"
+        },
+        {
+          "type": "step",
+          "text": "asasasasasasa",
+          "badge": "saasa",
+          "lead": "asasasasaasasa"
+        },
+        {
+          "type": "intro",
+          "text": "asasasasasasa"
+        },
+        {
+          "type": "warn",
+          "text": "asasasasaas",
+          "badge": "",
+          "lead": ""
+        }
+      ],
+      "image": ""
+    },
+    {
+      "component": "flow",
+      "eyebrow": "FLUXO",
+      "title": "Título do fluxo",
+      "stages": [
+        "Etapa 1",
+        "Etapa 2",
+        ""
+      ],
+      "caption": "Descrição do fluxograma."
+    },
+    {
+      "component": "grid",
+      "eyebrow": "SEÇÃO",
+      "title": "Título",
+      "cols": 2,
+      "cards": [
+        {
+          "label": "Card 1",
+          "desc": "Descrição do card."
+        },
+        {
+          "label": "Card 2",
+          "desc": "Descrição do card."
+        }
+      ],
+      "badges": [],
+      "intro": "",
+      "quote": ""
+    }
+  ]
+}

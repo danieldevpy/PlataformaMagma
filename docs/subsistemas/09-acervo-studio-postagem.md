@@ -77,12 +77,26 @@ Thumbnails: Pillow no momento do upload (só foto/arte): `ImageOps.exif_transpos
 maior, JPEG q80. Vídeo: `thumb=None` (UI usa card genérico com ícone ▶).
 Validação de upload: content-type `image/*` ou `video/*`, tamanho máx 1 GB.
 
+Detecção de duplicado: `meta.nome_original` guarda o filename tal como o
+cliente enviou (antes de qualquer rename do storage por colisão). No upload,
+`enviar_midia` compara nome (case-insensitive) + `meta.size` contra os itens
+foto/vídeo já existentes na turma (filtro em Python — `meta` é JSONField,
+mesma ressalva SQLite×MySQL do `get_fotos`); achando igual, responde 409 em
+vez de criar. A Mesa de Luz já faz essa mesma checagem no cliente ANTES de
+subir o arquivo (zero bytes gastos pro caso comum — grep por nome+tamanho
+contra o acervo carregado e a fila do próprio lote), com um único diálogo de
+confirmação agrupando todos os arquivos suspeitos do lote; o 409 do backend é
+só o backstop pra abas concorrentes ou upload direto via API. Limitação
+conhecida: itens enviados antes desta função não têm `nome_original` salvo
+em `meta`, então não entram na checagem até serem reenviados — não há
+backfill (não é crítico, dedup vale daqui pra frente).
+
 ## Contrato da API (`/api/midia/…`)
 
 | Ação | Método/rota | Corpo → Resposta |
 |---|---|---|
 | listar_acervo | GET `turmas/<id>/acervo/` | → `{turma:{id,codigo,curso,consentimento_midia}, itens:[Item], contagens:{fotos,videos,artes,destaque,capa,avaliacao}}` |
-| enviar_midia | POST `turmas/<id>/enviar/` | multipart `arquivo` (+`legenda?`,`aula_data?`) → `Item` 201 |
+| enviar_midia | POST `turmas/<id>/enviar/` | multipart `arquivo` (+`legenda?`,`aula_data?`,`forcar?`) → `Item` 201, ou 409 `{detail,duplicado:true,item_existente}` se já existir mesmo nome+tamanho (envie `forcar=1` pra subir mesmo assim) |
 | editar_item | PATCH `itens/<pk>/` | `{legenda?,tags?,aula_data?,ordem?}` → `Item` |
 | remover_item | DELETE `itens/<pk>/` | → 204 |
 | reordenar | POST `turmas/<id>/reordenar/` | `{ids:[...]}` → 200 |
@@ -113,8 +127,14 @@ mesmo mecanismo `RelativeMediaImageField`/`MEDIA_URL_BASE`). Import de
 Design system Magma (navy #101c38/#1b2a4d, ouro #b8933f/#dcb96a, Archivo/Inter,
 textura hexágonos). HTML/CSS/JS puro (SEM build), assets em
 `backend/static/midia/`. Assinaturas de UX obrigatórias:
-- Upload = drop zone + seletor; fila sequencial com card por arquivo (nome,
-  barra de progresso XHR real); ao concluir, o card "revela" no grid (blur→nítido).
+- Upload = drop zone + seletor, ambos com múltiplos arquivos (`<input
+  multiple>` + drag&drop de vários); fila sequencial com card por arquivo
+  (nome, barra de progresso XHR real); ao concluir, o card "revela" no grid
+  (blur→nítido). Antes de entrar na fila, cada arquivo é comparado por
+  nome+tamanho contra o acervo e o resto do lote; suspeitos de duplicado
+  ficam de fora até um diálogo único perguntar "enviar mesmo assim?" —
+  cancelar descarta, confirmar enfileira com aviso (card mostra ⏭️ "já
+  existe" se o backend também flagar no envio).
 - Grid responsivo de thumbs; vídeo = card com ícone ▶ + duração se houver;
   clique abre lightbox (foto grande / `<video controls>`).
 - Curadoria: hover/tap mostra 3 carimbos ⭐(destaque) 🖼️(capa) 💬(avaliação);

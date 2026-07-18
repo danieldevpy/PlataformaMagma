@@ -28,9 +28,12 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         return convite.turma.codigo if convite.turma else None
 
     def get_fotos(self, convite):
-        # Prioridade 1: acervo de mídia da turma (apps.midia) — fotos com
-        # curadoria pra avaliação (tag "avaliacao") ou destacadas (tag
-        # "destaque"), capa primeiro (ver docs/subsistemas/
+        # Prioridade 1: acervo de mídia da turma (apps.midia) — fotos BRUTAS
+        # (upload direto na Mesa de Luz) e ARTES já editadas (carrossel
+        # publicado no Studio — mesmas peças que viram post no Instagram,
+        # reaproveitadas aqui como "prova social" já pronta pra puxar
+        # depoimento) com curadoria pra avaliação (tag "avaliacao") ou
+        # destacadas (tag "destaque"), capa primeiro (ver docs/subsistemas/
         # 09-acervo-studio-postagem.md, Etapa 3). Mesmo shape
         # {ordem, imagem, legenda} do fallback — zero mudança no Next.
         fotos_acervo = self._fotos_do_acervo(convite)
@@ -59,9 +62,16 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         # SQLite e prod MySQL, e o lookup se comporta diferente entre os
         # dois. O acervo de uma turma é pequeno — dá pra trazer as fotos e
         # peneirar aqui sem custo relevante.
+        # tipo foto+arte (não video — carrossel de avaliação é só imagem):
+        # arte entra pra reaproveitar o carrossel já editado do Studio como
+        # repositório de "prova social" na avaliação, sem duplicar trabalho
+        # de curadoria (o instrutor tagueia uma vez na Mesa de Luz e a peça
+        # alimenta post do Instagram + avaliação ao mesmo tempo).
         fotos = [
             midia
-            for midia in convite.turma.midias.filter(tipo=MidiaTurma.Tipo.FOTO)
+            for midia in convite.turma.midias.filter(
+                tipo__in=[MidiaTurma.Tipo.FOTO, MidiaTurma.Tipo.ARTE]
+            )
             if "avaliacao" in midia.tags or "destaque" in midia.tags
         ]
         # Capa primeiro, depois pela ordem da Mesa de Luz (o queryset já vem

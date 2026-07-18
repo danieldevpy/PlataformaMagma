@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "project": "Novo deck",
+    "brand": "MAGMA Cursos",
+    "date": "17/07/2026",
+    "output_file": "meu_deck.pptx"
+  },
+  "slides": [
+    {
+      "component": "cover",
+      "eyebrow": "TREINAMENTO",
+      "title": "Título da Capa",
+      "subtitle": "Subtítulo descritivo do curso.",
+      "image": ""
+    },
+    {
+      "component": "grid",
+      "eyebrow": "SEÇÃO",
+      "title": "Título",
+      "cols": 2,
+      "cards": [
+        {
+          "label": "Card 1",
+          "desc": "Descrição do card."
+        },
+        {
+          "label": "Card 2",
+          "desc": "Descrição do card."
+        }
+      ],
+      "badges": [],
+      "intro": "",
+      "quote": ""
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "SEÇÃO",
+      "title": "Título dos passos",
+      "intro": "",
+      "steps": [
+        {
+          "badge": "1",
+          "lead": "Primeiro passo",
+          "text": "Descrição do passo."
+        }
+      ],
+      "image": "",
+      "note": "",
+      "hint": ""
+    },
+    {
+      "component": "content_card",
+      "eyebrow": "SEÇÃO",
+      "title": "Título do card",
+      "body": [
+        "Texto do parágrafo com **destaque**."
+      ],
+      "stats": [],
+      "footnote": ""
+    }
+  ]
+}

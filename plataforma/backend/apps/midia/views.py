@@ -45,6 +45,35 @@ def tipo_por_content_type(content_type):
     return None
 
 
+def encontrar_duplicata(turma, nome_original, tamanho):
+    """Procura no acervo da turma um item de foto/vídeo com o mesmo nome de
+    arquivo (case-insensitive) e tamanho em bytes — sinal simples e barato
+    (sem ler conteúdo) pra pegar o caso comum de reenvio acidental (Mesa de
+    Luz já faz essa mesma checagem no cliente antes de subir o arquivo; isto
+    aqui é o backstop server-side — pega tabs concorrentes ou uploads via
+    API direta). Filtra em Python (não `meta__nome_original=`) — `meta` é
+    JSONField e lookups nele se comportam diferente entre SQLite (dev) e
+    MySQL (prod), mesma lição do get_fotos da avaliação."""
+    nome_alvo = (nome_original or "").strip().lower()
+    candidatos = turma.midias.filter(
+        tipo__in=[MidiaTurma.Tipo.FOTO, MidiaTurma.Tipo.VIDEO]
+    )
+    for midia in candidatos:
+        meta = midia.meta or {}
+        if (
+            (meta.get("nome_original") or "").strip().lower() == nome_alvo
+            and meta.get("size") == tamanho
+        ):
+            return midia
+    return None
+
+
+def valor_verdadeiro(bruto):
+    """Interpreta um valor de form-data (sempre string) como booleano —
+    usado pro flag `forcar` de enviar_midia."""
+    return str(bruto or "").strip().lower() in ("1", "true", "on", "sim")
+
+
 class MidiaAPIView(APIView):
     """Base comum de toda /api/midia/ — sessão (admin embutido) ou JWT
     (consumo externo/agente), liberado só pra gestor/instrutor."""
@@ -105,6 +134,21 @@ class EnviarMidiaView(MidiaAPIView):
             return Response(
                 {"detail": "Arquivo excede o tamanho máximo de 1 GB."}, status=400
             )
+
+        forcar = valor_verdadeiro(request.data.get("forcar"))
+        if not forcar:
+            duplicata = encontrar_duplicata(turma, arquivo.name, arquivo.size)
+            if duplicata is not None:
+                return Response(
+                    {
+                        "detail": f'Já existe "{arquivo.name}" no acervo (mesmo nome e tamanho).',
+                        "duplicado": True,
+                        "item_existente": ItemMidiaSerializer(
+                            duplicata, context={"request": request}
+                        ).data,
+                    },
+                    status=409,
+                )
 
         aula_data_bruta = request.data.get("aula_data")
         midia = MidiaTurma(
@@ -303,8 +347,15 @@ CATALOGO_ACOES = [
             "arquivo": "multipart, 1 arquivo (image/* ou video/*, máx 1GB)",
             "legenda": "string, opcional",
             "aula_data": "date (YYYY-MM-DD), opcional",
+            "forcar": "'1'/'true', opcional — ignora a checagem de duplicado",
         },
-        "descricao": "Envia uma foto ou vídeo pro acervo da turma; gera thumb síncrono se for foto.",
+        "descricao": (
+            "Envia uma foto ou vídeo pro acervo da turma; gera thumb síncrono "
+            "se for foto. Antes de salvar, checa se já existe item de foto/"
+            "vídeo com mesmo nome de arquivo + tamanho (dedup barato, sem ler "
+            "conteúdo) — se achar, responde 409 {duplicado:true, item_existente} "
+            "em vez de criar; envie forcar=1 pra subir mesmo assim."
+        ),
     },
     {
         "nome": "editar_item",

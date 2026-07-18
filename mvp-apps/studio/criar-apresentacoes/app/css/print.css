@@ -1,0 +1,14 @@
+/* Impressão: 1 slide por página A4 paisagem. O studio.js preenche #printRoot. */
+@page { size: 297mm 167mm; margin: 0; }   /* 16:9 landscape */
+
+.print-root { display: none; }
+
+@media print {
+  .app { display: none !important; }
+  .print-root { display: block !important; }
+  .print-root .page {
+    width: 297mm; height: 167mm; overflow: hidden; page-break-after: always;
+    position: relative;
+  }
+  .print-root .stage-scaler { transform-origin: top left; }
+}

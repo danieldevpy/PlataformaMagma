@@ -515,14 +515,83 @@
   // ---------------------------------------------------------
   var filaUpload = [];
 
+  // Assinatura de arquivo pra detecção de duplicado — nome (case-insensitive,
+  // sem espaços nas pontas) + tamanho em bytes. Simples e sem custo (não lê
+  // conteúdo), suficiente pro caso comum: instrutor seleciona a mesma pasta
+  // duas vezes, ou arrasta um lote que já subiu antes.
+  function assinatura(nome, tamanho) {
+    return (nome || "").trim().toLowerCase() + "|" + tamanho;
+  }
+
+  function assinaturasDoAcervo() {
+    var set = {};
+    estado.itens.forEach(function (item) {
+      if (item.tipo !== "foto" && item.tipo !== "video") return;
+      var nome = item.meta && item.meta.nome_original;
+      var tamanho = item.meta && item.meta.size;
+      if (!nome || tamanho == null) return;
+      set[assinatura(nome, tamanho)] = true;
+    });
+    return set;
+  }
+
   function enfileirar(arquivos) {
-    var novos = Array.from(arquivos).map(function (file, i) {
+    var jaNoAcervo = assinaturasDoAcervo();
+    var jaNaFila = {};
+    filaUpload.forEach(function (f) {
+      jaNaFila[assinatura(f.file.name, f.file.size)] = true;
+    });
+
+    var semDuplicata = [];
+    var duplicados = [];
+    Array.from(arquivos).forEach(function (file) {
+      var assin = assinatura(file.name, file.size);
+      if (jaNoAcervo[assin] || jaNaFila[assin]) {
+        duplicados.push(file);
+      } else {
+        semDuplicata.push(file);
+        jaNaFila[assin] = true; // evita duplicar dentro do próprio lote solto
+      }
+    });
+
+    enfileirarArquivos(semDuplicata, false);
+
+    if (!duplicados.length) return;
+    var lista = duplicados
+      .map(function (f) {
+        return f.name;
+      })
+      .join(", ");
+    var msg =
+      (duplicados.length === 1
+        ? "1 arquivo já parece estar no acervo (mesmo nome e tamanho): "
+        : duplicados.length + " arquivos já parecem estar no acervo (mesmo nome e tamanho): ") +
+      lista +
+      ". Enviar mesmo assim?";
+    confirmar(msg).then(function (ok) {
+      if (ok) {
+        enfileirarArquivos(duplicados, true);
+      } else {
+        toast(
+          duplicados.length === 1
+            ? "1 duplicado ignorado."
+            : duplicados.length + " duplicados ignorados.",
+          "aviso"
+        );
+      }
+    });
+  }
+
+  function enfileirarArquivos(arquivos, forcar) {
+    if (!arquivos.length) return;
+    var novos = arquivos.map(function (file, i) {
       return {
-        uid: "u" + Date.now() + "_" + i,
+        uid: "u" + Date.now() + "_" + i + "_" + Math.random().toString(36).slice(2, 6),
         file: file,
-        status: "pendente", // pendente | enviando | ok | erro
+        status: "pendente", // pendente | enviando | ok | duplicado | erro
         pct: 0,
         erro: "",
+        forcar: !!forcar,
       };
     });
     filaUpload = filaUpload.concat(novos);
@@ -531,14 +600,14 @@
     if (!estado.filaAtiva) processarFila();
   }
 
+  var ICONE_STATUS = { ok: "✅", erro: "⚠️", duplicado: "⏭️" };
+  var LABEL_STATUS = { erro: "erro", duplicado: "já existe" };
+
   function renderFila() {
     el.queue.innerHTML = filaUpload
       .map(function (f) {
-        var classe =
-          "qitem" +
-          (f.status === "erro" ? " qitem--erro" : "") +
-          (f.status === "ok" ? " qitem--done" : "");
-        var icone = f.status === "ok" ? "✅" : f.status === "erro" ? "⚠️" : "⏳";
+        var classe = "qitem" + (f.status !== "pendente" && f.status !== "enviando" ? " qitem--" + (f.status === "ok" ? "done" : f.status) : "");
+        var icone = ICONE_STATUS[f.status] || "⏳";
         return (
           '<div class="' +
           classe +
@@ -557,21 +626,21 @@
           '%"></span></div>' +
           "</div>" +
           '<span class="qitem__pct">' +
-          (f.status === "erro" ? "erro" : f.pct + "%") +
+          (LABEL_STATUS[f.status] || f.pct + "%") +
           "</span>" +
           "</div>"
         );
       })
       .join("");
 
-    // some com itens concluídos há mais tempo, mantendo fila enxuta
+    // some com itens concluídos/pulados há mais tempo, mantendo fila enxuta
     var concluidos = filaUpload.filter(function (f) {
-      return f.status === "ok";
+      return f.status === "ok" || f.status === "duplicado";
     });
     if (concluidos.length) {
       setTimeout(function () {
         filaUpload = filaUpload.filter(function (f) {
-          return f.status !== "ok";
+          return f.status !== "ok" && f.status !== "duplicado";
         });
         renderFila();
         if (!filaUpload.length) el.queue.hidden = true;
@@ -599,12 +668,21 @@
         renderGrid({ revelarIds: [item.id] });
       })
       .catch(function (e) {
-        proximo.status = "erro";
-        proximo.erro = e.message || "falha no envio";
-        toast(
-          "Falha ao enviar " + proximo.file.name + ": " + proximo.erro,
-          "erro"
-        );
+        if (e.duplicado) {
+          // Backstop server-side (outra aba, outro cliente da API) — o
+          // arquivo já existe, então não há nada novo pra pendurar em
+          // estado.itens; só avisa e segue a fila sem travar.
+          proximo.status = "duplicado";
+          proximo.erro = e.message || "já existe no acervo";
+          toast(proximo.file.name + ": " + proximo.erro, "aviso");
+        } else {
+          proximo.status = "erro";
+          proximo.erro = e.message || "falha no envio";
+          toast(
+            "Falha ao enviar " + proximo.file.name + ": " + proximo.erro,
+            "erro"
+          );
+        }
       })
       .then(function () {
         renderFila();
@@ -636,13 +714,17 @@
           }
         } else {
           var msg = "não foi possível enviar (" + xhr.status + ")";
+          var duplicado = false;
           try {
             var json = JSON.parse(xhr.responseText);
             msg = json.detail || json.erro || json.mensagem || msg;
+            duplicado = xhr.status === 409 && !!json.duplicado;
           } catch (e) {
             /* mantém mensagem genérica */
           }
-          reject(new Error(msg));
+          var erro = new Error(msg);
+          erro.duplicado = duplicado;
+          reject(erro);
         }
       };
       xhr.onerror = function () {
@@ -651,6 +733,7 @@
 
       var form = new FormData();
       form.append("arquivo", fila.file);
+      if (fila.forcar) form.append("forcar", "1");
       xhr.send(form);
     });
   }

@@ -1,0 +1,668 @@
+{
+  "meta": {
+    "project": "Lei Lucas — Primeiros Socorros nas Escolas",
+    "brand": "MAGMA Cursos",
+    "date": "17/07/2026",
+    "output_file": "lei_lucas_powerpoint_novo.pptx"
+  },
+  "slides": [
+    {
+      "component": "cover",
+      "eyebrow": "TREINAMENTO · LEI Nº 13.722/2018",
+      "title": "Lei Lucas: Primeiros Socorros nas Escolas",
+      "subtitle": "Capacitação em Emergências Pré-Hospitalares — Diretrizes AHA 2025 | COFEN 805/2026 | SAMU/MS 2026",
+      "image": "slide_01_image_1.png"
+    },
+    {
+      "component": "content_card",
+      "eyebrow": "Instrutor",
+      "title": "Conhecendo nosso Instrutor",
+      "body": [
+        "**Enfermeiro** — Esp. em Enfermagem Neonatal e Pediatria; Esp. Urgência e Emergência; Emergencista e Intensivista."
+      ],
+      "stats": [
+        "+01 mil alunos formados!",
+        "08 anos ensinando pessoas a salvar vidas!"
+      ]
+    },
+    {
+      "component": "content_card",
+      "eyebrow": "Legislação",
+      "title": "O que é a Lei Lucas?",
+      "body": [
+        "A **Lei nº 13.722/2018** obriga escolas e locais de recreação infantil a capacitarem seus funcionários em primeiros socorros. Recebeu esse nome em homenagem a Lucas Begalli, um menino de 10 anos que faleceu por engasgo em um passeio escolar, sem que ninguém soubesse como agir."
+      ],
+      "footnote": "A lei garante que crianças estejam mais protegidas — e reforça que qualquer pessoa pode salvar uma vida com o conhecimento certo."
+    },
+    {
+      "component": "content_card",
+      "eyebrow": "Atualização",
+      "title": "Resolução COFEN 805/2026",
+      "body": [
+        "Com a atualização da Resolução COFEN 805/2026, enfermeiros e técnicos de enfermagem passaram a ter papel central na formação dessas equipes escolares, garantindo que alunos, professores e funcionários estejam preparados para agir nos primeiros minutos críticos de uma emergência."
+      ],
+      "callout": {
+        "kind": "alert",
+        "title": null,
+        "desc": "Os primeiros 4 minutos são decisivos para salvar uma vida em parada cardiorrespiratória."
+      }
+    },
+    {
+      "component": "grid",
+      "eyebrow": "Objetivos",
+      "title": "Objetivos desta Aula",
+      "cols": 2,
+      "badges": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "cards": [
+        {
+          "label": "Reconhecer PCR",
+          "desc": "Identificar sinais de parada cardiorrespiratória e agir com segurança e rapidez."
+        },
+        {
+          "label": "Realizar RCP",
+          "desc": "Executar compressões e ventilações de alta qualidade conforme AHA 2025."
+        },
+        {
+          "label": "Manobras de Engasgo",
+          "desc": "Aplicar a manobra de Heimlich em adultos, crianças e bebês corretamente."
+        },
+        {
+          "label": "AVC, Fraturas e mais",
+          "desc": "Reconhecer AVC, queimaduras, fraturas e convulsões e saber como agir."
+        }
+      ]
+    },
+    {
+      "component": "two_col",
+      "eyebrow": "PCR",
+      "title": "O que é Parada Cardiorrespiratória (PCR)?",
+      "left": [
+        {
+          "type": "h",
+          "text": "Definição"
+        },
+        {
+          "type": "p",
+          "text": "A PCR é a cessação súbita das funções cardíacas e respiratórias, levando à interrupção do fluxo de sangue oxigenado para o cérebro e órgãos vitais. Sem intervenção imediata, o dano cerebral irreversível começa em 4 a 6 minutos."
+        },
+        {
+          "type": "p",
+          "text": "A PCR pode ocorrer em qualquer pessoa, em qualquer lugar — inclusive em crianças e jovens durante atividades físicas escolares."
+        }
+      ],
+      "right": [
+        {
+          "type": "h",
+          "text": "Causas mais comuns"
+        },
+        {
+          "type": "bullet",
+          "text": "Infarto agudo do miocárdio"
+        },
+        {
+          "type": "bullet",
+          "text": "Choque elétrico"
+        },
+        {
+          "type": "bullet",
+          "text": "Afogamento"
+        },
+        {
+          "type": "bullet",
+          "text": "Trauma grave"
+        },
+        {
+          "type": "bullet",
+          "text": "Arritmias cardíacas"
+        },
+        {
+          "type": "bullet",
+          "text": "Engasgo com obstrução total"
+        },
+        {
+          "type": "bullet",
+          "text": "Overdose de medicamentos"
+        }
+      ],
+      "callout": {
+        "kind": "alert",
+        "title": null,
+        "desc": "Sem RCP imediata, a taxa de sobrevivência cai 10% a cada minuto!"
+      }
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Reconhecimento",
+      "title": "Como Reconhecer uma PCR?",
+      "intro": "Antes de iniciar a RCP, confirme os sinais de PCR. Verifique os três elementos abaixo rapidamente — todo esse processo deve durar no máximo 10 segundos.",
+      "note": "Na dúvida, INICIE A RCP! O risco de não agir é sempre maior do que o de agir.",
+      "steps": [
+        {
+          "badge": "1",
+          "lead": "Inconsciência",
+          "text": "A vítima não responde ao chamado, ao toque no ombro nem a estímulos dolorosos. Chame em voz alta: \"Você está bem?\""
+        },
+        {
+          "badge": "2",
+          "lead": "Ausência de Respiração Normal",
+          "text": "Não há movimentos torácicos, ou a respiração é agônica (gasping) — sons irregulares e superficiais que não constituem respiração eficaz."
+        },
+        {
+          "badge": "3",
+          "lead": "Sem Pulso",
+          "text": "Profissionais treinados verificam o pulso carotídeo por até 10 segundos. Para leigos, a ausência de resposta + ausência de respiração já indica PCR."
+        }
+      ]
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Suporte Básico de Vida",
+      "title": "Passo 1: Acione o SAMU — Ligue 192",
+      "image": "slide_08_image_1.png",
+      "steps": [
+        {
+          "badge": "01",
+          "lead": "Garanta a Segurança",
+          "text": "Verifique se o local é seguro para você e para a vítima. Não se exponha a riscos (elétricos, tráfego, estruturas instáveis)."
+        },
+        {
+          "badge": "02",
+          "lead": "Peça Ajuda em Voz Alta",
+          "text": "Grite: \"Alguém me ajuda! Chame o SAMU — 192!\" Delegue a uma pessoa específica para ligar."
+        },
+        {
+          "badge": "03",
+          "lead": "Ligue 192 (SAMU)",
+          "text": "Informe: localização exata, número de vítimas, condição da vítima e o que está sendo feito. Não desligue enquanto o operador orientar."
+        },
+        {
+          "badge": "04",
+          "lead": "Solicite o DEA",
+          "text": "Se disponível, peça que alguém busque o Desfibrilador Externo Automático (DEA) enquanto você inicia a RCP."
+        }
+      ]
+    },
+    {
+      "component": "split",
+      "eyebrow": "Passo 2 · Compressões",
+      "title": "Compressões Torácicas de Alta Qualidade",
+      "image": "slide_09_image_1.png",
+      "blocks": [
+        {
+          "type": "intro",
+          "text": "Como realizar compressões — Adulto"
+        },
+        {
+          "type": "step",
+          "badge": "",
+          "lead": "Posicionamento",
+          "text": "Coloque o calcanhar de uma mão no centro do peito (metade inferior do esterno). A outra mão por cima, dedos entrelaçados."
+        },
+        {
+          "type": "step",
+          "badge": "",
+          "lead": "Profundidade",
+          "text": "5 a 6 cm de profundidade. Braços estendidos, peso do corpo sobre as mãos."
+        },
+        {
+          "type": "step",
+          "badge": "",
+          "lead": "Ritmo AHA 2025",
+          "text": "100 a 120 compressões por minuto. Use a música \"Stayin' Alive\" (BeeGees) como referência de ritmo."
+        },
+        {
+          "type": "step",
+          "badge": "",
+          "lead": "Recolhimento",
+          "text": "Permita o recolhimento total do tórax entre as compressões. Não apoie o peso entre elas."
+        }
+      ]
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Passo 3 · Ventilações",
+      "title": "Ventilações — Relação 30:2",
+      "intro": "Após 30 compressões, realize 2 ventilações de resgate. Cada ventilação deve durar 1 segundo, com volume suficiente para elevar visivelmente o tórax.",
+      "image": "slide_11_image_2.png",
+      "hint": "Se não souber ou não puder ventilar: faça RCP apenas com compressões (Hands-Only CPR), conforme AHA 2025 para leigos.",
+      "steps": [
+        {
+          "badge": "a",
+          "lead": "Incline a Cabeça",
+          "text": "Hiperextensão cervical: uma mão na testa, dois dedos sob o queixo. Abre a via aérea."
+        },
+        {
+          "badge": "b",
+          "lead": "Tampe o Nariz",
+          "text": "Feche as narinas com o polegar e o indicador da mão que está na testa."
+        },
+        {
+          "badge": "c",
+          "lead": "Sopre Suavemente",
+          "text": "Faça uma vedação com a boca e sopre por 1 segundo. Observe o tórax elevar."
+        }
+      ]
+    },
+    {
+      "component": "grid3",
+      "eyebrow": "RCP Pediátrica",
+      "title": "RCP Pediátrica — Crianças e Bebês",
+      "columns": [
+        {
+          "head": "Bebê (0–12 meses)",
+          "img": "slide_13_image_1.png",
+          "bullets": [
+            "2 dedos no centro do peito (abaixo dos mamilos)",
+            "Profundidade: 4 cm",
+            "Ritmo: 100–120/min | Relação 30:2",
+            "Ventilação boca-a-boca-e-nariz"
+          ]
+        },
+        {
+          "head": "Criança (1–8 anos)",
+          "img": "slide_13_image_2.png",
+          "bullets": [
+            "1 ou 2 mãos no centro do peito",
+            "Profundidade: 5 cm (1/3 do diâmetro torácico)",
+            "Ritmo: 100–120/min | Relação 30:2",
+            "Ventilação boca-a-boca"
+          ]
+        },
+        {
+          "head": "Adulto (+8 anos)",
+          "img": "slide_13_image_3.png",
+          "bullets": [
+            "2 mãos entrelaçadas no centro do peito",
+            "Profundidade: 5–6 cm",
+            "Ritmo: 100–120/min | Relação 30:2",
+            "Ventilação boca-a-boca"
+          ]
+        }
+      ]
+    },
+    {
+      "component": "grid",
+      "eyebrow": "Protocolo",
+      "title": "Quando Parar a RCP?",
+      "cols": 2,
+      "intro": "A RCP deve ser mantida continuamente até que uma das condições abaixo ocorra. A minimização das interrupções é um dos pilares das Diretrizes AHA 2025 — cada pausa reduz a chance de sobrevivência.",
+      "cards": [
+        {
+          "label": "SAMU Assume",
+          "desc": "A equipe do SAMU ou outro profissional treinado chega e assume o atendimento."
+        },
+        {
+          "label": "Retorno da Circulação",
+          "desc": "A vítima retoma respiração espontânea, movimentos ou tosse — sinais de circulação espontânea."
+        },
+        {
+          "label": "DEA Disponível",
+          "desc": "O DEA é conectado — siga as instruções do dispositivo. Retome a RCP imediatamente após o choque."
+        },
+        {
+          "label": "Exaustão Física",
+          "desc": "O socorrista está incapaz de continuar. Se houver mais de uma pessoa, reveze a cada 2 minutos."
+        }
+      ]
+    },
+    {
+      "component": "flow",
+      "eyebrow": "Fluxo de Decisão · BLS",
+      "title": "Fluxograma BLS — AHA 2025",
+      "stages": [
+        "Reconhecer\nPCR",
+        "Acionar\nSAMU (192)",
+        "Iniciar RCP\n30:2",
+        "Usar DEA\nAnalisar"
+      ],
+      "caption": "Este fluxograma resume o algoritmo do Suporte Básico de Vida (BLS) para adultos conforme as Diretrizes da American Heart Association 2025. A cadeia de sobrevivência depende de reconhecimento precoce, RCP de alta qualidade e desfibrilação rápida."
+    },
+    {
+      "component": "split",
+      "eyebrow": "Engasgo · OVACE",
+      "title": "Obstrução de Via Aérea por Corpo Estranho",
+      "image": "slide_18_image_1.png",
+      "blocks": [
+        {
+          "type": "h",
+          "text": "Como Reconhecer o Engasgo Grave"
+        },
+        {
+          "type": "bullet",
+          "text": "Incapaz de falar ou emitir sons"
+        },
+        {
+          "type": "bullet",
+          "text": "Incapaz de tossir com força"
+        },
+        {
+          "type": "bullet",
+          "text": "Incapaz de respirar ou respiração muito difícil"
+        },
+        {
+          "type": "bullet",
+          "text": "Lábios e face ficando roxos (cianose)"
+        },
+        {
+          "type": "bullet",
+          "text": "Sinal universal: mãos no pescoço"
+        }
+      ],
+      "callout": {
+        "kind": "info",
+        "title": "Engasgo Leve — NÃO interfira!",
+        "desc": "Se a vítima consegue tossir com força, falar ou respirar, o engasgo é leve. Encoraje-a a continuar tossindo — não bata nas costas nem faça compressões."
+      }
+    },
+    {
+      "component": "hero",
+      "eyebrow": "OVACE",
+      "title": "Tossir com força",
+      "big": 70,
+      "subtitle": "Lembre-se sempre de incentivar o paciente a continuar a tossir com força."
+    },
+    {
+      "component": "hero",
+      "eyebrow": "Manobras de Desobstrução",
+      "title": "Técnicas",
+      "big": 76,
+      "subtitle": "Como agir diante do engasgo em diferentes situações."
+    },
+    {
+      "component": "grid",
+      "eyebrow": "Heimlich",
+      "title": "Heimlich em Situações Especiais",
+      "cols": 2,
+      "cards": [
+        {
+          "label": "Gestante",
+          "desc": "Compressões no tórax (não no abdômen). Punhos na metade inferior do esterno. Mesma lógica: 5 tapas nas costas + 5 compressões torácicas."
+        },
+        {
+          "label": "Vítima Sentada",
+          "desc": "Posicione-se atrás da cadeira. A técnica é a mesma — tapas nas costas e compressões abdominais com o punho abaixo do esterno."
+        },
+        {
+          "label": "Engasgo Sozinho",
+          "desc": "Faça as próprias compressões abdominais com o punho fechado. Ou jogue o abdômen contra uma superfície firme (encosto de cadeira, quina de mesa)."
+        },
+        {
+          "label": "Vítima Inconsciente",
+          "desc": "Deite a vítima no chão. Acione o SAMU (192) e inicie RCP. A cada ventilação, verifique se o objeto está visível para removê-lo com o dedo."
+        }
+      ]
+    },
+    {
+      "component": "split",
+      "eyebrow": "Parada Respiratória",
+      "title": "Parada Respiratória — Reconhecimento e Ação",
+      "image": "slide_23_image_1.png",
+      "blocks": [
+        {
+          "type": "h",
+          "text": "O que é Parada Respiratória?"
+        },
+        {
+          "type": "p",
+          "text": "A parada respiratória ocorre quando a vítima para de respirar mas ainda tem pulso e batimento cardíaco. É diferente da PCR — o coração ainda bate, mas os pulmões pararam. Sem intervenção em minutos, evolui para PCR."
+        },
+        {
+          "type": "h",
+          "text": "Causas comuns"
+        },
+        {
+          "type": "bullet",
+          "text": "Afogamento"
+        },
+        {
+          "type": "bullet",
+          "text": "Choque elétrico"
+        },
+        {
+          "type": "bullet",
+          "text": "Obstrução parcial de via aérea"
+        },
+        {
+          "type": "bullet",
+          "text": "Overdose (drogas, medicamentos)"
+        },
+        {
+          "type": "bullet",
+          "text": "Convulsão prolongada"
+        }
+      ]
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Ventilação de Resgate",
+      "title": "Ventilação de Resgate — 1 sopro a cada 5 segundos",
+      "intro": "Se a vítima tem pulso mas não respira, realize ventilações de resgate sem compressões torácicas. A frequência recomendada pelas Diretrizes AHA 2025 é:",
+      "callout": {
+        "kind": "alert",
+        "title": null,
+        "desc": "Mantenha a via aérea aberta durante todo o procedimento (hiperextensão cervical ou mandíbula projetada em traumas)."
+      },
+      "steps": [
+        {
+          "badge": "1",
+          "lead": "Sopro a cada 5 a 6 segundos",
+          "text": "Equivalente a 10–12 ventilações por minuto em adultos."
+        },
+        {
+          "badge": "1",
+          "lead": "Sopro a cada 3 a 5 segundos",
+          "text": "Em crianças e bebês — 12–20 ventilações por minuto."
+        },
+        {
+          "badge": "10s",
+          "lead": "Verificar pulso",
+          "text": "A cada 2 minutos, reavalie pulso e respiração. Se perder o pulso, inicie RCP 30:2 imediatamente."
+        }
+      ]
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Classificação e Conduta",
+      "title": "Como Agir nas Queimaduras",
+      "steps": [
+        {
+          "badge": "1",
+          "lead": "1º Grau — Superficial",
+          "text": "Vermelhidão e dor. Resfrie com água corrente por 20 minutos. Não aplique pasta de dente ou manteiga."
+        },
+        {
+          "badge": "2",
+          "lead": "2º Grau — Bolhas",
+          "text": "Bolhas e dor intensa. Não estoure as bolhas. Cubra com pano limpo e procure atendimento médico."
+        },
+        {
+          "badge": "3",
+          "lead": "3º Grau — Profunda",
+          "text": "Tecido escurecido, pouca dor (nervos destruídos). Ligue 192 imediatamente. Não toque na área queimada."
+        }
+      ]
+    },
+    {
+      "component": "do_dont",
+      "eyebrow": "Conduta",
+      "title": "Queimaduras — O que Fazer e o que NÃO Fazer",
+      "do": [
+        "Resfrie imediatamente com água fria corrente por 10 a 20 minutos",
+        "Retire roupas e acessórios ao redor da queimadura (exceto se grudados)",
+        "Cubra com pano limpo ou curativo não aderente",
+        "Ligue 192 (SAMU) em queimaduras extensas, profundas ou em face/mãos/genitais"
+      ],
+      "dont": [
+        "Não use gelo — causa vasoconstrição e aprofunda a lesão",
+        "Não fure bolhas — proteção natural contra infecção",
+        "Não aplique pasta de dente, manteiga, óleo ou qualquer produto caseiro",
+        "Não use água gelada ou muito quente",
+        "Não remova roupa grudada na pele"
+      ]
+    },
+    {
+      "component": "do_dont",
+      "eyebrow": "Convulsões",
+      "title": "Convulsões — Proteger, Não Conter",
+      "do": [
+        "Proteja a cabeça com algo macio (roupa dobrada)",
+        "Afaste objetos que possam machucar",
+        "Após a crise: posição lateral de segurança (PLS)",
+        "Cronometre a duração da crise",
+        "Ligue 192 se durar +5 min ou se for a primeira vez"
+      ],
+      "dont": [
+        "Não segure ou imobilize a vítima à força",
+        "Não coloque nada na boca — engolir a língua é um mito",
+        "Não ofereça água ou remédios durante a crise",
+        "Não deixe a vítima sozinha"
+      ],
+      "callout": {
+        "kind": "info",
+        "title": null,
+        "desc": "A Posição Lateral de Segurança (PLS) evita que a vítima se afogue com secreções após a crise."
+      }
+    },
+    {
+      "component": "grid",
+      "eyebrow": "AVC",
+      "title": "AVC — Acidente Vascular Cerebral",
+      "cols": 2,
+      "badges": [
+        "F",
+        "A",
+        "S",
+        "T"
+      ],
+      "intro": "O AVC ocorre quando o suprimento de sangue ao cérebro é interrompido ou reduzido. Cada minuto sem tratamento, 1,9 milhão de neurônios morrem. Reconhecer precocemente salva vida e qualidade de vida.",
+      "cards": [
+        {
+          "label": "F — Face",
+          "desc": "Peça para sorrir. Um lado da boca caiu? Assimetria facial é sinal claro de AVC."
+        },
+        {
+          "label": "A — Braço",
+          "desc": "Levante os dois braços. Um cai involuntariamente? Fraqueza unilateral é sinal de alarme."
+        },
+        {
+          "label": "S — Fala",
+          "desc": "Peça para repetir uma frase simples. Fala arrastada, confusa ou incapacidade de falar = emergência."
+        },
+        {
+          "label": "T — Tempo",
+          "desc": "Anote o horário dos primeiros sintomas e ligue 192 imediatamente. Tempo é cérebro!"
+        }
+      ]
+    },
+    {
+      "component": "step_card",
+      "eyebrow": "Como Identificar",
+      "title": "Método SAMU — Sinais de AVC",
+      "steps": [
+        {
+          "badge": "1",
+          "lead": "Sorriso",
+          "text": "Peça para sorrir. Um lado do rosto cai ou fica paralisado?"
+        },
+        {
+          "badge": "2",
+          "lead": "Abraço",
+          "text": "Peça para levantar os dois braços. Um braço cai ou não se move?"
+        },
+        {
+          "badge": "3",
+          "lead": "Música",
+          "text": "Peça para repetir uma frase simples. A fala está enrolada ou confusa?"
+        },
+        {
+          "badge": "4",
+          "lead": "Urgente",
+          "text": "Se qualquer sinal estiver presente, ligue 192 (SAMU) imediatamente!"
+        }
+      ]
+    },
+    {
+      "component": "grid",
+      "eyebrow": "Conclusão",
+      "title": "Cada Segundo Conta",
+      "cols": 3,
+      "quote": "A diferença entre uma vida salva e uma vida perdida pode ser apenas o conhecimento de quem estava presente.",
+      "callout": {
+        "kind": "success",
+        "title": null,
+        "desc": "Você agora sabe como agir em PCR, engasgo, queimadura, fratura, convulsão, AVC e parada respiratória. Parabéns!"
+      },
+      "cards": [
+        {
+          "label": "RCP Salva Vidas",
+          "desc": "Compressões de alta qualidade (100–120/min, 5–6 cm, relação 30:2) são a principal arma contra a PCR antes do SAMU chegar."
+        },
+        {
+          "label": "A Escola é um Ponto Chave",
+          "desc": "A Lei Lucas garante que profissionais de educação estejam preparados. Cada escola treinada é uma comunidade mais segura."
+        },
+        {
+          "label": "192 — Sempre",
+          "desc": "Em qualquer emergência, ligue 192 (SAMU). Não tente transportar sozinho. Aguarde orientação profissional."
+        }
+      ]
+    },
+    {
+      "component": "grid",
+      "eyebrow": "Base Legal",
+      "title": "Referências e Base Legal",
+      "cols": 2,
+      "callout": {
+        "kind": "tip",
+        "title": null,
+        "desc": "Coordenação de Enfermagem — CISBAF/SAMU  |  Material atualizado 2026"
+      },
+      "cards": [
+        {
+          "label": "American Heart Association (AHA)",
+          "desc": "Guidelines for CPR and Emergency Cardiovascular Care — 2025 Update: RCP de alta qualidade, algoritmos BLS adulto e pediátrico, minimização de interrupções, Hands-Only CPR."
+        },
+        {
+          "label": "Resolução COFEN 805/2026",
+          "desc": "Dispõe sobre a atuação do enfermeiro e técnico de enfermagem na capacitação e supervisão de primeiros socorros em instituições de ensino, no âmbito da Lei Lucas."
+        },
+        {
+          "label": "SAMU / Ministério da Saúde — 2026",
+          "desc": "Protocolos de Atendimento Pré-Hospitalar do SAMU 192, versão 2026. Ministério da Saúde — Secretaria de Atenção Especializada à Saúde."
+        },
+        {
+          "label": "Lei nº 13.722/2018 — Lei Lucas",
+          "desc": "Torna obrigatória a capacitação em primeiros socorros de professores e funcionários de estabelecimentos de educação básica. Publicada no DOU em 04/10/2018."
+        }
+      ]
+    },
+    {
+      "component": "hero",
+      "eyebrow": "Encerramento",
+      "title": "Salvar vidas começa com conhecimento",
+      "big": 50,
+      "subtitle": "Agora você conhece os principais protocolos de primeiros socorros baseados nas diretrizes mais atuais. Compartilhe esse conhecimento — ele pode fazer a diferença quando cada segundo conta.",
+      "contact": [
+        {
+          "lead": "Magma Cursos",
+          "desc": "Capacitação prática em primeiros socorros"
+        },
+        {
+          "lead": "Enf. João Paulo Bello",
+          "desc": "Dúvidas? Entre em contato!"
+        }
+      ]
+    },
+    {
+      "component": "hero",
+      "title": "Obrigado!",
+      "tagline": "Educar também é cuidar.",
+      "big": 96
+    }
+  ]
+}

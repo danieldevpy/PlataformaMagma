@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magma Studio — Formação de Turma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/studio.css" />
+</head>
+<body>
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand__mark" id="brandMark"></span>
+      <div class="brand__txt">
+        <strong>Magma Studio</strong>
+        <small>gerador de artes</small>
+      </div>
+    </div>
+
+    <nav class="models">
+      <p class="models__label">Modelos</p>
+      <button class="model model--active" data-model="formacao">
+        <span class="model__ic">🎓</span>
+        <span class="model__body">
+          <span class="model__name">Formação de Turma</span>
+          <span class="model__desc">Carrossel (capa · fotos · fechamento)</span>
+        </span>
+      </button>
+      <button class="model" disabled>
+        <span class="model__ic">🗞️</span>
+        <span class="model__body">
+          <span class="model__name">Post de Feed</span>
+          <span class="model__desc">Em breve</span>
+        </span>
+      </button>
+      <button class="model" disabled>
+        <span class="model__ic">📱</span>
+        <span class="model__body">
+          <span class="model__name">Story</span>
+          <span class="model__desc">Em breve</span>
+        </span>
+      </button>
+    </nav>
+
+    <div class="sidebar__foot">
+      <span>1080 × 1080 · PNG</span>
+    </div>
+  </aside>
+
+  <div class="gutter" data-target="sidebar" title="Arraste para ajustar"></div>
+
+  <!-- ===================== CONTROLES ===================== -->
+  <section class="panel">
+    <header class="panel__head">
+      <h1>Formação de Turma</h1>
+      <p>Suba as fotos da turma e o carrossel é montado no padrão da marca.</p>
+    </header>
+
+    <div class="field-grid">
+      <label class="field">
+        <span>Nº da turma</span>
+        <input id="fTurma" type="text" value="025" maxlength="5" />
+      </label>
+      <label class="field">
+        <span>Frase de fechamento</span>
+        <input id="fFrase" type="text" value="Parabéns à nossa turma!" />
+      </label>
+      <label class="field">
+        <span>Instagram</span>
+        <input id="fInsta" type="text" value="@magma_curso" />
+      </label>
+      <label class="field">
+        <span>WhatsApp</span>
+        <input id="fZap" type="text" value="(21) 97100-5197" />
+      </label>
+    </div>
+
+    <div class="uploader" id="uploader">
+      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      <div class="uploader__inner">
+        <span class="uploader__ic">＋</span>
+        <strong>Arraste fotos aqui</strong>
+        <small>ou clique para escolher — JPG/PNG</small>
+      </div>
+    </div>
+
+    <div class="photos" id="photoList" hidden>
+      <div class="photos__head">
+        <span>Fotos da turma</span>
+        <small id="photoHint">★ = foto exclusiva do fechamento</small>
+      </div>
+      <ul id="photoItems"></ul>
+    </div>
+  </section>
+
+  <div class="gutter" data-target="panel" title="Arraste para ajustar"></div>
+
+  <!-- ===================== PREVIEW ===================== -->
+  <main class="stage">
+    <div class="stage__top">
+      <div class="slides" id="slides"></div>
+    </div>
+
+    <div class="variants" id="variantBar" hidden>
+      <span class="variants__label">Variante deste slide</span>
+      <div class="variants__opts" id="variantOpts"></div>
+    </div>
+
+    <div class="stage__preview">
+      <div class="canvas-wrap">
+        <canvas id="preview" width="1080" height="1080"></canvas>
+      </div>
+      <p class="stage__empty" id="stageEmpty">Suba fotos para montar o carrossel →</p>
+    </div>
+
+    <div class="stage__actions">
+      <button id="btnDownOne" class="btn btn--ghost" disabled>Baixar esta</button>
+      <button id="btnDownAll" class="btn btn--gold" disabled>Baixar carrossel (PNG)</button>
+    </div>
+  </main>
+
+  <script src="js/templates.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

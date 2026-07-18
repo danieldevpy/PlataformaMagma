@@ -35,6 +35,11 @@ out/
 db.sqlite3
 local_settings.py
 *.egg
+plataforma/backend/media/
+plataforma/backend/data.json
+
+# Prints de bug (locais, fora do versionamento)
+plataforma/bug/
 
 # Logs
 *.log

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio Magma — Editor de Aulas</title>
+<link rel="stylesheet" href="./css/tokens.css">
+<link rel="stylesheet" href="./css/slides.css">
+<link rel="stylesheet" href="./css/studio.css">
+<link rel="stylesheet" href="./css/print.css" media="print">
+</head>
+<body>
+<div class="app">
+
+  <!-- ---------- topbar ---------- -->
+  <div class="topbar">
+    <div class="brand">MAGMA <small>Studio</small></div>
+    <input id="proj" class="proj" placeholder="Nome do deck">
+    <div class="spacer"></div>
+    <div class="actions">
+      <button id="btn-example" class="btn ghost">Exemplo</button>
+      <button id="btn-import" class="btn ghost">Importar</button>
+      <input id="file-import" type="file" accept="application/json,.json" class="hidden">
+      <button id="btn-print" class="btn ghost">Imprimir / PDF</button>
+      <button id="btn-export" class="btn gold">Exportar deck.json</button>
+    </div>
+  </div>
+
+  <!-- ---------- corpo ---------- -->
+  <div class="body">
+    <!-- rail -->
+    <aside class="rail">
+      <div class="rail-head">
+        <div class="row">
+          <div class="add-wrap">
+            <button id="addbtn" class="add-btn">+ Slide</button>
+            <div id="addmenu" class="menu"></div>
+          </div>
+        </div>
+      </div>
+      <div id="list" class="list"></div>
+    </aside>
+
+    <!-- palco -->
+    <main id="stage" class="stage"></main>
+
+    <!-- inspetor -->
+    <aside id="inspector" class="inspector"></aside>
+  </div>
+</div>
+
+<!-- alvo de impressão (preenchido on demand) -->
+<div id="printRoot" class="print-root"></div>
+
+<script src="./js/components.js"></script>
+<script src="./js/studio.js"></script>
+</body>
+</html>

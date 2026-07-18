@@ -161,6 +161,9 @@ a{color:inherit}
 .qitem--erro .qitem__bar > span{background:linear-gradient(90deg,#9c1f36,var(--red))}
 .qitem--erro .qitem__pct{color:#ff8a9a}
 .qitem--done{opacity:.55}
+.qitem--duplicado{opacity:.7}
+.qitem--duplicado .qitem__bar > span{background:linear-gradient(90deg,var(--gold-deep),var(--gold))}
+.qitem--duplicado .qitem__pct{color:var(--gold-light);width:auto;white-space:nowrap}
 
 /* ---------- GRID ---------- */
 .grid-wrap{position:relative;min-height:120px}
@@ -330,6 +333,7 @@ a{color:inherit}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .toast--erro{border-color:rgba(200,16,46,.4)}
 .toast--sucesso{border-color:rgba(46,139,87,.4)}
+.toast--aviso{border-color:rgba(220,185,106,.5)}
 
 /* ---------- RESPONSIVO ---------- */
 @media (max-width:760px){

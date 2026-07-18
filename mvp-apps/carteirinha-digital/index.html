@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sua Carteirinha Digital — Magma Cursos</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="carteirinha.css">
+</head>
+<body>
+
+<!-- sprite oculto: símbolo oficial Magma (design-system/assets/simbolo-magma.svg) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="magma-sym" viewBox="0 0 100 110">
+    <polygon points="50,8 90,31 90,79 50,102 10,79 10,31" fill="#232c3d" stroke="#232c3d" stroke-width="12" stroke-linejoin="round"/>
+    <polygon points="50,15 84.5,35 84.5,75 50,95 15.5,75 15.5,35" fill="#ffffff" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>
+    <polygon points="50,19 81,37 81,73 50,91 19,73 19,37" fill="#c8102e" stroke="#c8102e" stroke-width="7" stroke-linejoin="round"/>
+    <g transform="translate(50,55)">
+      <g fill="#ffffff">
+        <rect x="-9" y="-27" width="18" height="54" rx="3.5"/>
+        <rect x="-9" y="-27" width="18" height="54" rx="3.5" transform="rotate(60)"/>
+        <rect x="-9" y="-27" width="18" height="54" rx="3.5" transform="rotate(-60)"/>
+      </g>
+      <g fill="#1d4f91">
+        <rect x="-6.4" y="-24.4" width="12.8" height="48.8" rx="2.4"/>
+        <rect x="-6.4" y="-24.4" width="12.8" height="48.8" rx="2.4" transform="rotate(60)"/>
+        <rect x="-6.4" y="-24.4" width="12.8" height="48.8" rx="2.4" transform="rotate(-60)"/>
+      </g>
+      <circle cx="0" cy="-17.5" r="3.1" fill="#ffffff"/>
+      <rect x="-1.7" y="-15" width="3.4" height="33" rx="1.7" fill="#ffffff"/>
+      <path d="M-5 -10 C 6 -7.5, 6 -3.5, 0 -1.5 C -6 0.5, -6 4.5, 0 6.5 C 5 8.2, 5 11.5, -3 13.5" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </symbol>
+  <symbol id="ico-user" viewBox="0 0 24 24"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 20.5c1.4-4 4.4-6 8-6s6.6 2 8 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-back" viewBox="0 0 24 24"><path d="M19 12H6M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.6-2.4A2 2 0 0 1 10.3 4.6h3.4a2 2 0 0 1 1.7 1L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+  <symbol id="ico-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="scene" id="scene">
+  <div class="scene-glow"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg width="24" height="27"><use href="#magma-sym"/></svg>
+      <span>MAGMA <b>CURSOS</b></span>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="hero-copy" id="heroCopy">
+      <p class="eyebrow reveal" id="eyebrow">Sua credencial Magma</p>
+      <h1 class="reveal" data-delay="1" id="heroTitle">Essa carteirinha é sua.</h1>
+      <p class="sub reveal" data-delay="2" id="heroSub">Reservamos sua vaga em <b id="subCurso">Socorrista APH</b>. Falta só confirmar quem você é.</p>
+    </div>
+
+    <div class="card-stage" id="cardStage">
+      <div class="id-card" id="idCard">
+        <div class="card-shine" id="cardShine"></div>
+        <div class="card-hex-tex"></div>
+
+        <div class="card-top">
+          <div class="card-brand">
+            <svg width="20" height="22"><use href="#magma-sym"/></svg>
+            <span class="card-wordmark">MAGMA CURSOS</span>
+          </div>
+          <span class="card-tag">CARTEIRINHA&nbsp;DIGITAL</span>
+        </div>
+
+        <div class="card-body">
+          <div class="photo-slot empty" id="photoSlot">
+            <svg width="30" height="30"><use href="#ico-user"/></svg>
+          </div>
+
+          <div class="card-fields">
+            <div class="f-row main">
+              <span class="f-label">ALUNO(A)</span>
+              <span class="f-value placeholder" id="cardName">preencha abaixo</span>
+            </div>
+            <div class="f-row">
+              <span class="f-label">CURSO</span>
+              <span class="f-value" id="cardCourse">—</span>
+            </div>
+            <div class="f-grid">
+              <div class="f-cell">
+                <span class="f-label">CPF</span>
+                <span class="f-value placeholder small" id="cardCPF">000.000.000-00</span>
+              </div>
+              <div class="f-cell">
+                <span class="f-label">NASCIMENTO</span>
+                <span class="f-value placeholder small" id="cardBirth">00/00/0000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-bottom">
+          <div class="b-cell">
+            <span class="f-label">MATRÍCULA</span>
+            <span class="f-value mono" id="cardMatricula">…</span>
+          </div>
+          <div class="b-cell">
+            <span class="f-label">VÁLIDA ATÉ</span>
+            <span class="f-value mono" id="cardValidade">…</span>
+          </div>
+          <canvas class="qr-mock" id="qrMock" width="34" height="34" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-gold btn-pulse reveal" data-delay="3" id="fillBtn">
+      Preencher carteirinha
+      <svg width="18" height="18"><use href="#ico-arrow"/></svg>
+    </button>
+  </main>
+</div>
+
+<!-- bottom sheet -->
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Preencher carteirinha">
+  <div class="sheet-handle"></div>
+
+  <div class="sheet-head">
+    <button class="sheet-back" id="sheetBack" aria-label="Voltar">
+      <svg width="18" height="18"><use href="#ico-back"/></svg>
+    </button>
+    <div class="sheet-progress" id="sheetProgress">
+      <span class="dot" data-i="0"></span>
+      <span class="dot" data-i="1"></span>
+      <span class="dot" data-i="2"></span>
+      <span class="dot" data-i="3"></span>
+    </div>
+    <span class="sheet-count" id="sheetCount">1/4</span>
+  </div>
+
+  <div class="sheet-steps" id="sheetSteps">
+    <div class="step" data-step="0" data-target="cardName">
+      <label for="inpNome">Como você se chama?</label>
+      <input type="text" id="inpNome" placeholder="Nome completo" autocomplete="name" maxlength="60">
+    </div>
+
+    <div class="step" data-step="1" data-target="cardCPF">
+      <label for="inpCPF">Qual o seu CPF?</label>
+      <input type="text" id="inpCPF" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" maxlength="14">
+    </div>
+
+    <div class="step" data-step="2" data-target="cardBirth">
+      <label for="inpBirth">Sua data de nascimento?</label>
+      <input type="text" id="inpBirth" placeholder="DD/MM/AAAA" inputmode="numeric" autocomplete="off" maxlength="10">
+    </div>
+
+    <div class="step step-photo" data-step="3" data-target="photoSlot">
+      <label>Agora, sua foto para a carteirinha</label>
+      <input type="file" accept="image/*" capture="user" id="inpPhoto" hidden>
+      <div class="photo-drop" id="photoDrop">
+        <img id="photoPreviewImg" hidden alt="">
+        <div class="photo-drop-empty" id="photoDropEmpty">
+          <svg width="26" height="26"><use href="#ico-camera"/></svg>
+          <span>Toque para adicionar sua foto</span>
+        </div>
+      </div>
+      <button class="skip-link" id="skipPhoto" type="button">Prefiro usar minhas iniciais por enquanto</button>
+    </div>
+  </div>
+
+  <div class="sheet-actions">
+    <button class="sheet-next" id="sheetNext" aria-label="Confirmar e avançar">
+      <svg width="22" height="22"><use href="#ico-arrow"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- painel de sucesso -->
+<div class="success-panel" id="successPanel">
+  <div class="success-inner">
+    <span class="success-badge">
+      <svg width="20" height="20"><use href="#ico-check"/></svg>
+    </span>
+    <h2>Carteirinha pronta, <span id="successName">—</span>!</h2>
+    <p>Ela já está pronta e vinculada à sua matrícula.</p>
+
+    <div class="success-card-slot" id="successCardSlot"></div>
+
+    <button class="btn btn-gold btn-block" id="btnDownload">
+      <svg width="18" height="18"><use href="#ico-download"/></svg>
+      Baixar / Imprimir
+    </button>
+  </div>
+</div>
+
+<div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
+<script src="carteirinha.js"></script>
+</body>
+</html>
