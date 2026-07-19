@@ -2,10 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "studio-formacao",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8790", "--directory", "mvp-apps/studio/montar-templates/app"],
-      "port": 8790
+      "name": "backend-dev",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "MEDIA_URL_BASE=http://localhost:8123",
+        "/home/daniel/MeusNegocios/magmacursos/plataforma/backend/.venv/bin/python",
+        "/home/daniel/MeusNegocios/magmacursos/plataforma/backend/manage.py",
+        "runserver",
+        "127.0.0.1:8123"
+      ],
+      "port": 8123
     }
   ]
 }

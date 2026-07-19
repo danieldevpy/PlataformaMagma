@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mesa de Luz — {{ turma.codigo }} · Acervo de Mídia</title>
+  <title>Mesa de Luz — {% if turma %}{{ turma.codigo }}{% else %}Acervo da Marca{% endif %} · Acervo de Mídia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -16,8 +16,13 @@
     <div class="topbar__brand">
       <span class="topbar__mark" id="brandMark" aria-hidden="true"></span>
       <div class="topbar__title">
+        {% if turma %}
         <strong id="tituloCurso">{{ turma.curso }}</strong>
         <span id="tituloTurma">Turma {{ turma.codigo }} · Mesa de Luz</span>
+        {% else %}
+        <strong id="tituloCurso">Magma Cursos</strong>
+        <span id="tituloTurma">Acervo da Marca · Mesa de Luz</span>
+        {% endif %}
       </div>
     </div>
 
@@ -26,6 +31,7 @@
     </div>
 
     <div class="topbar__actions">
+      {% if turma %}
       <button
         type="button"
         id="btnConsentimento"
@@ -36,12 +42,25 @@
         <span class="consent-toggle__dot" aria-hidden="true"></span>
         <span class="consent-toggle__txt">Consentimento de imagem: verificando…</span>
       </button>
+      {% else %}
+      <a class="btn btn--ghost" href="{% url 'admin:midia_midia_changelist' %}">← Admin</a>
+      {% endif %}
       <a class="btn btn--ghost" href="../studio/">Abrir Studio →</a>
     </div>
   </header>
 
   <!-- ===================== CONTEÚDO ===================== -->
   <main class="content">
+    {% if not turma %}
+    <!-- seletor de camada do acervo da marca (spec 008) — a Mesa da turma
+         não tem isso: a camada dela é a própria turma -->
+    <section class="camada-bar" aria-label="Camada do acervo">
+      <label for="camadaSelect">Camada</label>
+      <select id="camadaSelect"></select>
+      <small id="camadaHint">Fotos e vídeos enviados entram na camada escolhida.</small>
+    </section>
+    {% endif %}
+
     <section class="uploader" id="uploader" aria-label="Enviar mídia">
       <input type="file" id="fileInput" accept="image/*,video/*" multiple hidden />
       <div class="uploader__inner">
@@ -59,7 +78,7 @@
       <div class="empty-state" id="emptyState" hidden>
         <span class="empty-state__ic" aria-hidden="true">🗂️</span>
         <strong>Nenhuma mídia ainda</strong>
-        <p>Envie as primeiras fotos ou vídeos da turma logo acima.</p>
+        <p>{% if turma %}Envie as primeiras fotos ou vídeos da turma logo acima.{% else %}Envie as primeiras fotos ou vídeos desta camada logo acima.{% endif %}</p>
       </div>
     </section>
   </main>
@@ -99,12 +118,17 @@
   <script>
     window.MAGMA_CSRF = "{{ csrf_token }}";
     window.MAGMA_API_BASE = "{{ api_base|default:'/api/midia' }}";
+    {% if turma %}
+    window.MAGMA_CONTEXTO = { tipo: "turma" };
     window.MAGMA_TURMA = {
       id: {{ turma.id }},
       codigo: "{{ turma.codigo|escapejs }}",
       curso: "{{ turma.curso|escapejs }}",
       consentimento: {{ turma.consentimento_midia|yesno:"true,false" }}
     };
+    {% else %}
+    window.MAGMA_CONTEXTO = { tipo: "marca" };
+    {% endif %}
   </script>
   <script src="{% static 'midia/acervo.js' %}"></script>
 </body>

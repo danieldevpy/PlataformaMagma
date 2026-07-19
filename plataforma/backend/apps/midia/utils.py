@@ -37,7 +37,7 @@ def gerar_thumbnail(midia_turma, arquivo_upload):
 
 def extrair_meta(arquivo_upload):
     """Monta o dict `meta` (width/height/size/content_type/nome_original)
-    salvo em MidiaTurma.meta. width/height só saem preenchidos para imagem —
+    salvo em Midia.meta. width/height só saem preenchidos para imagem —
     vídeo não tem decodificação de dimensão aqui (sem libs extras).
     `nome_original` é o filename tal como o cliente enviou (antes de
     qualquer rename do storage por colisão) — é o que a checagem de

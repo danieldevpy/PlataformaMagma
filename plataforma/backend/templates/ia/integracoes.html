@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magma Studio — Integrações de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'ia/integracoes.css' %}" />
+</head>
+<body>
+  <script>
+    window.MAGMA_CSRF = "{{ csrf_token }}";
+    window.MAGMA_API_BASE = "{{ api_base }}";
+  </script>
+
+  <div class="wrap">
+    <header class="brand">
+      <span class="brand__mark" id="brandMark"></span>
+      <div class="brand__txt">
+        <strong>Integrações de IA</strong>
+        <small>Provedores de texto · imagem · vídeo</small>
+      </div>
+      <a class="brand__back" href="{% url 'admin:index' %}">← Painel</a>
+    </header>
+
+    <p class="intro">
+      A IA é um complemento do Studio — nunca um requisito. Configure um provedor,
+      toque em <strong>Testar conexão</strong> e os recursos correspondentes acendem
+      sozinhos nos campos com ✨ do Studio. Sem provedor configurado, o Studio
+      continua funcionando 100% normalmente.
+    </p>
+
+    <section class="cards" id="cards">
+      <p class="loading" id="cardsLoading">Carregando provedores…</p>
+    </section>
+
+    <section class="uso">
+      <h2>Uso este mês</h2>
+      <div class="uso__grid" id="usoGrid">
+        <p class="loading">Carregando…</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="{% static 'ia/integracoes.js' %}"></script>
+</body>
+</html>

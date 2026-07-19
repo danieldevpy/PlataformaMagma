@@ -6,3 +6,6 @@ class CursosConfig(AppConfig):
     name = "apps.cursos"
     label = "cursos"
     verbose_name = "Cursos"
+
+    def ready(self):
+        from apps.cursos import acoes  # noqa: F401 — registra em apps.nucleo.acoes

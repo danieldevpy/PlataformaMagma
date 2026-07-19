@@ -80,6 +80,30 @@ body.resizing{user-select:none;cursor:col-resize}
 .pick__star{position:absolute;top:4px;right:4px;font-size:11px;color:var(--gold-light);text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .picker__empty,.picker__error{color:var(--muted);font-size:12.5px;line-height:1.5;text-align:center;padding:18px 6px}
 .picker__error{color:var(--gold-light)}
+.picker__none{color:var(--muted);font-size:12.5px;line-height:1.6;text-align:center;padding:24px 10px}
+
+/* ---------- FOTO ÚNICA (vagas/capa_reel/depoimento — fundo opcional) ---------- */
+.fotoUnica{
+  display:flex;align-items:center;gap:10px;margin-top:6px;padding:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+}
+.fotoUnica__thumb{width:36px;height:36px;border-radius:7px;object-fit:cover;flex:none;background:#0d1730}
+.fotoUnica__label{flex:1;min-width:0;font-size:11.5px;color:#cdd6e6}
+.fotoUnica__btns{display:flex;gap:4px}
+
+/* ---------- PICKER DE AVALIAÇÕES (Depoimento) ---------- */
+.avaliacoes__list{display:flex;flex-direction:column;gap:8px}
+.avcard{
+  display:flex;flex-direction:column;gap:4px;text-align:left;padding:10px 12px;
+  border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  color:#dbe3f0;cursor:pointer;transition:.12s;font-family:var(--font-body);
+}
+.avcard:hover{background:var(--surface-2)}
+.avcard--on{border-color:var(--gold-light);box-shadow:0 0 0 1px rgba(220,185,106,.35) inset}
+.avcard strong{font-family:var(--font-display);font-size:12.5px;color:#fff}
+.avcard__estrelas{font-size:11px;color:var(--gold-light);letter-spacing:1px}
+.avcard small{font-size:11px;color:var(--muted);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ---------- COLUNA 2 — PANEL (controles) ---------- */
 .panel{
@@ -89,6 +113,33 @@ body.resizing{user-select:none;cursor:col-resize}
 }
 .panel__head h1{font-family:var(--font-display);font-weight:800;font-size:20px}
 .panel__head p{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
+
+/* ---------- SELETOR DE MODO (cards de template) ---------- */
+.templates{display:flex;flex-direction:column;gap:10px}
+.templates__label{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+.templates__grid{display:flex;flex-wrap:wrap;gap:10px}
+.tplcard{
+  display:flex;flex-direction:column;gap:4px;text-align:left;min-width:150px;max-width:230px;flex:1 1 150px;
+  padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);
+  color:#dbe3f0;cursor:pointer;transition:.15s;font-family:var(--font-body);
+}
+.tplcard strong{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:#fff}
+.tplcard small{font-size:11.5px;color:var(--muted);line-height:1.4}
+.tplcard:hover{background:var(--surface-2)}
+.tplcard--on{border-color:var(--gold-light);box-shadow:0 0 0 1px rgba(220,185,106,.35) inset}
+.tplcard--on strong{color:var(--gold-light)}
+
+/* ---------- TOGGLE DE FORMATO (preview) — reusa a pílula .vopt ---------- */
+.formatSel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.formatSel__label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.formatSel__opts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- EXPORT KIT (checkboxes de formato a exportar) ---------- */
+.exportKit{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.exportKit__label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.exportKit__opts{display:flex;gap:14px;flex-wrap:wrap}
+.checkopt{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#cdd6e6;cursor:pointer}
+.checkopt input{accent-color:var(--gold-light);width:15px;height:15px;cursor:pointer}
 
 .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .field{display:flex;flex-direction:column;gap:6px}
@@ -128,12 +179,22 @@ body.resizing{user-select:none;cursor:col-resize}
 
 /* ---------- COLUNA 3 — STAGE (preview + postagens) ---------- */
 .stage{display:flex;flex-direction:column;padding:26px 30px 40px;gap:18px;min-width:0;overflow-y:auto}
+/* Numa coluna que ROLA, as faixas AUXILIARES (thumbnails, variantes, ações,
+   postagens) nunca devem encolher — senão, sob pressão vertical, o flex-shrink
+   colapsava a faixa de thumbnails (.stage__top) pra 0 e os thumbnails vazavam
+   POR CIMA da barra de variantes e do preview. O .stage__preview fica de FORA
+   desta regra de propósito: ele é o elemento flexível que absorve o espaço
+   restante e dimensiona a arte (ver bloco --stage-ar); travá-lo aqui inflava a
+   caixa do preview e criava um vão vazio enorme no formato 9:16. */
+.stage__top,.variants,.stage__actions,.postagens{flex-shrink:0}
 .stage__top{min-height:0}
 .slides{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
 .slide-thumb{
   flex:none;width:84px;height:84px;border-radius:10px;overflow:hidden;cursor:pointer;
   border:2px solid transparent;background:var(--navy-deep);position:relative;transition:.12s;
 }
+/* largura/altura reais vêm inline via JS (segue a proporção do formato ativo:
+   feed 1:1, story/capa_reel 9:16) — os 84px acima são só o fallback antes do JS rodar */
 .slide-thumb canvas{width:100%;height:100%;display:block}
 .slide-thumb--active{border-color:var(--gold-light)}
 .slide-thumb__tag{
@@ -152,13 +213,62 @@ body.resizing{user-select:none;cursor:col-resize}
 .vopt:hover{background:var(--surface-2);color:#fff}
 .vopt--on{background:linear-gradient(135deg,#dcb96a,#b8933f);color:#2a2008;border-color:transparent}
 
-.stage__preview{display:grid;place-items:center;min-height:0;position:relative;padding:6px 0}
+/* piso de altura só pra o preview não ficar minúsculo quando a lista de postagens
+   reserva espaço — é um FLOOR (o preview continua shrink/flexível), não trava a
+   caixa; o canvas usa min(100%, …) e acompanha esta altura sem inflar o vão. */
+.stage__preview{display:grid;place-items:center;min-height:360px;position:relative;padding:6px 0}
 .canvas-wrap{
-  width:min(100%,460px);aspect-ratio:1/1;border-radius:16px;overflow:hidden;
+  /* --stage-ar = w/h do formato ativo (1 = feed 1:1; 0.5625 = story/capa_reel
+     9:16), setado via JS (updateStageAspect) como NÚMERO puro (`String(f.w/f.h)`,
+     ex. "1" ou "0.5625") — válido tanto em `aspect-ratio` quanto dentro de
+     `calc()` (comprimento ÷ número = comprimento).
+
+     Histórico: a v1 usava `calc(70vh * ar)` (vazava sobre os vizinhos — 70vh
+     ignora o espaço já ocupado por .stage__top/.variants/.stage__actions). A
+     v2 tentou `width:min(100%,460px); max-height:100%` supondo que o
+     `aspect-ratio` recalculava a largura quando a altura era cortada pelo
+     max-height — ISSO NÃO ACONTECE: o CSS só "transfere" o tamanho na direção
+     da propriedade auto (aqui seria height, a partir do width definido);
+     quando é a própria altura resultante que estoura e leva um clamp de
+     max-height, esse corte NÃO realimenta um recálculo do width — o box vira
+     460×(altura cortada), fora de proporção, e o canvas (`#preview`, width/
+     height:100%) esticava pra preencher essa caixa deformada.
+
+     v3 (esta): inverte qual eixo é o "livre". `height` é o eixo com
+     constraint explícita (`min(100%, 460px/ar)` — nunca mais alto que o
+     espaço real de `.stage__preview`, nem mais que o equivalente a 460px de
+     largura); `width:auto` é DERIVADO dela via `aspect-ratio` (essa direção
+     — auto a partir de uma dimensão definida — É a que o CSS realmente
+     recalcula). Resultado: em qualquer formato, a altura nunca excede o
+     espaço disponível e a largura sempre acompanha na proporção certa.
+
+     Caso 1 — feed (ar=1), espaço à vontade: height=min(100%,460px)=460px;
+     width=460px*1=460px → 460×460, igual à v1/v2 no caso comum.
+     Caso 2 — story/capa_reel (ar=0.5625), altura apertada (o bug original):
+     height=min(100%, 817.8px)=100% do espaço real (ex. 700px); width=
+     700*0.5625≈394px → cabe exatamente na caixa, sem vazar e sem esticar.
+     Caso 3 — container ESTREITO (mobile, largura curta mas com scroll
+     vertical sobrando): height ainda pode resolver "grande" (pouca pressão
+     de altura) e o width derivado dela pode superar a largura real —
+     `max-width:100%` é a rede de segurança, mas por ser a MESMA regra
+     unidirecional acima (clamp no eixo que não é o de referência não
+     realimenta o outro), um clamp de max-width aqui deixaria o box fora de
+     proporção de novo. Por isso o `object-fit:contain` no `#preview`
+     abaixo: ele nunca estica o canvas pro box, só o encaixa (letterbox) —
+     então mesmo nesse caso extremo (2 clamps ativos ao mesmo tempo) o pior
+     resultado é uma faixa vazia dentro do wrapper, nunca distorção. */
+  --stage-ar:1;
+  height:min(100%, calc(460px / var(--stage-ar)));
+  width:auto;
+  max-width:100%;
+  aspect-ratio:var(--stage-ar);border-radius:16px;overflow:hidden;
   box-shadow:0 24px 60px rgba(0,0,0,.45);display:none;
 }
 .canvas-wrap.show{display:block}
-#preview{width:100%;height:100%;display:block}
+/* object-fit:contain é o que garante NUNCA esticar mesmo no caso extremo
+   descrito acima (2 clamps simultâneos) — sem isso, width/height:100% puro
+   esticaria o canvas pra caixa sempre que ela sair da proporção de --stage-ar. */
+#preview{width:100%;height:100%;display:block;object-fit:contain}
 .stage__empty{color:var(--muted);font-size:14px;text-align:center}
 
 .stage__actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
@@ -181,15 +291,39 @@ body.resizing{user-select:none;cursor:col-resize}
 .postagens__head h2{font-family:var(--font-display);font-weight:800;font-size:17px}
 .postagens__head p{color:var(--muted);font-size:12px;margin-top:4px}
 .postagens__empty{color:var(--muted);font-size:13px;padding:10px 0}
-.postagens__list{display:flex;flex-direction:column;gap:14px}
+/* lista rolável e limitada: mostra ~1 postagem por vez e rola pras próximas —
+   sem isto uma turma com várias postagens empurrava o preview/ações pra fora da
+   tela e não dava pra criar novas. Cada card é um accordion (só 1 aberto). */
+.postagens__list{display:flex;flex-direction:column;gap:12px;max-height:320px;overflow-y:auto;padding-right:6px}
 
 .postagem-card{
   background:var(--surface);border:1px solid var(--line);border-radius:14px;
-  padding:16px 18px;display:flex;flex-direction:column;gap:14px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:14px;
 }
-.postagem-card__head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.postagem-card__head strong{font-family:var(--font-display);font-size:14.5px}
+.postagem-card__head{
+  display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;
+}
+.postagem-card__caret{
+  flex:none;color:var(--gold-light);font-size:11px;width:14px;text-align:center;
+  transition:transform .15s;
+}
+.postagem-card.is-open .postagem-card__caret{transform:rotate(90deg)}
+.postagem-card__title{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.postagem-card__head strong{
+  font-family:var(--font-display);font-size:14px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 .postagem-card__date{font-size:11px;color:var(--muted)}
+/* chip de status visível mesmo com o card fechado */
+.postagem-card__chip{
+  flex:none;font-size:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;
+  padding:4px 9px;border-radius:20px;border:1px solid var(--line);color:var(--muted);
+}
+.postagem-card__chip--pronta{color:var(--gold-light);border-color:rgba(220,185,106,.5)}
+.postagem-card__chip--publicada{color:#2a2008;background:linear-gradient(135deg,#dcb96a,#b8933f);border-color:transparent}
+/* corpo do accordion — recolhido por padrão, aberto via .is-open */
+.postagem-card__body{display:flex;flex-direction:column;gap:14px}
+.postagem-card:not(.is-open) .postagem-card__body{display:none}
 
 /* timeline de status */
 .timeline{display:flex;align-items:center}
@@ -220,3 +354,59 @@ body.resizing{user-select:none;cursor:col-resize}
 .confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
 .confetti-piece{position:absolute;top:-12px;border-radius:2px;animation:confettiFall linear forwards}
 @keyframes confettiFall{to{transform:translateY(105vh) rotate(var(--rot));opacity:.9}}
+
+/* ---------- ✨ IA (spec 004-T2, doc 10 §5.4) ---------- */
+.field__row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.field__ia{display:inline-flex}
+.ia-wrap{position:relative;display:inline-flex}
+.ia-btn{
+  width:22px;height:22px;border-radius:7px;flex-shrink:0;
+  border:1px solid rgba(220,185,106,.35);background:rgba(220,185,106,.1);
+  color:var(--gold-light);font-size:12px;line-height:1;cursor:pointer;
+  display:grid;place-items:center;transition:.12s;
+}
+.ia-btn:hover{background:rgba(220,185,106,.2)}
+.ia-btn--off{opacity:.4;border-color:var(--line);color:var(--muted)}
+.ia-menu{
+  position:absolute;top:26px;right:0;z-index:30;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:9px;
+  padding:6px;display:flex;flex-direction:column;gap:2px;min-width:136px;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);
+}
+.ia-menu__item{
+  background:transparent;border:none;color:#dbe3f0;font-family:var(--font-body);
+  font-size:12.5px;padding:7px 9px;border-radius:6px;text-align:left;cursor:pointer;
+}
+.ia-menu__item:hover{background:rgba(220,185,106,.16);color:var(--gold-light)}
+.ia-proposta{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:9px;background:rgba(16,28,56,.55)}
+.ia-proposta__status{font-size:12.5px;color:var(--muted)}
+.ia-proposta__texto{font-size:13px;color:#e8ecf4;white-space:pre-wrap;margin-bottom:8px;line-height:1.45}
+.ia-proposta__erro{font-size:12.5px;color:#ff8c9c;margin-bottom:8px}
+.ia-proposta__btns{display:flex;gap:8px;flex-wrap:wrap}
+.ia-variantes{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.ia-variante{
+  text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  padding:9px 10px;color:#dbe3f0;font-size:12.5px;cursor:pointer;font-family:var(--font-body);
+  white-space:pre-wrap;line-height:1.4;
+}
+.ia-variante:hover{border-color:var(--gold-light);color:var(--gold-light)}
+
+/* ============================================================
+   Spec 008 — acervo em camadas no Studio: seletor de camada do
+   picker e cards de template indisponíveis fora do contexto turma
+   ============================================================ */
+.picker__camada{
+  width:100%;
+  margin:0 0 10px;
+  font:inherit;
+  color:#e8ecf4;
+  background:var(--surface-2, #1b2b4a);
+  border:1px solid var(--line, rgba(220,185,106,.14));
+  border-radius:8px;
+  padding:7px 9px;
+}
+.tplcard--off{
+  opacity:.45;
+  cursor:not-allowed;
+  filter:grayscale(.4);
+}

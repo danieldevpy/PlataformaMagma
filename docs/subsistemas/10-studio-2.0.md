@@ -33,6 +33,16 @@ Princípios inegociáveis deste plano:
    formatos de mídia seguem a tabela §6 do guia (feed 1080², story 1080×1920 com
    250px livres topo/base, thumb 1280×720).
 
+> **Correção de rumo (2026-07-18, noite — spec 008 IMPLEMENTADA):** o acervo
+> deixou de ser da turma e virou o **acervo da MARCA em camadas**
+> (`turma | curso | instrutores | estrutura | externa | geral`) — a turma é
+> uma camada entre várias. `MidiaTurma` → `Midia`, `Postagem` ganhou contexto
+> (turma/curso/marca), nasceram a Mesa de Luz da marca e o Studio da marca
+> (`/dj-admin/midia/midia/acervo|studio/`), e o picker do Studio ganhou
+> seletor de camada (arte pode misturar fotos de camadas diferentes).
+> Ver `specs/008-acervo-em-camadas/` e doc 03 §"Acervo em camadas". As
+> seções abaixo que dizem "da turma" leem-se "do contexto ativo".
+
 ## 2. Modelo conceitual: Seleção × Modo × Formato
 
 ```

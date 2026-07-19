@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.leads",
     "apps.educacional",
     "apps.midia",
+    "apps.ia",
 ]
 
 MIDDLEWARE = [

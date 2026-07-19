@@ -155,6 +155,336 @@ PATCH /api/painel/leads/{id}/               {"status": "em_contato"}
 GET/PATCH /api/painel/config/
 ```
 
+## Studio 2.0 — Mídia, IA e Camada de Ações
+
+> Fonte de verdade: código de `apps/midia`, `apps/ia` e `apps/nucleo`
+> (specs `003-studio-templates-campanha`, `004-ia-config-e-texto` e
+> `005-camada-de-acoes`). Auth Session/JWT = mesma cookie/Bearer do painel.
+
+### `GET /api/midia/turmas/{id}/avaliacoes/` — picker de depoimentos
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. Alimenta o picker do template
+Depoimento no Studio: avaliações **aprovadas** da turma, ordenadas por
+`-estrelas, -peso, -criado_em`. Sem filtros de query string — a view
+sempre devolve a lista completa filtrada por turma+status.
+
+```bash
+curl -H "Authorization: Bearer $JWT" \
+  https://.../api/midia/turmas/12/avaliacoes/
+```
+```json
+// 200
+[
+  {"id": 41, "nome": "Marcos Ribeiro", "cargo_atual": "Socorrista em eventos",
+   "estrelas": 5, "comentario": "...", "criado_em": "2026-06-01T14:00:00-03:00"}
+]
+// turma inexistente → 404 {"detail": "Not found."} (get_object_or_404 padrão DRF)
+// apps.avaliacoes fora do INSTALLED_APPS (cenário defensivo) → 200 []
+```
+
+### Acervo em camadas (spec 008)
+
+Auth: Session ou JWT, `IsGestorOuInstrutor` (todas). O acervo é da MARCA,
+organizado em camadas (`turma | curso | instrutores | estrutura | externa |
+geral`); as rotas por turma (`turmas/{id}/…`) seguem valendo com o contrato
+antigo. Invariantes: camada `turma` ⇔ `turma_id`; camada `curso` ⇔
+`curso_id`; demais camadas sem nenhum dos dois (violação → 400). Itens agora
+saem com `camada`, `contexto` (rótulo humano) e `credito` (fonte/licença de
+imagem externa — editável no `PATCH itens/{pk}/`).
+
+#### `GET /api/midia/acervo/` — listar com filtros
+
+Query string combinável: `camada`, `curso` (id), `turma` (id), `tipo`
+(`foto|video|arte`), `tag` (`destaque|capa|avaliacao`), `q` (busca na
+legenda). Sem filtro → tudo, mais novo primeiro (com `turma` → ordem de
+curadoria `ordem,id`).
+
+```json
+// 200
+{"itens": [{"id": 7, "camada": "geral", "contexto": "Geral da marca",
+            "tipo": "foto", "arquivo_url": "...", "thumb_url": "...",
+            "legenda": "", "credito": "", "tags": [], "ordem": 0,
+            "aula_data": null, "origem": "instrutor", "meta": {...},
+            "criado_em": "..."}],
+ "contagens": {"fotos": 1, "videos": 0, "artes": 0,
+               "destaque": 0, "capa": 0, "avaliacao": 0}}
+```
+
+#### `GET /api/midia/acervo/camadas/` — resumo pros seletores
+
+Contagens por camada fixa (Geral primeiro — é o balde padrão), por curso e
+por turma, INCLUINDO as vazias (são alvo válido de upload).
+
+```json
+// 200
+{"gerais": [{"camada": "geral", "rotulo": "Geral da marca",
+             "contagens": {"fotos": 1, "videos": 0, "artes": 0}}, ...],
+ "cursos": [{"id": 2, "nome": "Socorrista APH", "slug": "socorrista-aph",
+             "contagens": {...}}],
+ "turmas": [{"id": 4, "codigo": "027", "curso": "Socorrista APH",
+             "contagens": {...}}]}
+```
+
+#### `POST /api/midia/acervo/enviar/` — upload em qualquer camada
+
+Multipart: `arquivo` (1 por request, image/video, máx 1 GB), `camada`,
+`turma_id`/`curso_id` (conforme invariantes), `legenda`, `credito`,
+`aula_data`, `forcar`. Dedup nome+tamanho **no escopo da camada de destino**
+(mesmo arquivo em camadas diferentes NÃO é duplicata) → 409
+`{duplicado: true, item_existente}`.
+
+#### `GET/POST /api/midia/postagens/` — postagens multi-contexto
+
+- `GET` filtra por `turma`, `curso` ou `contexto=marca` (sem turma nem
+  curso). `PostagemOut` ganhou `contexto` (rótulo: "Turma … — curso", nome
+  do curso ou `"Marca"`).
+- `POST` multipart: `titulo`, `legenda`, `artes` (N PNGs) + `turma_id` OU
+  `curso_id` opcionais (os dois juntos → 400; nenhum = postagem da marca).
+  As artes entram no acervo na camada do contexto (`turma`/`curso`/`geral`).
+
+#### Ação `listar_postagens_agendadas` (executor central)
+
+Cada item agora traz `contexto` (`"turma"|"curso"|"marca"`) + `turma_codigo`
+e `curso_slug` (null quando não se aplicam; `turma_codigo` mantido por
+compat). Continua sem PK no retorno.
+
+#### Páginas staff da marca
+
+`/dj-admin/midia/midia/acervo/` (Mesa de Luz da marca, com seletor de
+camada, sem toggle de consentimento — consentimento é conceito de turma) e
+`/dj-admin/midia/midia/studio/` (Studio da marca — templates com
+`requer: ['turma']` aparecem desabilitados). Servidas via
+`MidiaAdmin.get_urls`, mesmos templates das páginas por turma.
+
+### `GET /api/ia/capacidades/` — quais recursos de IA estão ligados
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. Reflete só provedores **ativos
+e já testados** (`testado_em` preenchido) — provedor cadastrado mas nunca
+testado não acende a capacidade. Capacidades hoje: `texto.gerar`,
+`texto.melhorar`, `texto.variacoes`, `imagem.melhorar`,
+`imagem.remover_fundo`, `imagem.gerar`, `video.gerar` — as 4 últimas
+sempre `false` no código atual (nenhum adaptador de imagem/vídeo
+implementado ainda, ver "Divergências" abaixo).
+
+```bash
+curl -H "Authorization: Bearer $JWT" https://.../api/ia/capacidades/
+```
+```json
+// 200
+{"texto.gerar": true, "texto.melhorar": true, "texto.variacoes": true,
+ "imagem.melhorar": false, "imagem.remover_fundo": false,
+ "imagem.gerar": false, "video.gerar": false}
+```
+
+### `POST /api/ia/executar/` — proxy de execução (chave nunca no browser)
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. `contexto` segue o formato
+livre de `apps/ia/prompts.py::montar_mensagem` — campos conhecidos
+`tipo_conteudo`, `template`, `turma`, `curso`, `texto_atual` (obrigatório
+em `texto.melhorar`/`texto.variacoes` na prática, mas não validado no
+schema), `instrucao`; campos extras são aceitos e apenas anexados ao
+prompt. Toda chamada (sucesso ou erro) grava `ExecucaoIA`.
+
+```bash
+curl -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"capacidade": "texto.melhorar",
+       "contexto": {"tipo_conteudo": "legenda", "template": "depoimento",
+                     "turma": "03/2026", "texto_atual": "Texto atual aqui...",
+                     "instrucao": "deixar mais informal"}}' \
+  https://.../api/ia/executar/
+```
+```json
+// 200
+{"resultado": "Texto reescrito pronto pra colar no post..."}
+
+// 400 — erro de INPUT do chamador (capacidade/contexto mal formados, ou
+// nenhum provedor do tipo certo ativo+testado, ou provedor não sabe
+// executar aquela capacidade)
+{"detail": "Informe 'capacidade'."}
+{"detail": "'contexto' precisa ser um objeto."}
+{"detail": "Capacidade \"texto.xyz\" desconhecida."}
+{"detail": "Nenhum provedor de Texto configurado e testado. Configure em Integrações de IA."}
+{"detail": "O provedor configurado não sabe executar \"texto.gerar\"."}
+
+// 502 — erro do PROVEDOR (chamada saiu, mas falhou ou o adaptador
+// quebrou) — nunca vaza stack trace nem payload cru do provedor
+{"detail": "Anthropic recusou a chamada: <mensagem do provedor>"}
+{"detail": "Erro inesperado ao executar a IA."}
+```
+
+### `GET/POST /api/ia/provedores/` e `PATCH /api/ia/provedores/{pk}/`
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. Página staff "Integrações de
+IA". A credencial **nunca** volta em texto puro — só o booleano
+`tem_credencial`. Escrita usa `credencial_nova` (write-only): obrigatória
+no POST (criação), opcional no PATCH — **em branco/ausente no PATCH
+mantém a chave já salva** (mesmo padrão do `ProvedorIAForm` do admin).
+Ativar um provedor desativa automaticamente os demais do mesmo `tipo`
+(`ProvedorIA.save`, não é regra só de UI).
+
+> ⚠️ **Operação:** a credencial é cifrada com uma chave derivada do
+> `DJANGO_SECRET_KEY` (`apps/ia/crypto.py`). Rotacionar o `SECRET_KEY` em
+> produção invalida **silenciosamente** todas as credenciais já salvas
+> (`decifrar()` passa a devolver `""`, sem erro) — recadastre as chaves
+> aqui depois de qualquer rotação de `SECRET_KEY`.
+
+```bash
+# listar
+curl -H "Authorization: Bearer $JWT" https://.../api/ia/provedores/
+
+# criar
+curl -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"tipo": "texto", "provedor": "anthropic", "modelo": "claude-sonnet-5",
+       "credencial_nova": "sk-ant-...", "ativo": true}' \
+  https://.../api/ia/provedores/
+
+# editar sem trocar a chave (credencial_nova omitido/"")
+curl -X PATCH -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"modelo": "claude-sonnet-5", "config": {"max_tokens": 2048}}' \
+  https://.../api/ia/provedores/3/
+```
+```json
+// 200/201 (mesmo shape de leitura)
+{"id": 3, "tipo": "texto", "tipo_label": "Texto", "provedor": "anthropic",
+ "provedor_label": "Anthropic", "modelo": "claude-sonnet-5",
+ "config": {"max_tokens": 2048}, "ativo": true,
+ "testado_em": "2026-07-18T10:00:00-03:00", "criado_em": "2026-07-01T09:00:00-03:00",
+ "tem_credencial": true}
+
+// 400 (criação sem chave)
+{"credencial_nova": ["Informe a chave de API."]}
+```
+
+### `POST /api/ia/provedores/{pk}/testar/` — testar conexão real
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. Faz uma chamada mínima real
+ao provedor; só grava `testado_em` (now) se a chamada funcionar.
+
+```bash
+curl -X POST -H "Authorization: Bearer $JWT" https://.../api/ia/provedores/3/testar/
+```
+```json
+// 200
+{"testado_em": "2026-07-18T10:00:00-03:00"}
+// 400 — erro de input/credencial (ex. sem chave configurada, provedor sem adaptador)
+{"detail": "Provedor Anthropic sem credencial configurada."}
+// 502 — falha inesperada não classificada como ErroAdaptadorIA
+{"detail": "Erro inesperado ao testar a conexão."}
+```
+
+### `GET /api/ia/uso/` — card de uso do mês corrente
+
+Auth: Session ou JWT, `IsGestorOuInstrutor`. Contagens de `ExecucaoIA`
+desde o dia 1 do mês corrente (sem filtro por período na query string).
+
+```bash
+curl -H "Authorization: Bearer $JWT" https://.../api/ia/uso/
+```
+```json
+// 200
+{"mes_referencia": "2026-07", "execucoes": 42, "execucoes_ok": 39,
+ "execucoes_erro": 3, "tokens_entrada": 18400, "tokens_saida": 6200}
+```
+
+### `GET /api/acoes/` — catálogo de ações (registry + descritivo do midia)
+
+Auth: Session/JWT (gestor ou instrutor) **ou** header `X-Agente-Token`
+(qualquer token de agente ativo — o catálogo é a "documentação viva"; o
+filtro por escopo só entra na hora de **executar**). Devolve o registry
+central (ações executáveis via `/api/acoes/executar/`) concatenado com o
+`CATALOGO_ACOES` do `midia` (descritivo — rotas REST próprias, não passam
+pelo executor).
+
+```bash
+curl -H "X-Agente-Token: $TOKEN_AGENTE" https://.../api/acoes/
+```
+```json
+// 200 — cada item do registry central:
+[
+  {"nome": "gerar_link_avaliacao",
+   "descricao": "Devolve o link público de avaliação da turma (escopo turma, compartilhável) — reusa um convite válido existente ou cria um novo.",
+   "parametros": {"turma_codigo": "string, código da turma"},
+   "escopo": "avaliacoes:gerar_link_avaliacao",
+   "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
+  {"nome": "status_turma", "descricao": "Devolve curso, status, datas e contagens (mídias/postagens/avaliações) de uma turma.",
+   "parametros": {"turma_codigo": "string, código da turma"},
+   "escopo": "cursos:status_turma",
+   "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
+  {"nome": "listar_postagens_agendadas",
+   "descricao": "Lista as postagens com `agendada_para` preenchido (fila pro Manus publicar), da mais próxima pra mais distante no futuro.",
+   "parametros": {}, "escopo": "midia:listar_postagens_agendadas",
+   "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
+  // ... + itens do CATALOGO_ACOES do midia (executavel: false), ex.:
+  {"nome": "listar_avaliacoes_turma", "descricao": "...", "parametros": {},
+   "escopo": null, "executavel": false, "metodo": "GET",
+   "rota": "/api/midia/turmas/<id>/avaliacoes/"}
+]
+```
+
+### `POST /api/acoes/executar/` — executor central
+
+Auth: Session/JWT (gestor/instrutor sempre autorizado) **ou**
+`X-Agente-Token` (autorizado só se o escopo do token cobrir o escopo
+declarado da ação — ver "Auth por token de agente" abaixo). Body:
+`{"acao": "<nome>", "params": {...}}`. **Toda** execução (sucesso e erro)
+grava `LogAcao` (`acao`, `params`, `status`, `resultado_resumo` ou `erro`,
+`usuario` ou `agente`).
+
+Ações v1 registradas:
+
+| Ação | App | Escopo | Params | Retorno |
+|---|---|---|---|---|
+| `gerar_link_avaliacao` | avaliacoes | `avaliacoes:gerar_link_avaliacao` | `turma_codigo` | `{turma_codigo, url, expira_em}` — reusa convite de escopo turma ainda válido; cria um novo só se não houver |
+| `status_turma` | cursos | `cursos:status_turma` | `turma_codigo` | `{turma_codigo, curso, status, inicio_aulas, capacidade, vagas_restantes, midias, postagens, avaliacoes}` |
+| `listar_postagens_agendadas` | midia | `midia:listar_postagens_agendadas` | `{}` | lista de `{turma_codigo, titulo, legenda, canal, status, agendada_para}` (sem `id` — PK nunca é identificador público, constituição §6; `turma_codigo` + `agendada_para` já identificam a postagem sem ambiguidade prática), ordenada por `agendada_para` asc |
+
+```bash
+# humano (Session/JWT) — sempre autorizado, sem checar escopo
+curl -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" \
+  -d '{"acao": "gerar_link_avaliacao", "params": {"turma_codigo": "03/2026"}}' \
+  https://.../api/acoes/executar/
+
+# agente (n8n) — precisa de escopo compatível no token
+curl -X POST -H "X-Agente-Token: $TOKEN_AGENTE" -H "Content-Type: application/json" \
+  -d '{"acao": "status_turma", "params": {"turma_codigo": "03/2026"}}' \
+  https://.../api/acoes/executar/
+```
+```json
+// 200
+{"resultado": {"turma_codigo": "03/2026", "url": "https://site/avaliar/3f2b...",
+               "expira_em": "2026-08-01T23:59:59-03:00"}}
+
+// 400 — erro de negócio esperado (ErroAcao), ex. turma_codigo ausente/inexistente
+{"detail": "Informe 'turma_codigo'."}
+{"detail": "Turma '03/2026' não encontrada."}
+
+// 403 — agente autenticado mas sem escopo pra essa ação (PermissaoAcao)
+// (resposta padrão DRF de permissão, sem LogAcao — a checagem é antes da view)
+
+// 404 — nome de ação desconhecido no registry
+{"detail": "Ação não encontrada."}
+
+// 500 — qualquer exceção não prevista (nunca vaza detalhe interno)
+{"detail": "Erro ao executar a ação."}
+```
+
+### Auth por token de agente (`X-Agente-Token`)
+
+- Header `X-Agente-Token: <token bruto>`. Sem o header, cai pra
+  Session/JWT normalmente; com o header presente mas inválido/inativo,
+  recusa direto (401) — não tenta autenticar como humano.
+- Token é gerado no Django Admin (`TokenAgente`) — **aparece em texto
+  puro só uma vez**, na criação; o banco guarda só o hash SHA-256.
+  Perdeu o token → desativa (`ativo=False`) e cria outro.
+- `escopos` é uma lista JSON no `TokenAgente`, formato `"app:acao"` (exato,
+  ex. `"avaliacoes:gerar_link_avaliacao"`), `"app:*"` (prefixo — todas as
+  ações daquele app, ex. `"midia:*"`) ou `"*"` (qualquer ação). Ações sem
+  escopo declarado (as descritivas do `midia`, que não passam pelo
+  executor) nunca são autorizadas via `autoriza()` — só fazem sentido
+  chamadas via rota REST própria com Session/JWT.
+- `TokenAgente.ultimo_uso_em` é atualizado a cada request autenticado com
+  aquele token.
+
 ## Utilitário
 
 ```
@@ -166,3 +496,11 @@ POST /api/revalidate-hook/   # interno Django→Next (on-demand ISR), header X-S
 - Sem versionamento por ora (`/api/`); se necessário no futuro, `/api/v2/`.
 - Erros sempre `{"detail": "mensagem legível"}` + status HTTP correto.
 - Paginação DRF padrão (`?page=`) apenas em leads e avaliações do painel.
+- `/api/ia/executar/` e `/api/ia/provedores/{pk}/testar/` distinguem 400
+  (erro de input do chamador — capacidade/contexto/credencial ausente,
+  provedor não configurado) de 502 (a chamada saiu mas o provedor de IA
+  falhou ou recusou) — mesmo formato `{"detail": ...}` nos dois casos.
+- `/api/acoes/executar/` responde 404 pra ação inexistente, 400 pra erro
+  de negócio esperado (`ErroAcao`), 403 (corpo padrão DRF, sem `detail`
+  custom) quando o token de agente não tem escopo, e 500 genérico pra
+  qualquer exceção não prevista — nunca vaza detalhe interno.

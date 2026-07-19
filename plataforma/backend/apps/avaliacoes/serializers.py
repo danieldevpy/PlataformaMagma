@@ -55,7 +55,7 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         # Import protegido: se apps.midia sair do INSTALLED_APPS um dia, a
         # avaliação continua funcionando só com o fallback FotoCurso.
         try:
-            from apps.midia.models import MidiaTurma
+            from apps.midia.models import Midia
         except ImportError:
             return []
         # Filtro de tags em Python (não __contains de JSONField): dev roda
@@ -70,7 +70,7 @@ class ConviteAvaliacaoPublicoSerializer(serializers.Serializer):
         fotos = [
             midia
             for midia in convite.turma.midias.filter(
-                tipo__in=[MidiaTurma.Tipo.FOTO, MidiaTurma.Tipo.ARTE]
+                tipo__in=[Midia.Tipo.FOTO, Midia.Tipo.ARTE]
             )
             if "avaliacao" in midia.tags or "destaque" in midia.tags
         ]

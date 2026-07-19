@@ -1,15 +1,35 @@
 /* ============================================================
-   MESA DE LUZ — Acervo de Mídia da Turma (JS puro, sem libs)
-   Consome a API /api/midia/ conforme contrato do doc 09.
+   MESA DE LUZ — Acervo de Mídia (JS puro, sem libs)
+   Consome a API /api/midia/ conforme contrato do doc 09 + spec 008.
    Globais usados (definidos pelo template): MAGMA_CSRF,
-   MAGMA_API_BASE, MAGMA_TURMA. Nenhum outro global é criado.
+   MAGMA_API_BASE, MAGMA_CONTEXTO, MAGMA_TURMA. Nenhum outro global
+   é criado.
+
+   Dois modos (spec 008 — acervo em camadas):
+   - CONTEXTO.tipo === "turma": comportamento histórico (acervo da
+     turma, consentimento, rotas turmas/<id>/…).
+   - CONTEXTO.tipo === "marca": Mesa de Luz da marca — seletor de
+     camada (geral/instrutores/estrutura/externa + cursos), rotas
+     gerais /acervo/…, sem consentimento (que é conceito de turma).
    ============================================================ */
 (function () {
   "use strict";
 
   var TURMA = window.MAGMA_TURMA || {};
+  var CONTEXTO = window.MAGMA_CONTEXTO || { tipo: TURMA.id ? "turma" : "marca" };
+  var MODO_MARCA = CONTEXTO.tipo === "marca";
   var API_BASE = (window.MAGMA_API_BASE || "/api/midia").replace(/\/$/, "");
   var CSRF = window.MAGMA_CSRF || "";
+
+  // camadas fixas do acervo da marca (cursos entram dinamicamente via
+  // /acervo/camadas/) — value do <select> é "geral"… ou "curso:<id>"
+  var CAMADAS_FIXAS = [
+    { valor: "geral", rotulo: "Geral da marca" },
+    { valor: "instrutores", rotulo: "Instrutores" },
+    { valor: "estrutura", rotulo: "Estrutura" },
+    { valor: "externa", rotulo: "Externa (banco de imagens)" },
+  ];
+  var CHAVE_CAMADA_SALVA = "magma_mesa_camada";
 
   var TAGS = ["destaque", "capa", "avaliacao"];
   var TAG_ICON = { destaque: "⭐", capa: "🖼️", avaliacao: "💬" };
@@ -30,7 +50,26 @@
     hoverId: null,
     focusId: null,
     filaAtiva: false,
+    // modo marca: camada ativa do seletor ("geral"… ou "curso:<id>")
+    camada: MODO_MARCA ? lerCamadaSalva() : null,
   };
+
+  function lerCamadaSalva() {
+    try {
+      return localStorage.getItem(CHAVE_CAMADA_SALVA) || "geral";
+    } catch (e) {
+      return "geral";
+    }
+  }
+
+  // "geral" → {camada:"geral"}; "curso:3" → {camada:"curso", curso:"3"}
+  function paramsDaCamada() {
+    var valor = estado.camada || "geral";
+    if (valor.indexOf("curso:") === 0) {
+      return { camada: "curso", curso: valor.slice(6) };
+    }
+    return { camada: valor };
+  }
 
   // ---------------------------------------------------------
   // Referências DOM
@@ -56,6 +95,7 @@
     confirmCancel: byId("confirmCancel"),
     toasts: byId("toasts"),
     brandMark: byId("brandMark"),
+    camadaSelect: byId("camadaSelect"), // só existe no modo marca
   };
 
   function byId(id) {
@@ -203,11 +243,47 @@
   }
 
   function renderConsentimento() {
+    if (!el.consentBtn) return; // modo marca — consentimento é conceito de turma
     var ativo = !!estado.consentimento;
     el.consentBtn.setAttribute("aria-pressed", ativo ? "true" : "false");
     el.consentBtn.querySelector(".consent-toggle__txt").textContent = ativo
       ? "Consentimento de imagem: concedido pela turma"
       : "Consentimento de imagem: não concedido";
+  }
+
+  // ---------------------------------------------------------
+  // Seletor de camada (modo marca — spec 008)
+  // ---------------------------------------------------------
+  function renderSeletorCamada(cursos) {
+    if (!el.camadaSelect) return;
+    var opcoes = CAMADAS_FIXAS.map(function (c) {
+      return { valor: c.valor, rotulo: c.rotulo };
+    });
+    (cursos || []).forEach(function (curso) {
+      opcoes.push({ valor: "curso:" + curso.id, rotulo: "Curso — " + curso.nome });
+    });
+    var valores = opcoes.map(function (o) { return o.valor; });
+    if (valores.indexOf(estado.camada) === -1) estado.camada = "geral";
+    el.camadaSelect.innerHTML = opcoes
+      .map(function (o) {
+        return (
+          '<option value="' + escapeHtml(o.valor) + '"' +
+          (o.valor === estado.camada ? " selected" : "") + ">" +
+          escapeHtml(o.rotulo) + "</option>"
+        );
+      })
+      .join("");
+  }
+
+  function carregarCamadas() {
+    return api("/acervo/camadas/")
+      .then(function (resp) {
+        renderSeletorCamada((resp && resp.cursos) || []);
+      })
+      .catch(function () {
+        // sem o resumo, o seletor ainda funciona com as camadas fixas
+        renderSeletorCamada([]);
+      });
   }
 
   // ---------------------------------------------------------
@@ -693,7 +769,10 @@
   function enviarArquivo(fila) {
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
-      var url = API_BASE + "/turmas/" + TURMA.id + "/enviar/";
+      // turma → rota histórica; marca → upload geral na camada ativa
+      var url = MODO_MARCA
+        ? API_BASE + "/acervo/enviar/"
+        : API_BASE + "/turmas/" + TURMA.id + "/enviar/";
       xhr.open("POST", url, true);
       xhr.withCredentials = true;
       xhr.setRequestHeader("X-CSRFToken", CSRF);
@@ -734,6 +813,11 @@
       var form = new FormData();
       form.append("arquivo", fila.file);
       if (fila.forcar) form.append("forcar", "1");
+      if (MODO_MARCA) {
+        var alvo = paramsDaCamada();
+        form.append("camada", alvo.camada);
+        if (alvo.curso) form.append("curso_id", alvo.curso);
+      }
       xhr.send(form);
     });
   }
@@ -769,7 +853,17 @@
   // ---------------------------------------------------------
   function carregarAcervo() {
     renderConsentimento();
-    return api("/turmas/" + TURMA.id + "/acervo/")
+    var caminho;
+    if (MODO_MARCA) {
+      var alvo = paramsDaCamada();
+      caminho =
+        "/acervo/?camada=" +
+        encodeURIComponent(alvo.camada) +
+        (alvo.curso ? "&curso=" + encodeURIComponent(alvo.curso) : "");
+    } else {
+      caminho = "/turmas/" + TURMA.id + "/acervo/";
+    }
+    return api(caminho)
       .then(function (resp) {
         estado.itens = (resp && resp.itens) || [];
         if (resp && resp.turma && typeof resp.turma.consentimento_midia === "boolean") {
@@ -944,20 +1038,42 @@
       if (ev.target === el.bulkClear) limparSelecao();
     });
 
-    // consentimento
-    el.consentBtn.addEventListener("click", alternarConsentimento);
+    // consentimento (só existe no modo turma)
+    if (el.consentBtn) {
+      el.consentBtn.addEventListener("click", alternarConsentimento);
+    }
+
+    // seletor de camada (só existe no modo marca) — troca de camada limpa a
+    // seleção (os itens selecionados podem nem estar na camada nova)
+    if (el.camadaSelect) {
+      el.camadaSelect.addEventListener("change", function () {
+        estado.camada = el.camadaSelect.value;
+        try {
+          localStorage.setItem(CHAVE_CAMADA_SALVA, estado.camada);
+        } catch (e) {
+          /* ignora */
+        }
+        limparSelecao();
+        el.contadores.innerHTML = '<span class="stat-skel">carregando camada…</span>';
+        carregarAcervo();
+      });
+    }
   }
 
   // ---------------------------------------------------------
   // Inicialização
   // ---------------------------------------------------------
   function init() {
-    if (!TURMA || !TURMA.id) {
+    if (!MODO_MARCA && (!TURMA || !TURMA.id)) {
       toast("Turma não identificada — recarregue a página.", "erro");
       return;
     }
     renderMarca();
     ligarEventos();
+    if (MODO_MARCA) {
+      renderSeletorCamada([]); // camadas fixas já; cursos chegam a seguir
+      carregarCamadas();
+    }
     carregarAcervo();
   }
 

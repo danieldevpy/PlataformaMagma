@@ -1,19 +1,34 @@
 from django.urls import path
 
 from apps.midia.views import (
+    AcervoGeralView,
     AcervoTurmaView,
     AcoesCatalogoView,
+    AvaliacoesTurmaView,
+    CamadasView,
     ConsentimentoView,
+    EnviarAcervoView,
     EnviarMidiaView,
     ItemMidiaView,
     PostagemDetailView,
     PostagemZipView,
     PostagensTurmaView,
+    PostagensView,
     ReordenarView,
 )
 
 urlpatterns = [
     path("midia/acoes/", AcoesCatalogoView.as_view(), name="midia-acoes"),
+    # ---- acervo em camadas (spec 008) — rotas gerais ----
+    path("midia/acervo/", AcervoGeralView.as_view(), name="midia-acervo-geral"),
+    path("midia/acervo/camadas/", CamadasView.as_view(), name="midia-camadas"),
+    path(
+        "midia/acervo/enviar/",
+        EnviarAcervoView.as_view(),
+        name="midia-acervo-enviar",
+    ),
+    path("midia/postagens/", PostagensView.as_view(), name="midia-postagens-geral"),
+    # ---- rotas por turma (contrato do subsistema 09, intocado) ----
     path(
         "midia/turmas/<int:turma_id>/acervo/",
         AcervoTurmaView.as_view(),
@@ -23,6 +38,11 @@ urlpatterns = [
         "midia/turmas/<int:turma_id>/enviar/",
         EnviarMidiaView.as_view(),
         name="midia-enviar",
+    ),
+    path(
+        "midia/turmas/<int:turma_id>/avaliacoes/",
+        AvaliacoesTurmaView.as_view(),
+        name="midia-avaliacoes",
     ),
     path(
         "midia/turmas/<int:turma_id>/reordenar/",

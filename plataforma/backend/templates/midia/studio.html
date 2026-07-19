@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Magma Studio — Turma {{ turma.codigo }}</title>
+  <title>Magma Studio — {% if turma %}Turma {{ turma.codigo }}{% else %}Marca{% endif %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,11 +14,21 @@
   <script>
     window.MAGMA_CSRF = "{{ csrf_token }}";
     window.MAGMA_API_BASE = "{{ api_base }}";
+    window.MAGMA_IA_INTEGRACOES_URL = "{% url 'admin:ia_provedoria_integracoes' %}";
+    {% if turma %}
+    window.MAGMA_CONTEXTO = { tipo: "turma" };
     window.MAGMA_TURMA = {
       id: {{ turma.id }},
       codigo: "{{ turma.codigo|escapejs }}",
-      curso: "{{ turma.curso|escapejs }}"
+      curso: "{{ turma.curso|escapejs }}",
+      cursoSlug: "{{ turma.curso.slug|escapejs }}",
+      dataInicio: "{{ turma.inicio_aulas|date:'Y-m-d'|escapejs }}",
+      vagasRestantes: "{{ turma.vagas_restantes|default_if_none:''|escapejs }}",
+      diasAula: "{{ turma.dias_e_horario|escapejs }}"
     };
+    {% else %}
+    window.MAGMA_CONTEXTO = { tipo: "marca" };
+    {% endif %}
   </script>
 
   <!-- ===================== COLUNA 1 — ACERVO ===================== -->
@@ -27,21 +37,49 @@
       <span class="brand__mark" id="brandMark"></span>
       <div class="brand__txt">
         <strong>Magma Studio</strong>
-        <small>Turma {{ turma.codigo }}</small>
+        <small>{% if turma %}Turma {{ turma.codigo }}{% else %}Marca{% endif %}</small>
       </div>
     </div>
     <a class="brand__back" href="../acervo/">← Mesa de Luz (acervo)</a>
+    <a class="brand__back" href="{% url 'admin:ia_provedoria_integracoes' %}" target="_blank" rel="noopener">⚙ Integrações de IA</a>
 
-    <div class="picker">
+    <div class="picker" id="pickerFotos">
       <div class="picker__head">
-        <span>Fotos do acervo</span>
+        <span id="pickerFotosLabel">Fotos do acervo</span>
         <small id="pickerCount">0 selecionadas</small>
       </div>
+      <!-- seletor de camada do acervo (spec 008) — a arte pode misturar
+           fotos de camadas diferentes; a seleção sobrevive à troca -->
+      <select class="picker__camada" id="pickerCamada" aria-label="Camada do acervo"></select>
       <div class="picker__grid" id="pickerGrid"></div>
       <p class="picker__empty" id="pickerEmpty" hidden>
-        Nenhuma foto no acervo ainda. Envie fotos na Mesa de Luz da turma.
+        Nenhuma foto nesta camada ainda. Envie fotos na Mesa de Luz.
+      </p>
+      <div class="fotoUnica" id="fotoUnicaControls" hidden>
+        <img class="fotoUnica__thumb" id="fotoUnicaThumb" alt="">
+        <span class="fotoUnica__label">Foto selecionada</span>
+        <span class="fotoUnica__btns">
+          <button type="button" class="iconbtn imgup" id="fotoUnicaUp" title="Subir imagem no quadro">↥</button>
+          <button type="button" class="iconbtn imgdn" id="fotoUnicaDown" title="Descer imagem no quadro">↧</button>
+          <button type="button" class="iconbtn rm" id="fotoUnicaRm" title="Remover seleção">✕</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="picker" id="pickerAvaliacoes" hidden>
+      <div class="picker__head">
+        <span>Avaliações da turma</span>
+        <small id="avaliacoesCount">0 disponíveis</small>
+      </div>
+      <div class="avaliacoes__list" id="avaliacoesList"></div>
+      <p class="picker__empty" id="avaliacoesEmpty" hidden>
+        Nenhuma avaliação aprovada ainda.
       </p>
     </div>
+
+    <p class="picker__none" id="pickerNone" hidden>
+      Este modelo não usa fotos do acervo — preencha os campos ao lado.
+    </p>
   </aside>
 
   <div class="gutter" data-target="picker" title="Arraste para ajustar"></div>
@@ -49,32 +87,36 @@
   <!-- ===================== COLUNA 2 — CONTROLES ===================== -->
   <section class="panel">
     <header class="panel__head">
-      <h1>Formação de Turma</h1>
-      <p>Escolha as fotos do acervo à esquerda — o carrossel é montado no padrão da marca.</p>
+      <h1 id="panelTitle">Formação de Turma</h1>
+      <p id="panelDesc">Escolha as fotos do acervo à esquerda — o carrossel é montado no padrão da marca.</p>
     </header>
 
+    <div class="templates" id="templateSelector">
+      <span class="templates__label">Modelo de arte</span>
+      <div class="templates__grid" id="templateGrid"></div>
+    </div>
+
+    <div class="formatSel" id="formatoSelector" hidden>
+      <span class="formatSel__label">Formato do preview</span>
+      <div class="formatSel__opts" id="formatoOpts"></div>
+    </div>
+
+    <div class="field-grid" id="fieldGrid"></div>
+
     <div class="field-grid">
-      <label class="field">
-        <span>Nº da turma</span>
-        <input id="fTurma" type="text" maxlength="5" />
-      </label>
-      <label class="field">
-        <span>Frase de fechamento</span>
-        <input id="fFrase" type="text" value="Parabéns à nossa turma!" />
-      </label>
-      <label class="field">
-        <span>Instagram</span>
-        <input id="fInsta" type="text" value="@magma_curso" />
-      </label>
-      <label class="field">
-        <span>WhatsApp</span>
-        <input id="fZap" type="text" value="(21) 97100-5197" />
-      </label>
       <label class="field field--full">
-        <span>Legenda do post</span>
+        <div class="field__row">
+          <span>Legenda do post</span>
+          <span class="field__ia" id="legendaIaSlot"></span>
+        </div>
         <textarea id="fLegenda"></textarea>
         <small>Aceita edição livre — vai junto na criação da postagem.</small>
       </label>
+    </div>
+
+    <div class="exportKit" id="exportKit" hidden>
+      <span class="exportKit__label">Exportar em (kit)</span>
+      <div class="exportKit__opts" id="exportOpts"></div>
     </div>
 
     <div class="photos" id="photoList" hidden>
@@ -113,8 +155,8 @@
 
     <section class="postagens">
       <div class="postagens__head">
-        <h2>Postagens da turma</h2>
-        <p>Rascunho → Pronta → Publicada. Cada carrossel criado aparece aqui.</p>
+        <h2>{% if turma %}Postagens da turma{% else %}Postagens da marca{% endif %}</h2>
+        <p>Rascunho → Pronta → Publicada. Cada arte criada aparece aqui.</p>
       </div>
       <p class="postagens__empty" id="postagensEmpty">Nenhuma postagem criada ainda.</p>
       <div class="postagens__list" id="postagensList"></div>
@@ -124,6 +166,13 @@
   <div class="confetti-layer" id="confettiLayer"></div>
 
   <script src="{% static 'midia/templates-engine.js' %}"></script>
+  <script src="{% static 'midia/marca.js' %}"></script>
+  <script src="{% static 'midia/templates/formacao.js' %}"></script>
+  <script src="{% static 'midia/templates/depoimento.js' %}"></script>
+  <script src="{% static 'midia/templates/vagas.js' %}"></script>
+  <script src="{% static 'midia/templates/formatura.js' %}"></script>
+  <script src="{% static 'midia/templates/educativo.js' %}"></script>
+  <script src="{% static 'midia/templates/capa_reel.js' %}"></script>
   <script src="{% static 'midia/studio.js' %}"></script>
 </body>
 </html>
