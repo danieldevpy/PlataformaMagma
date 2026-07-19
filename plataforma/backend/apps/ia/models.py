@@ -19,6 +19,7 @@ class ProvedorIA(ComTimestamps):
     class Provedor(models.TextChoices):
         ANTHROPIC = "anthropic", "Anthropic"
         OPENAI = "openai", "OpenAI"
+        GEMINI = "gemini", "Google Gemini"
 
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     provedor = models.CharField(max_length=20, choices=Provedor.choices)

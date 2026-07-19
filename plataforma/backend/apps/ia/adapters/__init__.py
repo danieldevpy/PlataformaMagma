@@ -5,11 +5,13 @@ Trocar de provedor não toca o Studio nem `views.py`: só este registro muda.
 
 from apps.ia.adapters.anthropic import AdaptadorAnthropic
 from apps.ia.adapters.base import AdaptadorBase, ErroAdaptadorIA
+from apps.ia.adapters.gemini import AdaptadorGemini
 from apps.ia.adapters.openai import AdaptadorOpenAI
 
 REGISTRO_ADAPTADORES = {
     "anthropic": AdaptadorAnthropic,
     "openai": AdaptadorOpenAI,
+    "gemini": AdaptadorGemini,
 }
 
 
