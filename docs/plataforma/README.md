@@ -43,6 +43,28 @@
 | [08-conteudo-inicial-seeds.md](08-conteudo-inicial-seeds.md) | **Seed-first**: template → registros iniciais, `conteudo_origem`, checklist de revisão |
 | [09-fluxo-speckit-dotcontext.md](09-fluxo-speckit-dotcontext.md) | Como desenvolver: spec-kit (constitution, specs por fase) + `.context/` para agentes |
 
+## Como rodar os testes
+
+Rede de segurança da spec `specs/001-suite-de-testes/` — um comando responde
+"posso deployar?":
+
+```bash
+plataforma/rodar-testes.sh          # backend (Django, ~150 testes) + node --check + Vitest (lib/* do frontend)
+plataforma/rodar-testes.sh --full   # + tsc --noEmit e next build do frontend (mais lento; obrigatório antes de deploy)
+```
+
+- **Backend**: testes vivem em `apps/<app>/tests.py` (um por app, `django.test.TestCase`
+  nativo — **não** pytest); helpers compartilhados em `apps/nucleo/testing.py`. Rodam
+  sob `config/settings/test.py` (DB SQLite em memória, `MEDIA_ROOT` temporário) — nunca
+  tocam `db.sqlite3` nem `backend/media/` reais. Rodar só um app:
+  `cd backend && python manage.py test apps.midia --settings=config.settings.test -v 2`.
+- **Frontend**: `Vitest` (`frontend/vitest.config.ts`) cobre a **lógica pura** —
+  `lib/*` (formatação, merge de dados da home, JSON-LD, fetch wrapper) e o webhook
+  `app/api/revalidate/route.ts`. De propósito **sem** jsdom/Testing Library — testes de
+  componente/interação (`LeadForm`, `AvaliacaoExperience`, `Countdown`) e E2E de browser
+  real ficam pra uma spec futura. Testes ficam colocados junto do arquivo (`format.test.ts`
+  ao lado de `format.ts`). Rodar: `cd frontend && npm run test` (ou `npx vitest` pra modo watch).
+
 ## Regras de ouro do projeto
 
 1. **Seed-first.** O banco nunca está vazio: o conteúdo do template é semeado no deploy ([08](08-conteudo-inicial-seeds.md)). O seed jamais sobrescreve o que o gestor editou (`conteudo_origem="editado"`).

@@ -1,6 +1,7 @@
-"""Testes da camada de ações (spec 005-T1) — registry, catálogo, execução
-com auth de agente/escopo e auditoria (LogAcao). Ver apps/nucleo/acoes.py,
-apps/nucleo/views.py e specs/005-camada-de-acoes/spec.md."""
+"""Testes de apps.nucleo: camada de ações (spec 005-T1 — registry, catálogo,
+execução com auth de agente/escopo e auditoria/LogAcao) e config do site
+público/painel (spec 001-T2). Ver apps/nucleo/acoes.py, apps/nucleo/views.py
+e specs/005-camada-de-acoes/spec.md."""
 
 from django.test import TestCase
 from django.urls import reverse
@@ -9,7 +10,9 @@ from apps.avaliacoes.models import ConviteAvaliacao
 from apps.contas.models import Usuario
 from apps.cursos.models import Curso, Turma
 from apps.midia.models import Postagem
-from apps.nucleo.models import LogAcao, TokenAgente
+from apps.nucleo.models import ConfiguracaoSite, LogAcao, TokenAgente
+from apps.nucleo.serializers import CAMPOS_CONFIG
+from apps.nucleo.testing import criar_gestor, criar_instrutor, jpeg_em_memoria, jwt_headers
 
 
 def criar_token_agente(nome="agente-teste", escopos=None):
@@ -173,6 +176,39 @@ class CamadaDeAcoesTests(TestCase):
         self.assertEqual(resultado["turma_codigo"], "T027")
         self.assertEqual(resultado["curso"], "Socorrista APH")
 
+    def test_status_turma_inclui_contagens(self):
+        """status_turma (apps/cursos/acoes.py) soma mídias/postagens/
+        avaliações da turma — o teste acima só checava turma_codigo/curso."""
+        from apps.avaliacoes.models import Avaliacao
+        from apps.midia.models import Midia
+
+        Postagem.objects.create(turma=self.turma, titulo="Post 1")
+        Midia.objects.create(
+            camada=Midia.Camada.TURMA,
+            turma=self.turma,
+            tipo=Midia.Tipo.FOTO,
+            arquivo=jpeg_em_memoria(),
+        )
+        Avaliacao.objects.create(
+            curso=self.curso,
+            turma=self.turma,
+            nome="Fulana",
+            estrelas=5,
+            comentario="Muito bom.",
+            status=Avaliacao.Status.APROVADA,
+        )
+
+        self.client.force_login(self.gestor)
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "status_turma", "params": {"turma_codigo": "T027"}},
+            content_type="application/json",
+        )
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["midias"], 1)
+        self.assertEqual(resultado["postagens"], 1)
+        self.assertEqual(resultado["avaliacoes"], 1)
+
     def test_listar_postagens_agendadas(self):
         Postagem.objects.create(turma=self.turma, titulo="Sem agenda")
         agendada = Postagem.objects.create(
@@ -256,3 +292,90 @@ class PatchAgendadaParaTests(TestCase):
         self.postagem.refresh_from_db()
         self.assertIsNotNone(self.postagem.agendada_para)
         self.assertEqual(self.postagem.agendada_para.isoformat(), "2026-08-05T15:30:00+00:00")
+
+
+class SiteConfigPublicaViewTests(TestCase):
+    """GET /api/site/config/ — spec 001, T2. Singleton (get_or_create(pk=1)),
+    shape = CAMPOS_CONFIG (ver apps/nucleo/serializers.py)."""
+
+    def test_responde_200_com_shape_do_contrato(self):
+        resposta = self.client.get(reverse("site-config"))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(set(resposta.json().keys()), set(CAMPOS_CONFIG))
+
+    def test_reflete_valores_salvos(self):
+        config = ConfiguracaoSite.obter()
+        config.instagram = "@teste_magma"
+        config.exibir_nota_google = True
+        config.nota_google = "4.9"
+        config.save()
+
+        resposta = self.client.get(reverse("site-config"))
+        corpo = resposta.json()
+        self.assertEqual(corpo["instagram"], "@teste_magma")
+        self.assertTrue(corpo["exibir_nota_google"])
+
+
+class ConfigPainelViewTests(TestCase):
+    """GET/PATCH /api/painel/config/ — só gestor; PATCH marca
+    conteudo_origem="editado" (MarcarEditadoMixin). ConfigPainelView não
+    declara authentication_classes — só JWT (default global) vale aqui,
+    ver `jwt_headers` em apps/nucleo/testing.py."""
+
+    def setUp(self):
+        self.gestor = criar_gestor()
+
+    def test_gestor_edita_e_marca_editado(self):
+        resposta = self.client.patch(
+            reverse("painel-config"),
+            data={"instagram": "@magma_editado"},
+            content_type="application/json",
+            headers=jwt_headers(self.gestor),
+        )
+        self.assertEqual(resposta.status_code, 200)
+        corpo = resposta.json()
+        self.assertEqual(corpo["instagram"], "@magma_editado")
+        self.assertEqual(corpo["conteudo_origem"], "editado")
+
+    def test_instrutor_nao_acessa(self):
+        resposta = self.client.get(
+            reverse("painel-config"), headers=jwt_headers(criar_instrutor())
+        )
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_anonimo_401_ou_403(self):
+        resposta = self.client.get(reverse("painel-config"))
+        self.assertIn(resposta.status_code, (401, 403))
+
+
+class TokenAgenteAdminTests(TestCase):
+    """POST /dj-admin/nucleo/tokenagente/add/ — TokenAgenteAdmin.save_model
+    gera o par (bruto/hash) e mostra o bruto uma única vez na mensagem
+    (ver apps/nucleo/admin.py); a lógica de hash em si já é coberta por
+    TokenAgente.gerar_par via criar_token_agente, isto testa a "cola" do
+    admin em volta dela."""
+
+    def setUp(self):
+        self.superusuario = Usuario.objects.create_user(
+            username="super-token-admin",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.client.force_login(self.superusuario)
+
+    def test_criar_via_admin_gera_hash_e_mostra_bruto_uma_vez(self):
+        resposta = self.client.post(
+            "/dj-admin/nucleo/tokenagente/add/",
+            data={"nome": "agente-admin-teste", "escopos": "[]", "ativo": "on"},
+            follow=True,
+        )
+        self.assertEqual(resposta.status_code, 200)
+
+        agente = TokenAgente.objects.get(nome="agente-admin-teste")
+        self.assertTrue(agente.token_hash)
+        self.assertEqual(len(agente.token_hash), 64)  # sha256 hex
+
+        mensagens = [str(m) for m in resposta.context["messages"]]
+        self.assertTrue(any("copie AGORA" in m for m in mensagens))

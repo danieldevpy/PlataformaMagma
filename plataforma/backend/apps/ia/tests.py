@@ -375,3 +375,256 @@ class IntegracoesPaginaStaffTests(TestCase):
     def test_anonimo_e_redirecionado_pro_login(self):
         resposta = self.client.get("/dj-admin/ia/provedoria/integracoes/")
         self.assertEqual(resposta.status_code, 302)
+
+
+class AdaptadorGeminiTests(TestCase):
+    """Provedor Google Gemini (ver apps/ia/adapters/gemini.py) — spec 001,
+    T6. Mesmo padrão dos demais adaptadores: nunca chama a API real, o HTTP
+    é mockado em `requests.post`."""
+
+    def setUp(self):
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-gemini", password="senha-forte-123", papel=Usuario.Papel.GESTOR
+        )
+        self.client.force_login(self.gestor)
+
+    def test_credencial_gemini_fica_cifrada(self):
+        provedor = ProvedorIA(
+            tipo=ProvedorIA.Tipo.TEXTO,
+            provedor=ProvedorIA.Provedor.GEMINI,
+            modelo="gemini-2.0-flash",
+        )
+        provedor.set_credencial("chave-gemini-secreta")
+        provedor.save()
+
+        do_banco = ProvedorIA.objects.get(pk=provedor.pk)
+        self.assertNotIn("chave-gemini-secreta", do_banco.credencial)
+        self.assertEqual(do_banco.get_credencial(), "chave-gemini-secreta")
+
+    @patch("apps.ia.adapters.gemini.requests.post")
+    def test_executar_via_adaptador_gemini_mockado(self, post_mock):
+        post_mock.return_value.status_code = 200
+        post_mock.return_value.json.return_value = {
+            "candidates": [{"content": {"parts": [{"text": "Legenda gerada pelo Gemini."}]}}],
+            "usageMetadata": {"promptTokenCount": 12, "candidatesTokenCount": 6},
+        }
+        provedor = criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.GEMINI, modelo="gemini-2.0-flash"
+        )
+
+        resposta = self.client.post(
+            "/api/ia/executar/",
+            data={"capacidade": "texto.gerar", "contexto": {"tipo_conteudo": "legenda"}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json(), {"resultado": "Legenda gerada pelo Gemini."})
+        post_mock.assert_called_once()
+        # a chave vai como query param `key=`, não header (diferente de
+        # Anthropic/OpenAI) — ver apps/ia/adapters/gemini.py::_chamar.
+        self.assertEqual(post_mock.call_args.kwargs["params"]["key"], "sk-ant-teste-123")
+
+        execucao = ExecucaoIA.objects.get()
+        self.assertEqual(execucao.provedor_id, provedor.pk)
+        self.assertEqual(execucao.tokens_entrada, 12)
+
+    @patch("apps.ia.adapters.gemini.requests.post")
+    def test_erro_http_do_gemini_vira_erroadaptador(self, post_mock):
+        post_mock.return_value.status_code = 400
+        post_mock.return_value.json.return_value = {"error": {"message": "chave inválida"}}
+        criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.GEMINI, modelo="gemini-2.0-flash"
+        )
+
+        resposta = self.client.post(
+            "/api/ia/executar/",
+            data={"capacidade": "texto.gerar", "contexto": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 502)
+        self.assertIn("chave inválida", resposta.json()["detail"])
+
+    def test_gemini_esta_registrado_no_adaptador(self):
+        from apps.ia.adapters import REGISTRO_ADAPTADORES, obter_adaptador
+        from apps.ia.adapters.gemini import AdaptadorGemini
+
+        self.assertIs(REGISTRO_ADAPTADORES["gemini"], AdaptadorGemini)
+        provedor = criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.GEMINI, modelo="gemini-2.0-flash"
+        )
+        self.assertIsInstance(obter_adaptador(provedor), AdaptadorGemini)
+
+
+class CredencialNuncaVazaNoJsonTests(TestCase):
+    """Reforço transversal (spec 001, T6): a credencial cifrada nunca sai em
+    nenhuma resposta JSON da API de IA, qualquer que seja o provedor."""
+
+    def setUp(self):
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-seguranca-ia", password="senha-forte-123", papel=Usuario.Papel.GESTOR
+        )
+        self.client.force_login(self.gestor)
+
+    def test_credencial_fora_de_provedores_get_e_patch(self):
+        provedor = criar_provedor_texto_ativo_testado()
+        for resposta in (
+            self.client.get("/api/ia/provedores/"),
+            self.client.patch(
+                f"/api/ia/provedores/{provedor.pk}/",
+                data={"modelo": "outro-modelo"},
+                content_type="application/json",
+            ),
+        ):
+            self.assertNotIn(b"sk-ant-teste-123", resposta.content)
+            self.assertNotIn(b'"credencial"', resposta.content)
+
+
+class AdaptadorOpenAITests(TestCase):
+    """Provedor OpenAI (ver apps/ia/adapters/openai.py) — Anthropic e Gemini
+    já tinham teste de adapter dedicado, OpenAI ficou de fora. Mesmo padrão:
+    nunca chama a API real, `requests.post` é mockado."""
+
+    def setUp(self):
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-openai", password="senha-forte-123", papel=Usuario.Papel.GESTOR
+        )
+        self.client.force_login(self.gestor)
+
+    @patch("apps.ia.adapters.openai.requests.post")
+    def test_executar_via_adaptador_openai_mockado(self, post_mock):
+        post_mock.return_value.status_code = 200
+        post_mock.return_value.json.return_value = {
+            "choices": [{"message": {"content": "Texto gerado pela OpenAI."}}],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5},
+        }
+        provedor = criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.OPENAI, modelo="gpt-4o-mini"
+        )
+
+        resposta = self.client.post(
+            "/api/ia/executar/",
+            data={"capacidade": "texto.gerar", "contexto": {"tipo_conteudo": "legenda"}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json(), {"resultado": "Texto gerado pela OpenAI."})
+        # a chave vai no header Authorization: Bearer — diferente do Gemini
+        # (query param `key=`), ver apps/ia/adapters/openai.py::_chamar.
+        self.assertEqual(
+            post_mock.call_args.kwargs["headers"]["Authorization"],
+            "Bearer sk-ant-teste-123",
+        )
+
+        execucao = ExecucaoIA.objects.get()
+        self.assertEqual(execucao.provedor_id, provedor.pk)
+        self.assertEqual(execucao.tokens_entrada, 10)
+
+    @patch("apps.ia.adapters.openai.requests.post")
+    def test_erro_http_da_openai_vira_erroadaptador(self, post_mock):
+        post_mock.return_value.status_code = 401
+        post_mock.return_value.json.return_value = {"error": {"message": "invalid api key"}}
+        criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.OPENAI, modelo="gpt-4o-mini"
+        )
+
+        resposta = self.client.post(
+            "/api/ia/executar/",
+            data={"capacidade": "texto.gerar", "contexto": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 502)
+        self.assertIn("invalid api key", resposta.json()["detail"])
+
+    def test_openai_esta_registrado_no_adaptador(self):
+        from apps.ia.adapters import REGISTRO_ADAPTADORES, obter_adaptador
+        from apps.ia.adapters.openai import AdaptadorOpenAI
+
+        self.assertIs(REGISTRO_ADAPTADORES["openai"], AdaptadorOpenAI)
+        provedor = criar_provedor_texto_ativo_testado(
+            provedor=ProvedorIA.Provedor.OPENAI, modelo="gpt-4o-mini"
+        )
+        self.assertIsInstance(obter_adaptador(provedor), AdaptadorOpenAI)
+
+
+class MontarMensagemTests(TestCase):
+    """apps/ia/prompts.py::montar_mensagem — monta o prompt que vai pra API
+    paga; zero teste direto até aqui (só coberto de leve via mocks que nem
+    chamam essa função de verdade)."""
+
+    def test_sistema_inclui_prompt_da_marca_e_instrucao_da_capacidade(self):
+        from apps.ia.prompts import PROMPT_MARCA, montar_mensagem
+
+        sistema, _ = montar_mensagem("texto.gerar", {})
+        self.assertIn(PROMPT_MARCA, sistema)
+        self.assertIn("escrever um texto novo", sistema)
+
+    def test_capacidade_desconhecida_usa_instrucao_generica(self):
+        from apps.ia.prompts import montar_mensagem
+
+        sistema, _ = montar_mensagem("video.roteirizar", {})
+        self.assertIn("atender o pedido descrito no contexto", sistema)
+
+    def test_contexto_vazio_cai_no_fallback(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem("texto.gerar", {})
+        self.assertEqual(mensagem, "Contexto: (nenhum detalhe adicional informado)")
+
+    def test_contexto_none_nao_quebra(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem("texto.gerar", None)
+        self.assertIn("nenhum detalhe", mensagem)
+
+    def test_campos_conhecidos_viram_linhas_rotuladas(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem(
+            "texto.melhorar",
+            {"texto_atual": "oi", "instrucao": "encurtar", "turma": "T1"},
+        )
+        self.assertIn("Texto atual: oi", mensagem)
+        self.assertIn("Instrução: encurtar", mensagem)
+        self.assertIn("Turma: T1", mensagem)
+
+    def test_campo_extra_desconhecido_tambem_entra(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem("texto.gerar", {"campo_novo": "valor novo"})
+        self.assertIn("campo_novo: valor novo", mensagem)
+
+    def test_campo_vazio_e_omitido(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem("texto.gerar", {"turma": "", "curso": None})
+        self.assertNotIn("Turma:", mensagem)
+        self.assertNotIn("Curso:", mensagem)
+
+
+class CryptoTests(TestCase):
+    """apps/ia/crypto.py — cifrar/decifrar isolados; até aqui só cobertos
+    indiretamente via ProvedorIA.set_credencial/get_credencial."""
+
+    def test_cifrar_e_decifrar_round_trip(self):
+        from apps.ia.crypto import cifrar, decifrar
+
+        cifrado = cifrar("minha-chave-secreta")
+        self.assertNotEqual(cifrado, "minha-chave-secreta")
+        self.assertEqual(decifrar(cifrado), "minha-chave-secreta")
+
+    def test_cifrar_string_vazia_devolve_vazia(self):
+        from apps.ia.crypto import cifrar
+
+        self.assertEqual(cifrar(""), "")
+
+    def test_decifrar_string_vazia_devolve_vazia(self):
+        from apps.ia.crypto import decifrar
+
+        self.assertEqual(decifrar(""), "")
+
+    def test_decifrar_token_invalido_devolve_vazia_sem_excecao(self):
+        # SECRET_KEY trocado em prod, por exemplo — decifrar() nunca deve
+        # derrubar a request com exceção (ver docstring do módulo).
+        from apps.ia.crypto import decifrar
+
+        self.assertEqual(decifrar("isso-nao-e-um-token-fernet-valido"), "")
