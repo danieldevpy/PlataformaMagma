@@ -11,6 +11,7 @@
 - **18/07** — reorganização (protótipos → `mvp-apps/`), estrutura de memória (`.context/` + `specs/` + constituição) e **baseline v0.1.0**.
 - **18/07 (tarde)** — Studio 2.0: correção de 4 desalinhamentos de UI/UX achados no teste real (postagens viram accordion + overflow; título da capa de reel `central` deixa de vazar; texto do educativo `erro-certo` centralizado; barra de variantes não fica mais sob os thumbnails). Ver `historico/2026-07-18-studio-2-0-fixes-ui.md`.
 - **18/07 (noite)** — **Spec 008: acervo em camadas** (correção de rumo do turma-cêntrico): `Midia` com camadas turma/curso/instrutores/estrutura/externa/geral, postagens multi-contexto, Mesa de Luz + Studio DA MARCA, seletor de camada no picker (arte mistura camadas). Suíte 50/50. Ver `historico/2026-07-18-acervo-em-camadas.md`.
+- **19/07 (tarde)** — Limpeza de repositório: `design-system-junto/` (duplicata) removida, arte bruta do laboratório do Studio (`mvp-apps/studio/montar-templates/formacao-turma/`, ~109MB) tirada do versionamento (fica local, `.gitignore`), histórico do git reescrito com `git filter-repo` p/ o `.git` emagrecer (~137MB → poucos MB). Ver `historico/2026-07-19-limpeza-repo-git.md`.
 - **19/07** — **Spec 001 (suíte de testes) IMPLEMENTADA por completo, T1–T8**: 120 testes (era 45), `config/settings/test.py` isolado, `apps/nucleo/testing.py` (helpers), cobertura nova em `cursos`/`leads`/`avaliacoes`/`educacional`/`contas` (LP, leads, magic-link de avaliação e de carteirinha, JWT), expansão pesada de `midia` (EXIF, dedup completo, curadoria, consentimento, ZIP, 403 exaustivo, páginas staff da turma) e de `ia` (adapter Gemini mockado). Runner `plataforma/rodar-testes.sh` (+ `--full`). Achado: painéis de `cursos`/`leads`/`avaliacoes`/`nucleo` só aceitam JWT (não sessão) — registrado em `specs/001-suite-de-testes/tasks.md` §Log, nenhum código de produção alterado. T9 (CI) não disparada.
 
 ## O que está PRONTO (v0.1.0)
@@ -35,7 +36,7 @@
 
 ## PENDÊNCIAS / QUESTÕES ABERTAS
 
-1. `design-system-junto/` é cópia idêntica de `design-system/` — Daniel decide qual layout fica e a outra pasta some.
+1. ~~`design-system-junto/` é cópia idêntica de `design-system/`~~ — **resolvido 2026-07-19**: pasta removida (do working tree e do histórico do git); `design-system/` na raiz é a única fonte.
 2. Seed inicial completo (`docs/plataforma/08-conteudo-inicial-seeds.md`) ainda não materializado como comando idempotente.
 3. Prod: aplicar `client_max_body_size 1g` no nginx do HOST (ref. já está em `plataforma/nginx/`).
 4. Itens de mídia enviados antes do dedup não têm `meta.nome_original` (não entram na checagem; sem backfill, não crítico).

@@ -41,6 +41,9 @@ plataforma/backend/data.json
 # Prints de bug (locais, fora do versionamento)
 plataforma/bug/
 
+# Arte bruta de laboratório do Studio (exports/versões locais, não versionadas)
+mvp-apps/studio/montar-templates/formacao-turma/
+
 # Logs
 *.log
 npm-debug.log*

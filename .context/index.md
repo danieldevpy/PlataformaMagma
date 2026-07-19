@@ -9,8 +9,7 @@ Meta imediata: **encher a turma de Socorrista APH até 08/08/2026** via campanha
 | Pasta | O que é | Estado |
 |---|---|---|
 | `plataforma/` | **O produto real** — Django/DRF (`backend/`) + Next.js App Router (`frontend/`) + nginx + scripts `init-dev.sh` / `init-prod.sh` | Em produção (v0.1) |
-| `design-system/` | Identidade da marca v2 (Estrela da Vida) — tokens, logos, showcase, `AGENTS.md` | **LEI visual** |
-| `design-system-junto/` | Cópia idêntica de `design-system/` (dup. da reorganização) | ⚠️ decidir/remover |
+| `design-system/` | Identidade da marca v2 (Estrela da Vida) — tokens, logos, showcase, `AGENTS.md` | **LEI visual** (única cópia — `design-system-junto/` era duplicata e foi removida em 19/07) |
 | `docs/` | Concepção: visão, ofertas, `subsistemas/01..09` (o QUÊ/PORQUÊ de cada frente) | Fonte conceitual |
 | `docs/plataforma/` | Plano técnico: 01 arquitetura · 02 modelos · 03 **contratos de API** · 04 front · 05 avaliações · 06 painel · 07 roadmap · 08 seeds · 09 fluxo spec-kit | Fonte técnica |
 | `specs/` | Specs de features (fluxo spec-driven interno) | Ativo a partir da v0.1 |
