@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+
+{# Botões de acesso à Mesa de Luz e ao Studio DA MARCA (spec 008) — mesmo
+   padrão de templates/admin/cursos/turma/change_form.html, mas na
+   changelist (não há "original" aqui: acervo da marca não é por objeto).
+   Jazzmin não envolve object-tools-items em <li> (ver
+   change_list_object_tools.html: <a class="btn ... float-end">). #}
+{% block object-tools-items %}
+    <a class="btn btn-outline-secondary btn-sm float-end" href="acervo/">🎬 Acervo da marca</a>
+    <a class="btn btn-outline-secondary btn-sm float-end" href="studio/">🎨 Studio da marca</a>
+    {{ block.super }}
+{% endblock %}

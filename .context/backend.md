@@ -23,6 +23,7 @@
 - Filtros em JSONField feitos **em Python** (compat SQLite dev × MySQL prod).
 - URLs de mídia relativas (`config/drf.py::url_media_relativa`).
 - Páginas staff sob `/dj-admin/` (templates em `templates/midia/`, estáticos em `static/midia/`): por turma via `TurmaAdmin.get_urls`; da MARCA via `MidiaAdmin.get_urls` (`/dj-admin/midia/midia/acervo|studio/`) — mesmos templates, modo decidido por `turma` presente/None no contexto (`window.MAGMA_CONTEXTO`).
+- **Toda página staff nova via `get_urls()` PRECISA de link visível** — `get_urls()` só cria a rota, ninguém acha sem digitar a URL. Padrão: override `templates/admin/<app>/<model>/change_form.html` (link por objeto, bloco `object-tools-items`, `<a class="btn ...">` sem `<li>` — Jazzmin) ou `.../change_list.html` (link geral, mesmo bloco + `{{ block.super }}` pra manter o botão "Adicionar"). Exemplos: `cursos/turma/change_form.html` (Acervo/Studio por turma) e `midia/midia/change_list.html` (Acervo/Studio da marca).
 - Auth API: Session+JWT, permissão `IsGestorOuInstrutor`, CSRF via `window.MAGMA_CSRF` + header `X-CSRFToken`. Agentes externos (n8n/bot): `X-Agente-Token` (nucleo/autenticacao.py).
 - Templates de arte são declarativos e **sem DOM** (`static/midia/templates/*.js` — a "LEI" no topo do `templates-engine.js`); dados JSON-serializáveis (fotos via `imgKey` + `assets.imagens`), preparado p/ render server-side futuro (spec 007).
 - ⚠️ Cifra das credenciais de IA deriva de `DJANGO_SECRET_KEY` — rotacionar a chave em prod invalida as credenciais salvas (recadastrar depois).
