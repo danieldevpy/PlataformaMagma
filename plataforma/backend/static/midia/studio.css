@@ -379,6 +379,13 @@ body.resizing{user-select:none;cursor:col-resize}
 }
 .ia-menu__item:hover{background:rgba(220,185,106,.16);color:var(--gold-light)}
 .ia-proposta{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:9px;background:rgba(16,28,56,.55)}
+.ia-instrucao{display:flex;flex-direction:column;gap:8px}
+.ia-instrucao__input{
+  width:100%;box-sizing:border-box;padding:7px 9px;border-radius:7px;
+  border:1px solid var(--line);background:var(--surface);color:#e8ecf4;
+  font-family:var(--font-body);font-size:12.5px;
+}
+.ia-instrucao__input:focus{outline:none;border-color:var(--gold-light)}
 .ia-proposta__status{font-size:12.5px;color:var(--muted)}
 .ia-proposta__texto{font-size:13px;color:#e8ecf4;white-space:pre-wrap;margin-bottom:8px;line-height:1.45}
 .ia-proposta__erro{font-size:12.5px;color:#ff8c9c;margin-bottom:8px}

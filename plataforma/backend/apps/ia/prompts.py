@@ -47,14 +47,18 @@ PROMPT_POR_CAPACIDADE = {
     "texto.melhorar": (
         "Tarefa: reescrever o texto atual (campo `texto_atual` do "
         "contexto) seguindo a instrução dada (campo `instrucao`, ex.: "
-        '"encurtar", "deixar mais informal", "corrigir erros"). Mantenha '
-        "a mensagem central; devolva só a versão revisada."
+        '"encurtar", "deixar mais informal", "corrigir erros"). Se o '
+        "contexto trouxer `detalhe`, é um pedido específico do usuário — "
+        "siga à risca. Mantenha a mensagem central; devolva só a versão "
+        "revisada."
     ),
     "texto.variacoes": (
         "Tarefa: gerar 3 variações do texto (a partir de `texto_atual`, "
         "se houver, ou do contexto do zero) — cada uma com uma abordagem "
         "diferente (ex.: mais direta, mais emocional, mais informativa). "
-        "Devolva as 3 separadas por uma linha só com `---`, sem numerar."
+        "Se o contexto trouxer `detalhe`, é um pedido específico do "
+        "usuário — siga à risca nas 3 variações. Devolva as 3 separadas "
+        "por uma linha só com `---`, sem numerar."
     ),
 }
 
@@ -62,7 +66,10 @@ PROMPT_POR_CAPACIDADE = {
 def montar_mensagem(capacidade, contexto):
     """Monta (prompt_sistema, mensagem_usuario) pra uma chamada de texto.
     `contexto` segue o formato do plan.md: {tipo_conteudo, template, turma,
-    curso, texto_atual?, instrucao?} — campos ausentes são só omitidos."""
+    curso, texto_atual?, instrucao?, detalhe?} — campos ausentes são só
+    omitidos. `detalhe` é o pedido livre que o usuário digita no Studio
+    (ex.: "mais informal"), distinto de `instrucao` (a palavra-chave da
+    ação: "melhorar"/"encurtar")."""
     instrucao_capacidade = PROMPT_POR_CAPACIDADE.get(
         capacidade, "Tarefa: atender o pedido descrito no contexto abaixo."
     )
@@ -77,6 +84,7 @@ def montar_mensagem(capacidade, contexto):
         "curso": "Curso",
         "texto_atual": "Texto atual",
         "instrucao": "Instrução",
+        "detalhe": "Detalhe pedido pelo usuário",
     }
     for campo, rotulo in rotulos.items():
         valor = contexto.get(campo)

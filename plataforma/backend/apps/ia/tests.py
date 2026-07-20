@@ -587,6 +587,15 @@ class MontarMensagemTests(TestCase):
         self.assertIn("Instrução: encurtar", mensagem)
         self.assertIn("Turma: T1", mensagem)
 
+    def test_detalhe_do_usuario_vira_linha_propria(self):
+        from apps.ia.prompts import montar_mensagem
+
+        _, mensagem = montar_mensagem(
+            "texto.melhorar",
+            {"texto_atual": "oi", "instrucao": "melhorar", "detalhe": "mais informal"},
+        )
+        self.assertIn("Detalhe pedido pelo usuário: mais informal", mensagem)
+
     def test_campo_extra_desconhecido_tambem_entra(self):
         from apps.ia.prompts import montar_mensagem
 
