@@ -259,6 +259,155 @@ class CamadaDeAcoesTests(TestCase):
         self.assertEqual(log.status, LogAcao.Status.ERRO)
 
 
+class IdentificarContatoTests(TestCase):
+    """apps/nucleo/acoes_contato.py — ação `identificar_contato`, usada pelo
+    roteador do agente WhatsApp (specs/009-agente-whatsapp-fundacao). Resolve
+    via Usuario.whatsapp/papel (sem modelo novo — ver Log da spec) → Lead →
+    desconhecido."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag",
+            escopos=["nucleo:identificar_contato"],
+        )
+
+    def _identificar(self, numero):
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "identificar_contato", "params": {"numero": numero}},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_identifica_gestor_por_whatsapp(self):
+        Usuario.objects.create_user(
+            username="daniel",
+            password="senha-teste-123",
+            first_name="Daniel",
+            papel=Usuario.Papel.GESTOR,
+            whatsapp="5521999990001",
+        )
+        resposta = self._identificar("5521999990001")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["papel"], "gestor")
+        self.assertEqual(resultado["nome"], "Daniel")
+
+    def test_identifica_instrutor_por_whatsapp(self):
+        Usuario.objects.create_user(
+            username="professora",
+            password="senha-teste-123",
+            first_name="Fulana",
+            papel=Usuario.Papel.INSTRUTOR,
+            whatsapp="5521999990002",
+        )
+        resultado = self._identificar("5521999990002").json()["resultado"]
+        self.assertEqual(resultado["papel"], "instrutor")
+        self.assertEqual(resultado["nome"], "Fulana")
+
+    def test_identifica_lead_por_whatsapp(self):
+        from apps.leads.models import Lead
+
+        Lead.objects.create(nome="Maria Interessada", whatsapp="5521999990003")
+        resultado = self._identificar("5521999990003").json()["resultado"]
+        self.assertEqual(resultado["papel"], "lead")
+        self.assertEqual(resultado["nome"], "Maria Interessada")
+
+    def test_usuario_tem_prioridade_sobre_lead_no_mesmo_numero(self):
+        from apps.leads.models import Lead
+
+        Usuario.objects.create_user(
+            username="ambos",
+            password="senha-teste-123",
+            first_name="Operador",
+            papel=Usuario.Papel.GESTOR,
+            whatsapp="5521999990004",
+        )
+        Lead.objects.create(nome="Mesmo Número", whatsapp="5521999990004")
+        resultado = self._identificar("5521999990004").json()["resultado"]
+        self.assertEqual(resultado["papel"], "gestor")
+
+    def test_desconhecido_quando_nao_encontra(self):
+        resultado = self._identificar("5521999999999").json()["resultado"]
+        self.assertEqual(resultado["papel"], "desconhecido")
+        self.assertIsNone(resultado["nome"])
+
+    def test_numero_vazio_400(self):
+        resposta = self._identificar("")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_logacao_gravado(self):
+        self._identificar("5521999999999")
+        log = LogAcao.objects.filter(acao="identificar_contato").latest("criado_em")
+        self.assertEqual(log.status, LogAcao.Status.OK)
+
+    def test_escalado_false_por_padrao(self):
+        resultado = self._identificar("5521999999999").json()["resultado"]
+        self.assertFalse(resultado["escalado"])
+
+    def test_escalado_true_quando_ha_registro(self):
+        from apps.nucleo.models import ContatoEscalado
+
+        ContatoEscalado.objects.create(
+            numero="5521999990005", motivo="quer fechar matrícula"
+        )
+        resultado = self._identificar("5521999990005").json()["resultado"]
+        self.assertTrue(resultado["escalado"])
+
+
+class EscalarContatoTests(TestCase):
+    """apps/nucleo/acoes_contato.py — ação `escalar_contato`
+    (specs/012-agente-whatsapp-handoff)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag",
+            escopos=["nucleo:escalar_contato"],
+        )
+
+    def _escalar(self, numero, motivo):
+        return self.client.post(
+            self.url_executar,
+            data={
+                "acao": "escalar_contato",
+                "params": {"numero": numero, "motivo": motivo},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_escalar_cria_registro(self):
+        from apps.nucleo.models import ContatoEscalado
+
+        resposta = self._escalar("5521999990006", "reclamação")
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTrue(
+            ContatoEscalado.objects.filter(numero="5521999990006").exists()
+        )
+
+    def test_escalar_de_novo_atualiza_motivo_sem_duplicar(self):
+        from apps.nucleo.models import ContatoEscalado
+
+        self._escalar("5521999990007", "motivo 1")
+        self._escalar("5521999990007", "motivo 2")
+        self.assertEqual(
+            ContatoEscalado.objects.filter(numero="5521999990007").count(), 1
+        )
+        self.assertEqual(
+            ContatoEscalado.objects.get(numero="5521999990007").motivo, "motivo 2"
+        )
+
+    def test_sem_motivo_400(self):
+        resposta = self._escalar("5521999990008", "")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_sem_numero_400(self):
+        resposta = self._escalar("", "motivo")
+        self.assertEqual(resposta.status_code, 400)
+
+
 class PatchAgendadaParaTests(TestCase):
     """PATCH postagens/<pk>/ — agendada_para (ver apps/midia/serializers.py)."""
 

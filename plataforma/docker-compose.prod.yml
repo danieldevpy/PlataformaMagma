@@ -43,6 +43,15 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"
+    networks:
+      default:
+        aliases:
+          # Mesmo hostname que o n8n dev usa via extra_hosts (host-gateway)
+          # pro Django local — os nós do workflow do agente MAG chamam
+          # SEMPRE http://magma-backend-interno:8000/..., nunca `backend`
+          # direto, pra rodar sem editar nada ao promover pra prod. Ver
+          # plataforma/n8n/workflows/README.md.
+          - magma-backend-interno
 
   frontend:
     build:
@@ -88,6 +97,13 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       GENERIC_TIMEZONE: America/Sao_Paulo
       TZ: America/Sao_Paulo
+      # Filtro de números de teste (regex, lido pelos workflows via $env).
+      # Vazio de propósito: regex vazia casa com qualquer string → sem filtro,
+      # o agente responde a qualquer número de verdade em produção. Ver
+      # plataforma/n8n/workflows/README.md. Não bloquear acesso a $env
+      # dentro de nós — os workflows do agente MAG dependem disso.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      MAGMA_NUMEROS_TESTE_REGEX: ""
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
@@ -99,6 +115,75 @@ services:
       retries: 5
       start_period: 60s
 
+  # Evolution API (gateway WhatsApp do agente MAG — ver docs/subsistemas/
+  # 02b-agente-whatsapp-n8n.md). API não-oficial (protocolo WhatsApp Web):
+  # usar SEMPRE um número dedicado ao bot, nunca o número principal da
+  # escola (risco de banimento). Precisa de Postgres próprio (não suporta
+  # SQLite/MySQL) + Redis (cache de sessão, recomendado pela doc oficial) —
+  # containers dedicados, não reaproveitam o `db` (MySQL) da plataforma.
+  # SEM porta pública nem subdomínio: n8n fala com ela pela rede interna do
+  # compose (http://evolution-api:8080) e ela manda os eventos pro n8n pela
+  # mesma rede (http://n8n:5678/webhook/...). Loopback publicado só pra
+  # administração via túnel SSH (Manager embutido em /manager).
+  evolution-postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${EVOLUTION_POSTGRES_DB}
+      POSTGRES_USER: ${EVOLUTION_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${EVOLUTION_POSTGRES_PASSWORD}
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${EVOLUTION_POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  evolution-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - evolution_redis_data:/data
+
+  evolution-api:
+    image: evoapicloud/evolution-api:latest
+    restart: unless-stopped
+    depends_on:
+      evolution-postgres:
+        condition: service_healthy
+      evolution-redis:
+        condition: service_started
+    environment:
+      SERVER_URL: http://127.0.0.1:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://${EVOLUTION_POSTGRES_USER}:${EVOLUTION_POSTGRES_PASSWORD}@evolution-postgres:5432/${EVOLUTION_POSTGRES_DB}?schema=evolution_api
+      DATABASE_CONNECTION_CLIENT_NAME: magma_evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://evolution-redis:6379/6
+      CACHE_REDIS_SAVE_INSTANCES: "false"
+      CACHE_LOCAL_ENABLED: "false"
+      DEL_INSTANCE: "false"
+      LANGUAGE: pt-BR
+      CONFIG_SESSION_PHONE_CLIENT: Magma Cursos
+      LOG_LEVEL: ERROR,WARN,INFO
+    volumes:
+      - evolution_instances:/evolution/instances
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
 volumes:
   mysql_data:
   n8n_data:
+  evolution_postgres_data:
+  evolution_redis_data:
+  evolution_instances:

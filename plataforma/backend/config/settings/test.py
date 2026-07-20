@@ -39,3 +39,10 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 if not CORS_ALLOWED_ORIGINS:
     CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
+
+# Nunca disparar webhooks reais durante a suíte — sobrescreve qualquer valor
+# vindo de backend/.env. Sem isso, todo teste que cria um Lead (fixture
+# com número fictício) dispara POST de verdade pro n8n, que manda WhatsApp
+# de verdade via Evolution (aconteceu em 2026-07-20, ver
+# .context/historico/2026-07-20-agente-whatsapp-fase1-a1-a2.md).
+N8N_LEAD_WEBHOOK = ""

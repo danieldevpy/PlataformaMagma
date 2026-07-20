@@ -414,6 +414,16 @@ curl -H "X-Agente-Token: $TOKEN_AGENTE" https://.../api/acoes/
    "descricao": "Lista as postagens com `agendada_para` preenchido (fila pro Manus publicar), da mais próxima pra mais distante no futuro.",
    "parametros": {}, "escopo": "midia:listar_postagens_agendadas",
    "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
+  {"nome": "identificar_contato",
+   "descricao": "Resolve o papel de quem está falando no WhatsApp (gestor/instrutor via Usuario, lead via Lead, ou desconhecido) a partir do número, e se o contato está escalado (silenciado até liberação manual).",
+   "parametros": {"numero": "string, só dígitos com DDI (sem @s.whatsapp.net)"},
+   "escopo": "nucleo:identificar_contato",
+   "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
+  {"nome": "escalar_contato",
+   "descricao": "Marca um número como escalado pro humano — a MAG para de responder automaticamente até alguém da equipe liberar (apagar o registro no admin).",
+   "parametros": {"numero": "string, só dígitos com DDI", "motivo": "string, por que está escalando"},
+   "escopo": "nucleo:escalar_contato",
+   "executavel": true, "metodo": "POST", "rota": "/api/acoes/executar/"},
   // ... + itens do CATALOGO_ACOES do midia (executavel: false), ex.:
   {"nome": "listar_avaliacoes_turma", "descricao": "...", "parametros": {},
    "escopo": null, "executavel": false, "metodo": "GET",
@@ -437,6 +447,8 @@ Ações v1 registradas:
 | `gerar_link_avaliacao` | avaliacoes | `avaliacoes:gerar_link_avaliacao` | `turma_codigo` | `{turma_codigo, url, expira_em}` — reusa convite de escopo turma ainda válido; cria um novo só se não houver |
 | `status_turma` | cursos | `cursos:status_turma` | `turma_codigo` | `{turma_codigo, curso, status, inicio_aulas, capacidade, vagas_restantes, midias, postagens, avaliacoes}` |
 | `listar_postagens_agendadas` | midia | `midia:listar_postagens_agendadas` | `{}` | lista de `{turma_codigo, titulo, legenda, canal, status, agendada_para}` (sem `id` — PK nunca é identificador público, constituição §6; `turma_codigo` + `agendada_para` já identificam a postagem sem ambiguidade prática), ordenada por `agendada_para` asc |
+| `identificar_contato` | nucleo | `nucleo:identificar_contato` | `numero` | `{papel, nome, escalado}` — `papel` em `gestor`\|`instrutor` (via `Usuario.whatsapp`/`papel`, sem modelo novo) \| `lead` (via `Lead.whatsapp`) \| `desconhecido` (`nome: null`, nunca inventa dado); `Usuario` tem prioridade sobre `Lead` no mesmo número; `escalado` = existe `ContatoEscalado` pra esse número (silenciado até liberação manual) |
+| `escalar_contato` | nucleo | `nucleo:escalar_contato` | `numero`, `motivo` | `{ok: true}` — cria/atualiza `ContatoEscalado`; reescalar com novo motivo não é erro (`update_or_create`) |
 
 ```bash
 # humano (Session/JWT) — sempre autorizado, sem checar escopo

@@ -7,6 +7,13 @@
 # Editor: http://localhost:5678 (primeiro acesso cria a conta do dono).
 # Para os workflows chamarem o Django dev (runserver no host), use dentro do
 # n8n a URL http://host.docker.internal:8000/api/... (mapeada abaixo).
+#
+# Rede compartilhada com o Evolution API dev (../evolution/docker-compose.dev.yml):
+# os dois publicam a porta só em 127.0.0.1 (não dá pra um alcançar o outro via
+# host.docker.internal — isso resolve pro gateway da bridge, não pro loopback).
+# Por isso os dois entram na MESMA rede externa (magma-dev-net, criada pelo
+# init-dev.sh) e se enxergam pelo nome do serviço: http://n8n:5678/... e
+# http://evolution-api:8080/...
 
 services:
   n8n:
@@ -25,11 +32,24 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       GENERIC_TIMEZONE: America/Sao_Paulo
       TZ: America/Sao_Paulo
+      # Filtro de números de teste (regex, lido pelos workflows via $env). Em
+      # prod fica vazio — regex vazia casa com qualquer string, ou seja, sem
+      # filtro (atende todo mundo). Ver plataforma/n8n/workflows/README.md.
+      # Não bloquear acesso a $env dentro de nós — os workflows do
+      # agente MAG dependem disso.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      MAGMA_NUMEROS_TESTE_REGEX: "991920338|5521979070319|5521964946079"
     volumes:
       - n8n_dev_data:/home/node/.n8n
     extra_hosts:
       # Permite o container enxergar o Django dev rodando no host (porta 8000).
       - "host.docker.internal:host-gateway"
+      # Mesmo hostname que o backend usa em PROD (lá é alias de rede pro
+      # container `backend`) — aqui aponta pro host via host-gateway, onde
+      # roda o runserver. Os nós do agente MAG usam SEMPRE este hostname
+      # (nunca host.docker.internal direto), pra rodar sem editar nada ao
+      # promover o workflow pra prod. Ver plataforma/n8n/workflows/README.md.
+      - "magma-backend-interno:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null || exit 1"]
       interval: 30s
@@ -39,3 +59,8 @@ services:
 
 volumes:
   n8n_dev_data:
+
+networks:
+  default:
+    name: magma-dev-net
+    external: true

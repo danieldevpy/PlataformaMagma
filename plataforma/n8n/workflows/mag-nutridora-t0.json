@@ -1,0 +1,122 @@
+{
+  "name": "MAG - Nutridora (T+0)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-novo",
+        "options": {}
+      },
+      "id": "webhook-lead-novo",
+      "name": "Lead Novo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "b9c38a37-a921-46f6-b6f8-a8cdcbc605e0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.whatsapp }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.body.whatsapp }}",
+              "rightValue": "={{ $env.MAGMA_NUMEROS_TESTE_REGEX }}",
+              "operator": { "type": "string", "operation": "regex" }
+            },
+            {
+              "id": "c3",
+              "leftValue": "={{ $json.body.utm_source }}",
+              "rightValue": "whatsapp",
+              "operator": { "type": "string", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-tem-whatsapp",
+      "name": "Deve mandar boas-vindas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [224, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "m1",
+              "name": "numero",
+              "type": "string",
+              "value": "={{ $json.body.whatsapp }}"
+            },
+            {
+              "id": "m2",
+              "name": "mensagem",
+              "type": "string",
+              "value": "={{ $json.body.curso ? (\"Oi, \" + $json.body.nome + \"! Aqui é a MAG, da Magma Cursos 🚑\\n\\nRecebi seu interesse no curso de \" + $json.body.curso + \" — em breve alguém da nossa equipe te chama por aqui pra tirar qualquer dúvida e te ajudar a garantir sua vaga.\") : (\"Oi, \" + $json.body.nome + \"! Aqui é a MAG, da Magma Cursos 🚑\\n\\nRecebi seu interesse e já vou passar pra nossa equipe — em breve alguém te chama por aqui pra saber mais sobre qual curso combina com você.\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "montar-mensagem",
+      "name": "Montar mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [448, -80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.numero, \"text\": $json.mensagem } }}",
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "enviar-boas-vindas",
+      "name": "Enviar boas-vindas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, -80],
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    }
+  ],
+  "connections": {
+    "Lead Novo": {
+      "main": [[{ "node": "Deve mandar boas-vindas?", "type": "main", "index": 0 }]]
+    },
+    "Deve mandar boas-vindas?": {
+      "main": [[{ "node": "Montar mensagem", "type": "main", "index": 0 }], []]
+    },
+    "Montar mensagem": {
+      "main": [[{ "node": "Enviar boas-vindas", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "binaryMode": "separate"
+  }
+}

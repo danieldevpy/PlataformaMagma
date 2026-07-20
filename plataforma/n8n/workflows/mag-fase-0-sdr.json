@@ -1,0 +1,501 @@
+{
+  "name": "MAG - Fase 0 (eco WhatsApp)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-in",
+        "options": {}
+      },
+      "id": "webhook-wpp-in",
+      "name": "WhatsApp In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "bbd69a1d-ca99-464d-a5ff-e549868c4618"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "recebidoEm",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "log-raw",
+      "name": "Log payload cru",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 3,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-event",
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "messages.upsert",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "cond-fromme",
+              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "false", "singleValue": true }
+            },
+            {
+              "id": "cond-text",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            },
+            {
+              "id": "cond-numero-permitido",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "={{ $env.MAGMA_NUMEROS_TESTE_REGEX }}",
+              "operator": { "type": "string", "operation": "regex" }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-msg-valida",
+      "name": "É mensagem de texto recebida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [448, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e1",
+              "name": "numero",
+              "type": "string",
+              "value": "={{ $json.body.data.key.remoteJid.split('@')[0] }}"
+            },
+            {
+              "id": "e2",
+              "name": "texto",
+              "type": "string",
+              "value": "={{ $json.body.data.message.conversation }}"
+            },
+            {
+              "id": "e3",
+              "name": "nome",
+              "type": "string",
+              "value": "={{ $json.body.data.pushName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extrai-dados",
+      "name": "Extrair dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, -80]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.numero, \"text\": $json.papel === 'desconhecido' ? \"Oi! Ainda não te conheço por aqui. 🙂\" : (\"Oi, \" + $json.nome + \"! Te reconheci como \" + $json.papel + \". (teste da MAG: recebi \\\"\" + $json.texto + \"\\\")\") } }}",
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "responder-wpp",
+      "name": "Responder no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1344, -208],
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"acao\": \"identificar_contato\", \"params\": { \"numero\": $json.numero } } }}",
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "86ac7f88-55ba-499d-ae95-56d9f1dd973a",
+      "name": "Identificar Contato",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [880, -80],
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.papel }}",
+              "rightValue": "gestor",
+              "operator": { "type": "string", "operation": "equals" }
+            },
+            {
+              "id": "c2",
+              "leftValue": "={{ $json.papel }}",
+              "rightValue": "instrutor",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-papel-humano",
+      "name": "É gestor ou instrutor?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1104, -80]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"Numero do contato: \" + $json.numero + \"\\nPapel do contato: \" + $json.papel + \". Nome (se já souber): \" + ($json.nome || \"desconhecido\") + \".\\nMensagem: \" + $json.texto }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "Você é a MAG, atendente virtual da Magma Cursos, escola de cursos profissionalizantes de saúde na Baixada Fluminense (RJ) — carro-chefe: Socorrista APH 120h. Agora você está no papel de SDR (\"Capitã de Matrículas\"), atendendo quem pergunta sobre cursos pelo WhatsApp.\n\nREGRAS QUE VOCÊ NUNCA QUEBRA:\n- Nunca invente preço, data, vaga, endereço/cidade ou qualquer dado de curso — toda informação vem SEMPRE das tools listar_cursos/detalhes_curso. Sem ter chamado a tool, diga que vai confirmar com a equipe.\n- Se a tool devolver preço vazio/nulo, diga 'consulte condições' — nunca chute valor.\n- Se perguntarem se você é humana, seja honesta: você é a assistente virtual da Magma.\n- Tom caloroso, direto, profissional; no máximo 1 emoji por mensagem.\n\nHANDOFF (chamar um humano) — sempre que a conversa tiver: intenção clara de fechar matrícula (\"quero pagar\", \"como faço pra me matricular\"), reclamação, assunto de saúde sensível, ou pedido explícito de falar com um humano: chame AS DUAS tools `escalar_contato` E `avisar_equipe` (nessa ordem, com o mesmo motivo curto), e responda pro contato avisando que alguém da equipe já foi chamado e vai falar com ele em breve — pare de vender, não insista, não continue qualificando.\n\nSEU OBJETIVO (fora do handoff):\n1. Entender qual curso interessa (use listar_cursos se não souber o slug).\n2. Responder preço/data/carga horária/vaga/requisitos/endereço usando detalhes_curso.\n3. Criar senso de urgência LEGÍTIMO só com dado real (ex.: 'restam 8 vagas').\n4. Quando souber nome + curso de interesse, registre o lead com registrar_lead (uma vez só por conversa).\n5. Nunca prometa emprego, resultado ou vaga garantida.",
+          "maxIterations": 8,
+          "returnIntermediateSteps": true
+        }
+      },
+      "id": "sdr-agent",
+      "name": "SDR - Capitã de Matrículas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.3,
+      "position": [1504, 144]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "id": "lm-chat-gemini",
+      "name": "Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [1552, 400],
+      "credentials": {
+        "googlePalmApi": { "id": "2hfz9nsgW5VRmX93", "name": "MAG - Gemini" }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.numero }}",
+        "contextWindowLength": 10
+      },
+      "id": "sdr-memoria",
+      "name": "Memória da conversa",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [1632, 256]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lista todos os cursos publicados com nome, slug, carga horária e resumo da turma em aberto (código, status, vagas). Use pra descobrir o slug do curso que a pessoa mencionou antes de chamar detalhes_curso.",
+        "url": "http://magma-backend-interno:8000/api/cursos/"
+      },
+      "id": "tool-listar-cursos",
+      "name": "listar_cursos",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1776, 144]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Devolve TODOS os dados reais de um curso pelo slug: preço (ou null se estiver desligado — nesse caso responda 'consulte condições'), datas, vagas restantes, carga horária, requisitos (FAQs), localização. SEMPRE chame antes de responder qualquer pergunta específica sobre um curso.",
+        "url": "http://magma-backend-interno:8000/api/cursos/{slug}/",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "slug",
+              "description": "Código do curso (slug), obtido a partir da tool listar_cursos",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "tool-detalhes-curso",
+      "name": "detalhes_curso",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1936, 144]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Registra o lead na plataforma quando já souber o nome da pessoa e o curso de interesse. Chame só UMA vez por conversa, depois de qualificar minimamente (nome + curso).",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/leads/",
+        "sendBody": true,
+        "parametersBody": {
+          "values": [
+            { "name": "nome" },
+            { "name": "curso_slug" },
+            { "name": "quando_pretende", "valueProvider": "modelOptional" },
+            { "name": "whatsapp", "valueProvider": "fieldValue", "value": "={{ $json.numero }}" },
+            { "name": "utm_source", "valueProvider": "fieldValue", "value": "whatsapp" },
+            { "name": "pagina_origem", "valueProvider": "fieldValue", "value": "whatsapp" }
+          ]
+        }
+      },
+      "id": "tool-registrar-lead",
+      "name": "registrar_lead",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2096, 144]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $('Preparar contexto SDR').first().json.numero, \"text\": $json.output } }}",
+        "options": {},
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "responder-wpp-sdr",
+      "name": "Responder no WhatsApp (SDR)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1312, 240],
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "p1",
+              "name": "numero",
+              "type": "string",
+              "value": "={{ $('Extrair dados').item.json.numero }}"
+            },
+            {
+              "id": "p2",
+              "name": "texto",
+              "type": "string",
+              "value": "={{ $('Extrair dados').item.json.texto }}"
+            },
+            {
+              "id": "p3",
+              "name": "papel",
+              "type": "string",
+              "value": "={{ $json.resultado.papel }}"
+            },
+            {
+              "id": "p4",
+              "name": "nome",
+              "type": "string",
+              "value": "={{ $json.resultado.nome }}"
+            },
+            {
+              "id": "p5",
+              "name": "escalado",
+              "type": "boolean",
+              "value": "={{ $json.resultado.escalado }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "preparar-contexto-sdr",
+      "name": "Preparar contexto SDR",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1104, 48]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1",
+              "leftValue": "={{ $json.escalado }}",
+              "rightValue": "",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-esta-escalado",
+      "name": "Está escalado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1104, -160]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Marca o contato como escalado pro humano. Chame com o numero do contato (mencionado no início da mensagem do usuário como 'Numero do contato') e um motivo curto. Chame junto com avisar_equipe sempre que: intenção clara de fechar matrícula, reclamação, assunto de saúde sensível, ou pedido explícito de humano.",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"escalar_contato\", \"params\": {\"numero\": \"{numero_esc}\", \"motivo\": \"{motivo_esc}\"}}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "numero_esc",
+              "description": "O numero exato do contato, mencionado no prompt como 'Numero do contato'",
+              "type": "string"
+            },
+            {
+              "name": "motivo_esc",
+              "description": "Motivo curto do encaminhamento pra humano",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "tool-escalar-contato",
+      "name": "escalar_contato",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2256, 144],
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Avisa a equipe (WhatsApp do gestor) que um contato precisa de atenção humana. Chame com o numero do contato (mencionado no início da mensagem do usuário como 'Numero do contato') e um motivo curto. Chame sempre junto com escalar_contato.",
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"number\": \"5521991920338\", \"text\": \"{mensagem}\"}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "mensagem",
+              "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "tool-avisar-equipe",
+      "name": "avisar_equipe",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2416, 144],
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp In": {
+      "main": [[{ "node": "Log payload cru", "type": "main", "index": 0 }]]
+    },
+    "Log payload cru": {
+      "main": [[{ "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }]]
+    },
+    "É mensagem de texto recebida?": {
+      "main": [[{ "node": "Extrair dados", "type": "main", "index": 0 }], []]
+    },
+    "Extrair dados": {
+      "main": [[{ "node": "Identificar Contato", "type": "main", "index": 0 }]]
+    },
+    "É gestor ou instrutor?": {
+      "main": [
+        [{ "node": "Responder no WhatsApp", "type": "main", "index": 0 }],
+        [{ "node": "SDR - Capitã de Matrículas", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Memória da conversa": {
+      "ai_memory": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_memory", "index": 0 }]]
+    },
+    "listar_cursos": {
+      "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]]
+    },
+    "detalhes_curso": {
+      "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]]
+    },
+    "registrar_lead": {
+      "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]]
+    },
+    "SDR - Capitã de Matrículas": {
+      "main": [[{ "node": "Responder no WhatsApp (SDR)", "type": "main", "index": 0 }]]
+    },
+    "Identificar Contato": {
+      "main": [[{ "node": "Preparar contexto SDR", "type": "main", "index": 0 }]]
+    },
+    "Preparar contexto SDR": {
+      "main": [[{ "node": "Está escalado?", "type": "main", "index": 0 }]]
+    },
+    "Está escalado?": {
+      "main": [[], [{ "node": "É gestor ou instrutor?", "type": "main", "index": 0 }]]
+    },
+    "escalar_contato": {
+      "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]]
+    },
+    "avisar_equipe": {
+      "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "binaryMode": "separate"
+  }
+}

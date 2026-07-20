@@ -43,9 +43,21 @@ Primeiro acesso ao editor cria a conta do dono (user management nativo do n8n).
 
 ## Como o n8n conversa com a plataforma
 
-- **Workflow → API da plataforma**: em prod, pela rede interna do compose:
-  `http://backend:8000/api/...`. Em dev: `http://host.docker.internal:8000/api/...`.
-  Autenticação: JWT (`POST /api/token/`) com um usuário de serviço.
+- **Workflow → Django**: SEMPRE via `http://magma-backend-interno:8000/api/...`
+  — hostname neutro que resolve pro mesmo lugar nos dois ambientes (dev:
+  `extra_hosts` do compose do n8n dev, apontando pro host via
+  `host-gateway`, onde roda o `runserver`; prod: alias de rede no serviço
+  `backend`). **Nunca** usar `host.docker.internal` ou `backend` direto nos
+  nós — só esse hostname, senão o workflow deixa de rodar sem edição ao subir
+  pra prod. Autenticação: Camada de Ações (`X-Agente-Token`, ver
+  `docs/plataforma/03-api-contratos.md`) via credencial n8n `MAG -
+  X-Agente-Token` — nunca hardcoded no nó.
+- **Workflow → Evolution**: `http://evolution-api:8080/...` (idêntico nos dois
+  ambientes — mesmo nome de serviço no compose dev e prod). Autenticação via
+  credencial n8n `MAG - Evolution apikey` — nunca hardcoded no nó.
+- **Filtro de números de teste**: os workflows leem `$env.MAGMA_NUMEROS_TESTE_REGEX`
+  (setado no compose de cada ambiente) em vez de ter a regex hardcoded num nó —
+  em prod fica vazio (regex vazia casa com qualquer string = sem filtro).
 - **Plataforma → n8n**: já existe o gancho de leads — todo lead novo dispara
   `POST` para `N8N_LEAD_WEBHOOK` (`apps/leads/signals.py`; vazio = desligado).
   Em prod use a URL interna, ex.: `http://n8n:5678/webhook/lead-novo`.
@@ -54,8 +66,20 @@ Primeiro acesso ao editor cria a conta do dono (user management nativo do n8n).
   Webhook de teste do editor exige URL pública — testar fluxo de WhatsApp real
   direto em prod (ou túnel temporário em dev).
 
-## Próximo passo (fora deste setup)
+> Por que esse cuidado todo: os 3 pontos acima (hostname neutro, credenciais,
+> `$env` pro filtro) existem pra que o MESMO JSON exportado em
+> `workflows/` rode em dev e prod sem precisar editar nó nenhum na hora do
+> deploy. Ver `workflows/README.md` para o passo a passo de import em prod, e
+> `.context/decisoes.md` (ADR 2026-07-20) pro raciocínio completo.
 
-O agente de WhatsApp em si (workflows, credencial Meta/Evolution, prompts) é
-uma feature própria — deve nascer como spec em `specs/` quando for começar,
-começando pelo fluxo de leads (`N8N_LEAD_WEBHOOK` → primeira mensagem).
+## Workflows do agente MAG (versionados)
+
+Os workflows do agente WhatsApp (`MAG - Fase 0 (eco WhatsApp)` = A0
+identificação + A1 SDR + handoff; `MAG - Nutridora (T+0)` = A2) ficam
+versionados em `workflows/*.json` — exportados via n8n-mcp a partir da
+instância de dev. Editados ali (n8n-mcp/Claude Code), não direto no editor.
+Ver `workflows/README.md` antes de importar em prod pela primeira vez
+(credenciais precisam ser recriadas lá, não vêm no JSON).
+
+Documentação completa do agente (personas, specs, roteamento): ver
+`docs/subsistemas/02b-agente-whatsapp-n8n.md`.

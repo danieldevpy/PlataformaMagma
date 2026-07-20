@@ -1,6 +1,6 @@
 # Magma Cursos — mapa para agentes
 
-O que é: ecossistema físico + digital da Magma Cursos. O físico (Nova Iguaçu/RJ) é o
+O que é: ecossistema físico + digital da Magma Cursos. O físico (Nilópolis/RJ) é o
 palco da prática e da certificação; o digital capta, ensina teoria, retém e monetiza.
 Meta imediata: **encher a turma de Socorrista APH até 08/08/2026** via campanha digital.
 

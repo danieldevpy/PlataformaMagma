@@ -26,7 +26,7 @@ fi
 
 # Barra o deploy se algum placeholder óbvio do .example não foi trocado —
 # evita subir produção com senha/secret padrão.
-if grep -Eq '(troque-esta-senha|gere-uma-chave-forte-aqui|gere-um-segredo-aqui|gere-uma-chave-n8n-aqui|203\.0\.113\.10)' "$ENV_FILE"; then
+if grep -Eq '(troque-esta-senha|gere-uma-chave-forte-aqui|gere-um-segredo-aqui|gere-uma-chave-n8n-aqui|gere-uma-chave-evolution-aqui|203\.0\.113\.10)' "$ENV_FILE"; then
   echo "$ENV_FILE ainda tem valores de exemplo (senha/secret/IP placeholder)." >&2
   echo "Edite $ENV_FILE com os valores reais da VPS antes de subir produção." >&2
   exit 1
@@ -46,9 +46,10 @@ SCHEME="http"
 
 echo ""
 echo "Containers no ar (portas só no loopback 127.0.0.1):"
-echo "  backend  -> 127.0.0.1:8000"
-echo "  frontend -> 127.0.0.1:3000"
-echo "  n8n      -> 127.0.0.1:5678"
+echo "  backend    -> 127.0.0.1:8000"
+echo "  frontend   -> 127.0.0.1:3000"
+echo "  n8n        -> 127.0.0.1:5678"
+echo "  evolution  -> 127.0.0.1:8080 (gateway WhatsApp, sem domínio público — administração via túnel SSH)"
 echo ""
 echo "O acesso público é pelo nginx do HOST. Se ainda não configurou:"
 echo "  1. Ajuste os caminhos em nginx/nginx.conf pros diretórios abaixo e"

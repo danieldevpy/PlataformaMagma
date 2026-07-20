@@ -1,6 +1,11 @@
 from django.contrib import admin, messages
 
-from apps.nucleo.models import ConfiguracaoSite, LogAcao, TokenAgente
+from apps.nucleo.models import (
+    ConfiguracaoSite,
+    ContatoEscalado,
+    LogAcao,
+    TokenAgente,
+)
 
 
 @admin.register(ConfiguracaoSite)
@@ -52,6 +57,14 @@ class TokenAgenteAdmin(admin.ModelAdmin):
             f"mostrado de novo: {token_bruto}",
             level=messages.WARNING,
         )
+
+
+@admin.register(ContatoEscalado)
+class ContatoEscaladoAdmin(admin.ModelAdmin):
+    """Apagar aqui = liberar o contato (a MAG volta a responder)."""
+
+    list_display = ("numero", "motivo", "criado_em")
+    search_fields = ("numero", "motivo")
 
 
 @admin.register(LogAcao)

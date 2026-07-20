@@ -130,6 +130,27 @@ class TokenAgente(ComTimestamps):
         return False
 
 
+class ContatoEscalado(ComTimestamps):
+    """Número de WhatsApp pausado pra resposta automática — a presença do
+    registro já é o estado (existe = silenciado; apagar pelo admin =
+    libera). Usado pelo handoff da SDR (ver apps/nucleo/acoes_contato.py e
+    specs/012-agente-whatsapp-handoff)."""
+
+    numero = models.CharField(
+        max_length=20,
+        unique=True,
+        help_text="Só dígitos com DDI, mesmo formato de Usuario.whatsapp/Lead.whatsapp.",
+    )
+    motivo = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Contato escalado"
+        verbose_name_plural = "Contatos escalados"
+
+    def __str__(self):
+        return f"{self.numero} — {self.motivo}"
+
+
 class LogAcao(ComTimestamps):
     """Auditoria de toda execução de `/api/acoes/executar/` — sucesso e
     erro (bot operando a escola exige trilha, ver doc 10 §6)."""
