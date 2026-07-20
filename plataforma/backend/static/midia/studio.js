@@ -423,7 +423,9 @@
   }
 
   // contexto comum enviado pro adaptador de IA (ver notas T4 da spec 003 e
-  // plan.md da 004: {tipo_conteudo, template, turma, curso, texto_atual?, instrucao?})
+  // plan.md da 004: {tipo_conteudo, template, turma, curso, texto_atual?,
+  // instrucao?, detalhe?} — `detalhe` é o pedido livre que o usuário digita
+  // antes de melhorar/encurtar/variações, ver pedirDetalhe())
   function contextoIA(campoId, extra) {
     return Object.assign({
       tipo_conteudo: campoId === 'legenda' ? 'legenda' : `campo:${campoId}`,
@@ -463,6 +465,8 @@
     proposta.hidden = true;
     label.appendChild(proposta);
 
+    let ultimoDetalhe;
+
     function montarMenu() {
       menu.innerHTML = '';
       const temValor = !!(getValor() || '').trim();
@@ -472,16 +476,41 @@
         item.type = 'button';
         item.className = 'ia-menu__item';
         item.textContent = IA_ROTULO_ACAO[acao];
-        item.onclick = () => { menu.hidden = true; executar(acao); };
+        item.onclick = () => { menu.hidden = true; acao === 'gerar' ? executar(acao) : pedirDetalhe(acao); };
         menu.appendChild(item);
       });
     }
 
-    function executar(acao) {
+    // melhorar/encurtar/variações pedem um detalhe opcional antes de
+    // chamar a IA (ex.: "mais informal", "focar nas vagas") — vai pro
+    // contexto como `detalhe`, separado de `instrucao` (a palavra-chave
+    // da ação em si, ver executar()).
+    function pedirDetalhe(acao) {
+      proposta.hidden = false;
+      proposta.innerHTML = `
+        <div class="ia-instrucao">
+          <input type="text" class="ia-instrucao__input" maxlength="200"
+            placeholder="Como quer? (opcional) — ex.: mais informal, focar nas vagas">
+          <div class="ia-proposta__btns">
+            <button type="button" class="btn btn--gold btn--sm ia-instrucao__ok">${escapeHtml(IA_ROTULO_ACAO[acao])}</button>
+            <button type="button" class="btn btn--ghost btn--sm ia-fechar">Cancelar</button>
+          </div>
+        </div>`;
+      const input = proposta.querySelector('.ia-instrucao__input');
+      input.focus();
+      const disparar = () => executar(acao, input.value.trim());
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') disparar(); });
+      proposta.querySelector('.ia-instrucao__ok').onclick = disparar;
+      proposta.querySelector('.ia-fechar').onclick = () => { proposta.hidden = true; };
+    }
+
+    function executar(acao, detalhe) {
+      ultimoDetalhe = detalhe;
       const capacidade = acao === 'gerar' ? 'texto.gerar' : acao === 'variacoes' ? 'texto.variacoes' : 'texto.melhorar';
       const contexto = contextoIA(campoId, {
         texto_atual: getValor() || undefined,
         instrucao: (acao === 'melhorar' || acao === 'encurtar') ? acao : undefined,
+        detalhe: detalhe || undefined,
       });
       proposta.hidden = false;
       proposta.innerHTML = `<p class="ia-proposta__status">${acao === 'variacoes' ? 'escrevendo 3 variações…' : 'escrevendo…'}</p>`;
@@ -497,7 +526,7 @@
           <button type="button" class="btn btn--ghost btn--sm ia-tentar">Tentar de novo</button>
           <button type="button" class="btn btn--ghost btn--sm ia-fechar">Fechar</button>
         </div>`;
-      proposta.querySelector('.ia-tentar').onclick = () => executar(acao);
+      proposta.querySelector('.ia-tentar').onclick = () => executar(acao, ultimoDetalhe);
       proposta.querySelector('.ia-fechar').onclick = () => { proposta.hidden = true; };
     }
 
@@ -530,7 +559,7 @@
           <button type="button" class="btn btn--ghost btn--sm ia-fechar">Descartar</button>
         </div>`;
       proposta.querySelector('.ia-aplicar').onclick = () => { aplicar(texto); proposta.hidden = true; };
-      proposta.querySelector('.ia-tentar').onclick = () => executar(acao);
+      proposta.querySelector('.ia-tentar').onclick = () => executar(acao, ultimoDetalhe);
       proposta.querySelector('.ia-fechar').onclick = () => { proposta.hidden = true; };
     }
 
