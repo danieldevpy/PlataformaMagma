@@ -299,7 +299,17 @@
     {
       "parameters": {
         "toolDescription": "Lista todos os cursos publicados com nome, slug, carga horária e resumo da turma em aberto (código, status, vagas). Use pra descobrir o slug do curso que a pessoa mencionou antes de chamar detalhes_curso.",
-        "url": "http://magma-backend-interno:8000/api/cursos/"
+        "url": "http://magma-backend-interno:8000/api/cursos/",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
+          ]
+        }
       },
       "id": "24f16bb9-6552-4ffc-ae42-5f2151271668",
       "name": "listar_cursos",
@@ -320,6 +330,16 @@
               "name": "slug",
               "description": "Código do curso (slug), obtido a partir da tool listar_cursos",
               "type": "string"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
             }
           ]
         }
@@ -365,6 +385,16 @@
               "name": "pagina_origem",
               "valueProvider": "fieldValue",
               "value": "whatsapp"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
             }
           ]
         }
@@ -506,6 +536,16 @@
               "name": "motivo_esc",
               "description": "Motivo curto do encaminhamento pra humano",
               "type": "string"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
             }
           ]
         }
