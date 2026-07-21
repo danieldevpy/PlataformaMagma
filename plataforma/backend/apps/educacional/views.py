@@ -66,6 +66,7 @@ class MatriculaConvitePublicoView(APIView):
         alvo = (
             Matricula.objects.create(
                 turma=matricula.turma,
+                escopo=Matricula.Escopo.INDIVIDUAL,
                 enviado_por=matricula.enviado_por,
                 validade_carteirinha_meses=matricula.validade_carteirinha_meses,
             )

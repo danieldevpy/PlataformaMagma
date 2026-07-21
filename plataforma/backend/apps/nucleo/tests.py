@@ -3,8 +3,11 @@ execução com auth de agente/escopo e auditoria/LogAcao) e config do site
 público/painel (spec 001-T2). Ver apps/nucleo/acoes.py, apps/nucleo/views.py
 e specs/005-camada-de-acoes/spec.md."""
 
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from apps.avaliacoes.models import ConviteAvaliacao
 from apps.contas.models import Usuario
@@ -177,9 +180,11 @@ class CamadaDeAcoesTests(TestCase):
         self.assertEqual(resultado["curso"], "Socorrista APH")
 
     def test_status_turma_inclui_contagens(self):
-        """status_turma (apps/cursos/acoes.py) soma mídias/postagens/
-        avaliações da turma — o teste acima só checava turma_codigo/curso."""
+        """status_turma (apps/cursos/acoes.py) soma matrículas/mídias/
+        postagens/avaliações da turma — o teste acima só checava
+        turma_codigo/curso."""
         from apps.avaliacoes.models import Avaliacao
+        from apps.educacional.models import Matricula
         from apps.midia.models import Midia
 
         Postagem.objects.create(turma=self.turma, titulo="Post 1")
@@ -197,6 +202,10 @@ class CamadaDeAcoesTests(TestCase):
             comentario="Muito bom.",
             status=Avaliacao.Status.APROVADA,
         )
+        Matricula.objects.create(turma=self.turma, status=Matricula.Status.ATIVA)
+        # convite de escopo turma ainda não preenchido — não conta como
+        # matrícula de fato (fica em CONVIDADO até alguém preencher).
+        Matricula.objects.create(turma=self.turma)
 
         self.client.force_login(self.gestor)
         resposta = self.client.post(
@@ -205,9 +214,38 @@ class CamadaDeAcoesTests(TestCase):
             content_type="application/json",
         )
         resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["matriculas"], 1)
         self.assertEqual(resultado["midias"], 1)
         self.assertEqual(resultado["postagens"], 1)
         self.assertEqual(resultado["avaliacoes"], 1)
+
+    def test_listar_turmas(self):
+        """listar_turmas (apps/cursos/acoes.py) — spec 013, achado do
+        Daniel: precisa achar o código da turma sem lembrar de cabeça."""
+        outra_turma = Turma.objects.create(
+            curso=self.curso, codigo="T028", status=Turma.Status.ENCERRADA
+        )
+
+        self.client.force_login(self.gestor)
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "listar_turmas", "params": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        codigos = {item["turma_codigo"] for item in resultado}
+        self.assertEqual(codigos, {"T027", "T028"})
+        self.assertNotIn("id", resultado[0])
+
+        resposta_filtrada = self.client.post(
+            self.url_executar,
+            data={"acao": "listar_turmas", "params": {"status": "encerrada"}},
+            content_type="application/json",
+        )
+        resultado_filtrado = resposta_filtrada.json()["resultado"]
+        self.assertEqual(len(resultado_filtrado), 1)
+        self.assertEqual(resultado_filtrado[0]["turma_codigo"], outra_turma.codigo)
 
     def test_listar_postagens_agendadas(self):
         Postagem.objects.create(turma=self.turma, titulo="Sem agenda")
@@ -406,6 +444,176 @@ class EscalarContatoTests(TestCase):
     def test_sem_numero_400(self):
         resposta = self._escalar("", "motivo")
         self.assertEqual(resposta.status_code, 400)
+
+
+class ListarLeadsTests(TestCase):
+    """apps/leads/acoes.py — ação `listar_leads` (specs/013-agente-whatsapp-
+    operadora-leitura, tool de leitura da Operadora/B1)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag",
+            escopos=["leads:listar_leads"],
+        )
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-listar-leads",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+
+    def _listar(self, **params):
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "listar_leads", "params": params},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def _criar_lead(self, nome, dias_atras=0, **extra):
+        from apps.leads.models import Lead
+
+        lead = Lead.objects.create(nome=nome, curso=self.curso, **extra)
+        if dias_atras:
+            criado_em = timezone.now() - timedelta(days=dias_atras)
+            Lead.objects.filter(pk=lead.pk).update(criado_em=criado_em)
+        return lead
+
+    def test_lista_leads_de_hoje_por_padrao(self):
+        self._criar_lead("Maria")
+        self._criar_lead("João", dias_atras=3)
+
+        resposta = self._listar()
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        nomes = {item["nome"] for item in resultado}
+        self.assertEqual(nomes, {"Maria"})
+
+    def test_dias_amplia_a_janela(self):
+        self._criar_lead("Maria")
+        self._criar_lead("João", dias_atras=3)
+
+        resposta = self._listar(dias=5)
+        resultado = resposta.json()["resultado"]
+        nomes = {item["nome"] for item in resultado}
+        self.assertEqual(nomes, {"Maria", "João"})
+
+    def test_filtra_por_status(self):
+        self._criar_lead("Maria", status="novo")
+        self._criar_lead("João", status="contatado")
+
+        resposta = self._listar(status="contatado")
+        resultado = resposta.json()["resultado"]
+        nomes = {item["nome"] for item in resultado}
+        self.assertEqual(nomes, {"João"})
+
+    def test_retorno_nao_inclui_pk(self):
+        self._criar_lead("Maria")
+        resposta = self._listar()
+        resultado = resposta.json()["resultado"]
+        self.assertNotIn("id", resultado[0])
+        self.assertEqual(resultado[0]["curso"], self.curso.nome)
+
+    def test_dias_invalido_400(self):
+        resposta = self._listar(dias="abc")
+        self.assertEqual(resposta.status_code, 400)
+
+
+class GerarLinkMatriculaTests(TestCase):
+    """apps/educacional/acoes.py — ação `gerar_link_matricula` (spec 013,
+    achado do Daniel: a Operadora não tinha como gerar link de matrícula
+    nem informar quantas matrículas a turma já tem)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-matricula",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+        self.turma = Turma.objects.create(curso=self.curso, codigo="T-MAT-1")
+        _, self.token_bruto = criar_token_agente(
+            escopos=["educacional:gerar_link_matricula"]
+        )
+
+    def _gerar(self, turma_codigo):
+        return self.client.post(
+            self.url_executar,
+            data={
+                "acao": "gerar_link_matricula",
+                "params": {"turma_codigo": turma_codigo},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_devolve_url_valida(self):
+        from apps.educacional.models import Matricula
+
+        resposta = self._gerar("T-MAT-1")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+
+        matricula = Matricula.objects.get(turma=self.turma)
+        self.assertIn(str(matricula.token), resultado["url"])
+        self.assertEqual(matricula.escopo, Matricula.Escopo.TURMA)
+
+        resposta_convite = self.client.get(
+            reverse("carteirinha-convite", args=[matricula.token])
+        )
+        self.assertEqual(resposta_convite.status_code, 200)
+        self.assertTrue(resposta_convite.json()["valido"])
+
+    def test_reusa_convite_existente(self):
+        from apps.educacional.models import Matricula
+
+        primeira = self._gerar("T-MAT-1")
+        segunda = self._gerar("T-MAT-1")
+        self.assertEqual(
+            primeira.json()["resultado"]["url"], segunda.json()["resultado"]["url"]
+        )
+        self.assertEqual(Matricula.objects.filter(turma=self.turma).count(), 1)
+
+    def test_nao_devolve_matricula_ja_preenchida(self):
+        """Achado real do Daniel: pedir o link de matrícula devolveu o link
+        de um aluno que já tinha preenchido a carteirinha. Causa raiz:
+        `MatriculaConvitePublicoView.post` (apps/educacional/views.py) não
+        marcava a matrícula individual gerada como `escopo=INDIVIDUAL`
+        (ficava com o default `TURMA`), então ela colava no filtro de
+        "convite reaproveitável". Corrigido em dois pontos: a view agora
+        marca `escopo=INDIVIDUAL` explicitamente, e esta ação passou a
+        filtrar por `preenchida_em__isnull=True` também — nunca confiar só
+        no `escopo` pra decidir se é um convite em aberto."""
+        from apps.educacional.models import Matricula
+
+        convite_aberto = Matricula.objects.create(
+            turma=self.turma, escopo=Matricula.Escopo.TURMA
+        )
+        # simula o cenário real: matrícula preenchida que (por bug já
+        # corrigido) ficou com escopo=turma em vez de individual — mais
+        # recente que o convite em aberto.
+        Matricula.objects.create(
+            turma=self.turma,
+            escopo=Matricula.Escopo.TURMA,
+            status=Matricula.Status.ATIVA,
+            preenchida_em=timezone.now(),
+        )
+
+        resposta = self._gerar("T-MAT-1")
+        resultado = resposta.json()["resultado"]
+        self.assertIn(str(convite_aberto.token), resultado["url"])
+
+    def test_turma_inexistente_400_e_loga_erro(self):
+        resposta = self._gerar("NAO-EXISTE")
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("detail", resposta.json())
+
+        log = LogAcao.objects.filter(acao="gerar_link_matricula").latest("criado_em")
+        self.assertEqual(log.status, LogAcao.Status.ERRO)
 
 
 class PatchAgendadaParaTests(TestCase):

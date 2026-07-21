@@ -7,8 +7,8 @@ from apps.nucleo.acoes import ErroAcao, registrar_acao
 @registrar_acao(
     nome="status_turma",
     descricao=(
-        "Devolve curso, status, datas e contagens (mídias/postagens/"
-        "avaliações) de uma turma."
+        "Devolve curso, status, datas e contagens (matrículas/mídias/"
+        "postagens/avaliações) de uma turma."
     ),
     params={"turma_codigo": "string, código da turma"},
     escopo="cursos:status_turma",
@@ -35,6 +35,16 @@ def status_turma(params, request):
     # ação continua respondendo o essencial (mesma cautela do get_fotos em
     # apps/avaliacoes/serializers.py).
     try:
+        from apps.educacional.models import Matricula
+
+        resultado["matriculas"] = Matricula.objects.filter(
+            turma=turma,
+            status__in=[Matricula.Status.ATIVA, Matricula.Status.CONCLUIDA],
+        ).count()
+    except ImportError:
+        resultado["matriculas"] = None
+
+    try:
         resultado["midias"] = turma.midias.count()
     except Exception:
         resultado["midias"] = None
@@ -52,3 +62,38 @@ def status_turma(params, request):
         resultado["avaliacoes"] = None
 
     return resultado
+
+
+@registrar_acao(
+    nome="listar_turmas",
+    descricao=(
+        "Lista as turmas cadastradas com código, curso, status, início das "
+        "aulas e vagas — útil pra descobrir o código de uma turma quando "
+        "não lembra de cabeça. Filtro opcional por status."
+    ),
+    params={
+        "status": (
+            "string, opcional — filtra por status exato (rascunho|"
+            "inscricoes|lotada|em_andamento|encerrada); vazio lista todas"
+        ),
+    },
+    escopo="cursos:listar_turmas",
+)
+def listar_turmas(params, request):
+    turmas = Turma.objects.select_related("curso").order_by("-criado_em")
+
+    status_filtro = (params.get("status") or "").strip()
+    if status_filtro:
+        turmas = turmas.filter(status=status_filtro)
+
+    return [
+        {
+            "turma_codigo": turma.codigo,
+            "curso": turma.curso.nome,
+            "status": turma.status,
+            "inicio_aulas": turma.inicio_aulas,
+            "capacidade": turma.capacidade,
+            "vagas_restantes": turma.vagas_restantes,
+        }
+        for turma in turmas
+    ]

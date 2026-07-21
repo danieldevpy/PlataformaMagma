@@ -38,7 +38,11 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
    dev (nomes exatos, o import tenta casar por nome):
    - `MAG - X-Agente-Token` (Header Auth: `X-Agente-Token` = token real de um
      `TokenAgente` criado em prod, escopos `nucleo:identificar_contato` +
-     `nucleo:escalar_contato` — ver `docs/plataforma/03-api-contratos.md`).
+     `nucleo:escalar_contato` + `cursos:status_turma` +
+     `avaliacoes:gerar_link_avaliacao` + `leads:listar_leads` +
+     `educacional:gerar_link_matricula` + `cursos:listar_turmas` (os 5
+     últimos desde a spec 013, Operadora) — ver
+     `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).
    - `MAG - Gemini` (Google Gemini/PaLM API: chave de produção).

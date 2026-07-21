@@ -6,3 +6,6 @@ class EducacionalConfig(AppConfig):
     name = "apps.educacional"
     label = "educacional"
     verbose_name = "Educacional"
+
+    def ready(self):
+        from apps.educacional import acoes  # noqa: F401 — registra em apps.nucleo.acoes

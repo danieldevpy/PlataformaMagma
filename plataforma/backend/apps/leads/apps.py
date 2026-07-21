@@ -8,4 +8,5 @@ class LeadsConfig(AppConfig):
     verbose_name = "Leads"
 
     def ready(self):
+        from apps.leads import acoes  # noqa: F401 — registra em apps.nucleo.acoes
         from apps.leads import signals  # noqa: F401
