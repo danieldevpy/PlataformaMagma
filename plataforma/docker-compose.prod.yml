@@ -7,8 +7,10 @@
 #   /static/ e /media/ -> servidos direto do disco (volumes ./staticfiles e ./media)
 # Ver nginx/nginx.conf (config de referência pra copiar em /etc/nginx).
 #
-# Por isso as portas 8000/3000 são publicadas SÓ no loopback (127.0.0.1):
-# só o nginx do host as alcança — nunca ficam expostas direto na internet.
+# As portas 8000/3000/5678/8080 são publicadas sem restrição de IP (0.0.0.0)
+# porque o binding em 127.0.0.1 fazia os serviços não serem encontrados na
+# VPS no deploy. Isso expõe essas portas direto na internet — proteger via
+# firewall da VPS (ufw/iptables) liberando só 80/443 (nginx) e SSH pra fora.
 
 services:
   db:
@@ -42,7 +44,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8000:8000"
     networks:
       default:
         aliases:
@@ -71,7 +73,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
 
   # n8n (automações / agente WhatsApp). Banco: SQLite interno no volume —
   # o n8n NÃO suporta MySQL (só SQLite/Postgres), então não reaproveita o db
@@ -107,7 +109,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
-      - "127.0.0.1:5678:5678"
+      - "5678:5678"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz >/dev/null || exit 1"]
       interval: 30s
@@ -121,10 +123,11 @@ services:
   # escola (risco de banimento). Precisa de Postgres próprio (não suporta
   # SQLite/MySQL) + Redis (cache de sessão, recomendado pela doc oficial) —
   # containers dedicados, não reaproveitam o `db` (MySQL) da plataforma.
-  # SEM porta pública nem subdomínio: n8n fala com ela pela rede interna do
-  # compose (http://evolution-api:8080) e ela manda os eventos pro n8n pela
-  # mesma rede (http://n8n:5678/webhook/...). Loopback publicado só pra
-  # administração via túnel SSH (Manager embutido em /manager).
+  # SEM subdomínio: n8n fala com ela pela rede interna do compose
+  # (http://evolution-api:8080) e ela manda os eventos pro n8n pela mesma
+  # rede (http://n8n:5678/webhook/...). Porta 8080 publicada sem restrição
+  # de IP (ver comentário no topo do arquivo) — proteger via firewall da
+  # VPS; administração continua via túnel SSH (Manager embutido em /manager).
   evolution-postgres:
     image: postgres:15
     restart: unless-stopped
@@ -173,7 +176,7 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080 >/dev/null || exit 1"]
       interval: 30s

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Ambiente de produção — containers (Next.js + Django/gunicorn + MySQL) via
 # docker-compose.prod.yml. O nginx roda no HOST da VPS (não é container),
-# termina o TLS e faz proxy pros containers publicados no loopback:
+# termina o TLS e faz proxy pros containers (portas publicadas sem restrição
+# de IP, ver comentário em docker-compose.prod.yml):
 #   /api e /dj-admin -> 127.0.0.1:8000  |  resto -> 127.0.0.1:3000
 # Ver nginx/nginx.conf (config de referência pra copiar em /etc/nginx).
 set -euo pipefail
@@ -45,11 +46,11 @@ SCHEME="http"
 [ "$HTTPS_ENABLED" = "true" ] && SCHEME="https"
 
 echo ""
-echo "Containers no ar (portas só no loopback 127.0.0.1):"
-echo "  backend    -> 127.0.0.1:8000"
-echo "  frontend   -> 127.0.0.1:3000"
-echo "  n8n        -> 127.0.0.1:5678"
-echo "  evolution  -> 127.0.0.1:8080 (gateway WhatsApp, sem domínio público — administração via túnel SSH)"
+echo "Containers no ar (portas publicadas sem restrição de IP — proteja com o firewall da VPS):"
+echo "  backend    -> :8000"
+echo "  frontend   -> :3000"
+echo "  n8n        -> :5678"
+echo "  evolution  -> :8080 (gateway WhatsApp, sem domínio público — administração via túnel SSH)"
 echo ""
 echo "O acesso público é pelo nginx do HOST. Se ainda não configurou:"
 echo "  1. Ajuste os caminhos em nginx/nginx.conf pros diretórios abaixo e"
