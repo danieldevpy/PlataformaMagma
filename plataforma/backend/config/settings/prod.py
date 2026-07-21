@@ -8,11 +8,14 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
 # O SSR do Next faz fetch na API pela rede interna do Docker
 # (INTERNAL_API_URL=http://backend:8000 no docker-compose.prod.yml), então a
-# request chega com Host "backend". Garantimos esse nome aqui pra não exigir
-# que o operador o liste no .env — se você renomear o serviço no compose,
-# ajuste também aqui.
-if "backend" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("backend")
+# request chega com Host "backend". Os workflows do n8n (agente MAG) chamam
+# SEMPRE http://magma-backend-interno:8000/... (alias de rede do serviço
+# `backend`, ver docker-compose.prod.yml) — mesmo motivo, request chega com
+# esse Host. Garantimos os dois nomes aqui pra não exigir que o operador
+# liste no .env — se renomear o serviço ou o alias no compose, ajuste aqui.
+for _host in ("backend", "magma-backend-interno"):
+    if _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 DATABASES = {
     "default": dj_database_url.parse(env.str("DATABASE_URL"))
