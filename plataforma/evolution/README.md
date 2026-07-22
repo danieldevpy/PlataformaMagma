@@ -27,6 +27,16 @@ whatsmeow, riscos assumidos).
 - **Número dedicado ao bot**: API não-oficial = risco real de banimento do
   número. Nunca parear o número principal da escola aqui — ver riscos em
   `docs/subsistemas/02b-agente-whatsapp-n8n.md` §2.1.
+- **Persistência de mensagens ligada** (`DATABASE_SAVE_DATA_NEW_MESSAGE`,
+  `DATABASE_SAVE_MESSAGE_UPDATE`, `DATABASE_SAVE_DATA_CONTACTS`,
+  `DATABASE_SAVE_DATA_CHATS`, 2026-07-21): sem essas flags só a instância era
+  salva no Postgres da Evolution — o Manager não tinha o que exibir no chat,
+  então só dava pra ver (em tempo real, via webhook) o que a MAG respondia,
+  nunca o histórico do que o contato mandou. Com isso ligado, `/manager` passa
+  a mostrar a conversa completa (os dois lados) — útil pra acompanhar se o
+  bot está respondendo certo sem precisar abrir execução do n8n uma a uma.
+  Requer restart do container pra valer; conversas anteriores à mudança não
+  são recuperadas retroativamente.
 
 ## Como rodar
 
