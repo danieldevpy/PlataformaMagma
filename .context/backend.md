@@ -7,13 +7,13 @@
 | App | Responsabilidade |
 |---|---|
 | `nucleo` | Base/configurações compartilhadas + **Camada de Ações agent-first** (`/api/acoes/`: registry, `TokenAgente` hash sha256 + escopos `app:acao`/`app:*`/`*`, `LogAcao` inclusive em erro, auth por header `X-Agente-Token`) |
-| `cursos` | Cursos, turmas (`cursos/models.py` — Turma), fotos, conteúdo da LP |
+| `cursos` | Cursos, turmas (`cursos/models.py` — Turma; `vagas_restantes`/`lotada` são `@property` calculadas a partir das matrículas ativas/concluídas, nunca campo digitado — spec 014; `token_cadastro` é o link estável de cadastro de aluno novo), fotos, conteúdo da LP |
 | `leads` | Captação de interessados |
 | `avaliacoes` | Avaliações via magic-link (individual e por turma); `get_fotos` prioriza acervo (capa primeiro) com fallback `FotoCurso` |
 | `midia` | **Acervo da MARCA em camadas** (`Midia`, ex-`MidiaTurma` — spec 008: `camada` turma/curso/instrutores/estrutura/externa/geral, `turma`/`curso` opcionais conforme invariantes, `credito` p/ imagem externa), postagens multi-contexto (`Postagem` c/ turma OU curso OU marca + `agendada_para`), thumbs Pillow c/ EXIF, dedup nome+tamanho **por escopo de camada** (409/`forcar`), API `/api/midia/`: rotas por turma (contrato antigo intocado) + gerais (`acervo/`, `acervo/camadas/`, `acervo/enviar/`, `postagens/`) + catálogo `acoes/`; Studio 2.0: motor declarativo (`static/midia/templates-engine.js` + `templates/*.js`, 6 templates, `requer:['turma']` nos 4 que dependem de turma) e `marca.js` |
 | `ia` | Provedores de IA (`ProvedorIA` c/ credencial **cifrada Fernet** write-only, `ExecucaoIA` auditoria/custo), adaptadores Anthropic/OpenAI (texto), `/api/ia/` (capacidades, executar, provedores, uso), página staff "Integrações de IA", botão ✨ no Studio (proposta, nunca sobrescreve) |
 | `contas` | Contas/usuários |
-| `educacional` | Base para gestão escolar / área do aluno |
+| `educacional` | Gestão escolar: `Aluno` é identidade durável (`token` uuid, `cpf` unique/null, dono da carteirinha código+validade — spec 014); `Matrícula` pura (`aluno`+`turma`+status, `unique(aluno,turma)`, conta vaga); cadastro público por `Turma.token_cadastro` (link estável, busca-ou-cria por CPF) e card por `Aluno.token`; ações `buscar_aluno`/`matricular_aluno` (gestor matricula existente pelo WhatsApp, protocolo buscar→confirmar→matricular) |
 
 ## Convenções
 

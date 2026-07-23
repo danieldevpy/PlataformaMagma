@@ -133,7 +133,7 @@ mesma pessoa da `instrutor.png` oficial.** Regra até você confirmar o contrár
 Preencha isto olhando a **imagem final renderizada** (passo 4 da seção 6), não de memória do prompt.
 
 - [ ] Símbolo = Estrela da Vida oficial?
-- [ ] Cores da paleta oficial, vermelho ≤ 2% da área?
+- [ ] Cores da paleta oficial
 - [ ] Se aparece o instrutor: é `instrutor.png` (o real), não uma das fotos "-dea"?
 - [ ] Texto da arte está legível, sem erro de grafia ou corte na borda (falha comum de gerador de imagem)?
 - [ ] Dimensão bate com a seção 5 (feed 1080×1080, stories/reels 1080×1920)?

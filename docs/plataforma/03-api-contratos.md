@@ -126,6 +126,38 @@ POST /api/avaliacoes/convite/{token}/     → cria a avaliação
 // POST 201 → {"ok": true}   (marca convite.usado_em; status inicial: pendente)
 ```
 
+### Carteirinha digital (spec 014)
+
+`Aluno` é a identidade durável (uma pessoa = um registro, chave CPF) e dono
+da carteirinha; `Matrícula` é só o vínculo com a turma. Duas portas
+distintas, dois tokens distintos — **não confundir**:
+
+```
+GET  /api/carteirinha/nova/{turma.token_cadastro}/   → dados p/ montar a tela de cadastro
+POST /api/carteirinha/nova/{turma.token_cadastro}/   → busca-ou-cria o Aluno por CPF + Matrícula ativa
+GET  /api/carteirinha/{aluno.token}/                 → card digital do aluno (sempre "preenchido")
+```
+
+```json
+// GET /carteirinha/nova/{token}/ 200
+{"valido": true, "turma_codigo": "03/2026", "curso": "Socorrista APH"}
+// inválido → 200 {"valido": false, "motivo": "inexistente" | "fechada"}
+// "fechada": turma fora de inscricoes/em_andamento (rascunho/lotada/encerrada)
+
+// POST /carteirinha/nova/{token}/ request (multipart — foto opcional)
+{"nome": "Marcos Ribeiro", "cpf": "111.222.333-44", "data_nascimento": "2000-01-01"}
+// 201 → card do aluno (mesmo shape do GET abaixo). Idempotente: reabrir o
+// link com o mesmo CPF não cria 2º Aluno, só devolve a Matrícula já criada.
+// 400 → turma não aceita cadastro, ou CPF inválido (não tem 11 dígitos)
+
+// GET /carteirinha/{token}/ 200
+{"valido": true, "token": "3f2b...", "url": "https://site/carteirinha/3f2b...",
+ "nome": "Marcos Ribeiro", "cpf": "11122233344", "data_nascimento": "2000-01-01",
+ "foto": null, "codigo_carteirinha": "APH-2607-0012", "validade_carteirinha": "2028-07-23",
+ "matriculas": [{"curso": "Socorrista APH", "turma_codigo": "03/2026", "status": "ativa"}]}
+// inválido → 200 {"valido": false, "motivo": "inexistente"} (token nunca expira)
+```
+
 ## Painel (JWT — `Authorization: Bearer`)
 
 ```
@@ -452,6 +484,9 @@ Ações v1 registradas:
 | `escalar_contato` | nucleo | `nucleo:escalar_contato` | `numero`, `motivo` | `{ok: true}` — cria/atualiza `ContatoEscalado`; reescalar com novo motivo não é erro (`update_or_create`) |
 | `listar_leads` | leads | `leads:listar_leads` | `dias` (opcional, padrão 1 = hoje), `status` (opcional, exato) | lista de `{nome, whatsapp, curso, quando_pretende, status, utm_source, criado_em}` (sem `id`), mais recente primeiro; `dias` conta dias corridos (calendário), não janela rolante de 24h |
 | `gerar_link_matricula` | educacional | `educacional:gerar_link_matricula` | `turma_codigo` | `{turma_codigo, url}` — devolve o link estável de cadastro de aluno novo da turma (`{FRONTEND_URL}/carteirinha/nova/{turma.token_cadastro}`); reutilizável, um por turma, sem `expira_em` (validade agora é o `status` da turma). Spec 014: acabou a `Matrícula`-fantasma — a ação não cria mais Matrícula |
+| `buscar_aluno` | educacional | `educacional:buscar_aluno` | `termo` (nome parcial, CPF ou WhatsApp) | lista (máx. 10) de `{token, nome, cpf_mascarado, whatsapp, matriculas}` (sem CPF cru nem `id` — constituição §6). 11 dígitos tenta CPF **e** WhatsApp (ambíguo sem DDI); outro tamanho numérico só WhatsApp; senão busca por nome (`icontains`). Passo 1 do fluxo buscar→confirmar→matricular — spec 014 |
+| `listar_matriculas_turma` | educacional | `educacional:listar_matriculas_turma` | `turma_codigo` | `{turma_codigo, alunos: [{aluno_token, nome, status, matriculado_em}]}`, alunos em ordem alfabética (sem CPF nem `id`) — quem está matriculado numa turma específica, não só a contagem que `status_turma` já dá |
+| `matricular_aluno` | educacional | `educacional:matricular_aluno` | `aluno_token` (de `buscar_aluno`), `turma_codigo`, `status` (opcional, padrão `ativa`) | `{aluno_nome, turma_codigo, status, vagas_restantes}` — cria a `Matrícula`; recusa (`ErroAcao`) se o aluno já estiver matriculado nessa turma, ou se `aluno_token`/`turma_codigo` não existirem. **Nunca chamar sem antes confirmar com `buscar_aluno`** — spec 014 |
 
 ```bash
 # humano (Session/JWT) — sempre autorizado, sem checar escopo
