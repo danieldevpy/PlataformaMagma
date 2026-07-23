@@ -172,39 +172,42 @@ export interface AvaliacaoConviteResposta {
   ok: boolean;
 }
 
-/* ---------- Magic link de carteirinha digital ---------- */
+/* ---------- Carteirinha digital (spec 014) ---------- */
+/* Duas portas: cadastro (Turma.token_cadastro, aluno novo) e card
+ * (Aluno.token, identidade durável) — ver docs/plataforma/03 §Carteirinha. */
 
-export interface AlunoCarteirinha {
-  /** admin pode criar o convite já com o nome do aluno — o resto vem em branco */
+export interface MatriculaResumo {
+  curso: string;
+  turma_codigo: string;
+  status: string;
+}
+
+/** Card do aluno — mesmo shape no GET do card e na resposta do POST de
+ * cadastro (o cadastro devolve o card recém-criado). */
+export interface CarteirinhaAluno {
+  token: string;
+  url: string;
   nome: string;
   cpf: string;
-  /** ISO "yyyy-mm-dd" — null enquanto o aluno não preencheu */
+  /** ISO "yyyy-mm-dd" */
   data_nascimento: string | null;
   /** ImageField vazio → backend devolve null */
   foto: string | null;
+  codigo_carteirinha: string;
+  /** ISO "yyyy-mm-dd" */
+  validade_carteirinha: string;
+  matriculas: MatriculaResumo[];
 }
 
 export type ConviteCarteirinha =
-  | {
-      valido: true;
-      /** Token da Matrícula que este payload realmente representa — em
-       * links de turma (compartilhados) difere do token da URL depois que
-       * o POST cria uma Matrícula individual nova pro aluno. */
-      token: string;
-      curso: string;
-      turma_codigo: string;
-      codigo_carteirinha: string;
-      /** ISO "yyyy-mm-dd" */
-      validade_carteirinha: string;
-      preenchida: boolean;
-      /** não-nulo quando o admin já vinculou um aluno (mesmo que só o
-       * nome) — não implica preenchida=true */
-      aluno: AlunoCarteirinha | null;
-    }
-  | {
-      valido: false;
-      motivo: "expirado" | "inexistente";
-    };
+  | ({ valido: true } & CarteirinhaAluno)
+  | { valido: false; motivo: "inexistente" };
+
+/** `GET /carteirinha/nova/{turma.token_cadastro}/` — dados pra montar a
+ * tela de cadastro de aluno novo. */
+export type ConviteCadastroTurma =
+  | { valido: true; turma_codigo: string; curso: string }
+  | { valido: false; motivo: "inexistente" | "fechada" };
 
 /* ---------- Erros (`{"detail": "mensagem legível"}`) ---------- */
 

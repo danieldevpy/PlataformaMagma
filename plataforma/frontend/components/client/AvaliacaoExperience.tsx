@@ -19,8 +19,8 @@ function chaveJaAvaliado(token: string): string {
  * Experiência completa de avaliação pós-curso — porta fiel de
  * avaliacao/{index.html,styles.css,script.js} (ver esse diretório para o
  * protótipo original). Mantém a mesma abordagem imperativa (DOM direto,
- * não estado do React) do protótipo — como já faz CarteirinhaExperience e
- * o hook useReveal() do resto do site — trocando apenas: fotos e nome vêm
+ * não estado do React) do protótipo — como já fazem CarteirinhaCadastro/
+ * CarteirinhaCard e o hook useReveal() do resto do site — trocando apenas: fotos e nome vêm
  * do convite real (não de query string), e o envio vai pra API de verdade.
  */
 export default function AvaliacaoExperience({

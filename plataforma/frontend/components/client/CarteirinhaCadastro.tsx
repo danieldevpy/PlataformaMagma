@@ -4,24 +4,11 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useReveal } from "@/hooks/useReveal";
 import { API_URL } from "@/lib/api";
-import type { ConviteCarteirinha } from "@/lib/types";
+import type { CarteirinhaAluno, ConviteCadastroTurma } from "@/lib/types";
 import "@/styles/carteirinha.css";
 
-// Chave de localStorage pra "lembrar" a Matrícula individual que este
-// device já gerou a partir de um link de turma (compartilhado) — assim
-// reabrir o mesmo link não pede os dados de novo nem cria uma segunda
-// carteirinha pra mesma pessoa.
-function chaveLembranca(tokenDoLink: string): string {
-  return `magma:carteirinha:${tokenDoLink}`;
-}
-
-type ConviteValido = Extract<ConviteCarteirinha, { valido: true }>;
-
-function formatDateBr(iso: string | null): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
-}
+type ConviteValido = Extract<ConviteCadastroTurma, { valido: true }>;
+type CadastroResposta = { valido: true } & CarteirinhaAluno;
 
 function iniciaisDe(nome: string): string {
   return nome
@@ -33,16 +20,14 @@ function iniciaisDe(nome: string): string {
 }
 
 /**
- * Experiência completa da carteirinha digital — porta fiel de
- * carteirinha-digital/{index.html,carteirinha.css,carteirinha.js}
- * (ver esse diretório para o protótipo original). Mantém a mesma
- * abordagem imperativa (DOM direto, não estado do React) do
- * protótipo — como já faz o hook useReveal() do resto do site —
- * trocando apenas: matrícula/validade/curso vêm do convite real
- * (não de query string) e o passo final envia a foto pra API de
- * verdade em vez de só mover o nó na tela.
+ * Cadastro de aluno novo (spec 014) — link estável e reutilizável da
+ * Turma (`token_cadastro`), sempre em branco (não é mais "por pessoa").
+ * Porta a experiência do protótipo original (carteirinha-digital/), menos
+ * o caso "já preenchida" — quem já tem carteirinha acessa direto por
+ * `/carteirinha/{aluno.token}` (ver CarteirinhaCard). Ao concluir, o card
+ * pronto aparece aqui mesmo e depois redireciona pro link pessoal.
  */
-export default function CarteirinhaExperience({
+export default function CarteirinhaCadastro({
   token,
   convite,
 }: {
@@ -53,30 +38,11 @@ export default function CarteirinhaExperience({
   const router = useRouter();
   const jaRodou = useRef(false);
 
-  const aluno = convite.aluno;
-  const jaPreenchida = convite.preenchida && convite.aluno;
-  // admin pode já ter vinculado um aluno com só o nome (ver Django Admin →
-  // Matrícula → campo "aluno") — nesse caso o nome já entra pronto no
-  // cartão e a etapa "como você se chama?" nem aparece no formulário.
-  const nomeConhecido = aluno?.nome?.trim() || null;
-  const totalSteps = nomeConhecido ? 3 : 4;
-
   useEffect(() => {
     // guarda contra o double-invoke do StrictMode em dev: sem isso os
     // listeners abaixo seriam anexados duas vezes (cliques duplicados).
     if (jaRodou.current) return;
     jaRodou.current = true;
-
-    // Link de turma (compartilhado) já preenchido por este device antes?
-    // Manda pro token da carteirinha individual do aluno em vez de
-    // mostrar o formulário em branco de novo.
-    if (!convite.preenchida) {
-      const meuToken = localStorage.getItem(chaveLembranca(token));
-      if (meuToken && meuToken !== token) {
-        router.replace(`/carteirinha/${meuToken}`);
-        return;
-      }
-    }
 
     const $ = <T extends Element = HTMLElement>(sel: string) =>
       document.querySelector<T>(sel);
@@ -86,8 +52,6 @@ export default function CarteirinhaExperience({
     const idCard = $("#idCard")!;
     const cardStage = $("#cardStage")!;
     idCard.classList.add("settling");
-
-    const validadeFormatada = formatDateBr(convite.validade_carteirinha);
 
     function typeInto(el: Element, text: string, speed = 55) {
       el.textContent = "";
@@ -186,43 +150,19 @@ export default function CarteirinhaExperience({
       }
     }
 
-    function finish(primeiroNome: string, isRevisita: boolean) {
-      const atraso = isRevisita ? 0 : 420;
+    function finish(primeiroNome: string, alunoToken: string) {
       setTimeout(() => {
         $("#successCardSlot")!.appendChild(cardStage);
         idCard.classList.add("sweep");
-        if (!isRevisita) launchConfetti();
+        launchConfetti();
         $("#successName")!.textContent = primeiroNome;
         $("#successPanel")!.classList.add("show");
-      }, atraso);
+      }, 420);
+      // o link do cadastro é da turma (compartilhável, reutilizável); a
+      // carteirinha em si vive no token do aluno — manda pra lá depois de
+      // dar tempo do aluno ver a animação/o cartão pronto.
+      setTimeout(() => router.replace(`/carteirinha/${alunoToken}`), 3800);
     }
-
-    // ---------------------------------------------------------------
-    // já preenchida (revisita): pula o formulário, só revela o cartão
-    // pronto dentro do painel de sucesso — sem confete, sem sheet.
-    // ---------------------------------------------------------------
-    if (convite.preenchida && convite.aluno) {
-      setTimeout(() => {
-        typeInto($("#cardMatricula")!, convite.codigo_carteirinha, 30);
-        typeInto($("#cardValidade")!, validadeFormatada, 35);
-        drawQrMock(convite.codigo_carteirinha);
-      }, 300);
-      finish(convite.aluno.nome.split(" ")[0] || "Aluno", true);
-      return () => {
-        cardStage.removeEventListener("mousemove", onMouseMove);
-        cardStage.removeEventListener("mouseleave", onMouseLeave);
-      };
-    }
-
-    // ---------------------------------------------------------------
-    // primeira visita: matrícula/validade "materializam" sozinhas ao
-    // carregar (dado do sistema, não do aluno)
-    // ---------------------------------------------------------------
-    setTimeout(() => {
-      typeInto($("#cardMatricula")!, convite.codigo_carteirinha, 45);
-      typeInto($("#cardValidade")!, validadeFormatada, 55);
-      drawQrMock(convite.codigo_carteirinha);
-    }, 1000);
 
     const steps = $$(".step");
     const TOTAL = steps.length;
@@ -232,7 +172,7 @@ export default function CarteirinhaExperience({
       cpf?: string;
       nascimento?: string;
       photo?: { type: "image"; src: string; file: File } | { type: "initials"; value: string };
-    } = { nome: nomeConhecido || undefined };
+    } = {};
 
     const backdrop = $("#backdrop")!;
     const sheet = $("#sheet")!;
@@ -453,7 +393,6 @@ export default function CarteirinhaExperience({
     });
 
     $("#skipPhoto")!.addEventListener("click", () => {
-      // #inpNome pode nem existir no DOM quando o nome já veio do convite
       const nome = answers.nome || $<HTMLInputElement>("#inpNome")?.value.trim() || "Aluno Magma";
       const initials = iniciaisDe(nome);
       answers.photo = { type: "initials", value: initials };
@@ -463,7 +402,7 @@ export default function CarteirinhaExperience({
     });
 
     // ---- envio real pra API (multipart) ----
-    async function submitCarteirinha() {
+    async function submitCadastro() {
       const fd = new FormData();
       fd.append("nome", answers.nome!);
       fd.append("cpf", answers.cpf!);
@@ -472,7 +411,7 @@ export default function CarteirinhaExperience({
       if (answers.photo?.type === "image") {
         fd.append("foto", answers.photo.file);
       }
-      const res = await fetch(`${API_URL}/carteirinha/convite/${token}/`, {
+      const res = await fetch(`${API_URL}/carteirinha/nova/${token}/`, {
         method: "POST",
         body: fd,
       });
@@ -485,7 +424,7 @@ export default function CarteirinhaExperience({
         }
         throw new Error(detail);
       }
-      return res.json() as Promise<ConviteValido>;
+      return res.json() as Promise<CadastroResposta>;
     }
 
     function showSubmitError(msg: string) {
@@ -524,20 +463,17 @@ export default function CarteirinhaExperience({
         }
 
         try {
-          const dados = await submitCarteirinha();
-          if (dados.valido && dados.token !== token) {
-            // Veio de um link de turma: a carteirinha real nasceu num token
-            // novo. Guarda a associação pra próxima visita a este mesmo
-            // link já cair direto na carteirinha do aluno.
-            localStorage.setItem(chaveLembranca(token), dados.token);
-          }
-          if (dados.valido && dados.aluno?.foto) {
-            targetEl.dataset.imgSrc = dados.aluno.foto;
-            targetEl.style.backgroundImage = `url(${dados.aluno.foto})`;
+          const dados = await submitCadastro();
+          typeInto($("#cardMatricula")!, dados.codigo_carteirinha, 45);
+          typeInto($("#cardValidade")!, dados.validade_carteirinha, 55);
+          drawQrMock(dados.codigo_carteirinha);
+          if (dados.foto) {
+            targetEl.dataset.imgSrc = dados.foto;
+            targetEl.style.backgroundImage = `url(${dados.foto})`;
           }
           sheetNext.style.pointerEvents = "";
           closeSheet();
-          finish((answers.nome || "").split(" ")[0] || "Aluno", false);
+          finish((answers.nome || "").split(" ")[0] || "Aluno", dados.token);
         } catch (err) {
           sheetNext.style.pointerEvents = "";
           showSubmitError(err instanceof Error ? err.message : "erro inesperado");
@@ -559,8 +495,7 @@ export default function CarteirinhaExperience({
       cardStage.removeEventListener("mousemove", onMouseMove);
       cardStage.removeEventListener("mouseleave", onMouseLeave);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, router]);
 
   return (
     <>
@@ -678,32 +613,17 @@ export default function CarteirinhaExperience({
               </div>
 
               <div className="card-body">
-                {jaPreenchida && aluno?.foto ? (
-                  <div
-                    className="photo-slot filled"
-                    id="photoSlot"
-                    style={{ backgroundImage: `url(${aluno.foto})` }}
-                  />
-                ) : jaPreenchida ? (
-                  <div className="photo-slot filled" id="photoSlot">
-                    <span className="initials">{iniciaisDe(aluno!.nome)}</span>
-                  </div>
-                ) : (
-                  <div className="photo-slot empty" id="photoSlot">
-                    <svg width="30" height="30">
-                      <use href="#ico-user" />
-                    </svg>
-                  </div>
-                )}
+                <div className="photo-slot empty" id="photoSlot">
+                  <svg width="30" height="30">
+                    <use href="#ico-user" />
+                  </svg>
+                </div>
 
                 <div className="card-fields">
                   <div className="f-row main">
                     <span className="f-label">ALUNO(A)</span>
-                    <span
-                      className={`f-value${nomeConhecido ? "" : " placeholder"}`}
-                      id="cardName"
-                    >
-                      {nomeConhecido || "preencha abaixo"}
+                    <span className="f-value placeholder" id="cardName">
+                      preencha abaixo
                     </span>
                   </div>
                   <div className="f-row">
@@ -715,20 +635,14 @@ export default function CarteirinhaExperience({
                   <div className="f-grid">
                     <div className="f-cell">
                       <span className="f-label">CPF</span>
-                      <span
-                        className={`f-value small${jaPreenchida ? "" : " placeholder"}`}
-                        id="cardCPF"
-                      >
-                        {jaPreenchida ? aluno!.cpf : "000.000.000-00"}
+                      <span className="f-value small placeholder" id="cardCPF">
+                        000.000.000-00
                       </span>
                     </div>
                     <div className="f-cell">
                       <span className="f-label">NASCIMENTO</span>
-                      <span
-                        className={`f-value small${jaPreenchida ? "" : " placeholder"}`}
-                        id="cardBirth"
-                      >
-                        {jaPreenchida ? formatDateBr(aluno!.data_nascimento) : "00/00/0000"}
+                      <span className="f-value small placeholder" id="cardBirth">
+                        00/00/0000
                       </span>
                     </div>
                   </div>
@@ -753,14 +667,12 @@ export default function CarteirinhaExperience({
             </div>
           </div>
 
-          {!jaPreenchida && (
-            <button className="btn btn-gold btn-pulse reveal" data-delay="3" id="fillBtn">
-              Preencher carteirinha
-              <svg width="18" height="18">
-                <use href="#ico-arrow" />
-              </svg>
-            </button>
-          )}
+          <button className="btn btn-gold btn-pulse reveal" data-delay="3" id="fillBtn">
+            Preencher carteirinha
+            <svg width="18" height="18">
+              <use href="#ico-arrow" />
+            </svg>
+          </button>
         </main>
       </div>
 
@@ -775,22 +687,20 @@ export default function CarteirinhaExperience({
             </svg>
           </button>
           <div className="sheet-progress" id="sheetProgress">
-            {Array.from({ length: totalSteps }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <span className="dot" key={i}></span>
             ))}
           </div>
           <span className="sheet-count" id="sheetCount">
-            1/{totalSteps}
+            1/4
           </span>
         </div>
 
         <div className="sheet-steps" id="sheetSteps">
-          {!nomeConhecido && (
-            <div className="step" data-target="cardName">
-              <label htmlFor="inpNome">Como você se chama?</label>
-              <input type="text" id="inpNome" placeholder="Nome completo" autoComplete="name" maxLength={60} />
-            </div>
-          )}
+          <div className="step" data-target="cardName">
+            <label htmlFor="inpNome">Como você se chama?</label>
+            <input type="text" id="inpNome" placeholder="Nome completo" autoComplete="name" maxLength={60} />
+          </div>
 
           <div className="step" data-target="cardCPF">
             <label htmlFor="inpCPF">Qual o seu CPF?</label>
