@@ -1,0 +1,12 @@
+{
+  "_comentario": "IDs opacos do n8n de PRODUÇÃO (identificadores de linha do banco, não são segredos — o segredo de verdade é o valor da credencial, que nunca sai de dentro do n8n). Usado por promover-prod.sh pra atualizar o workflow certo (em vez de duplicar) e remapear as credenciais (cada instância n8n tem os seus próprios IDs, mesmo pra credenciais com nome idêntico ao de dev). Descobertos manualmente em 2026-07-21 (spec 013) — ver specs/013-agente-whatsapp-operadora-leitura/tasks.md. Se um workflow ou credencial for recriado do zero em prod, atualizar aqui (1x) — ver README.md § 'Descobrir um ID novo'.",
+  "workflows": {
+    "MAG - Fase 0 (eco WhatsApp)": "hpv8MhUXW8rdG5bo",
+    "MAG - Nutridora (T+0)": "9xvwlmDV6SSNAdgJ"
+  },
+  "credenciais": {
+    "MAG - X-Agente-Token": "nCo0Grw1pk3Vr81Q",
+    "MAG - Evolution apikey": "ZT68GeREpqYwtxfe",
+    "MAG - Gemini": "66EgqO0SNbVhEf3Y"
+  }
+}
