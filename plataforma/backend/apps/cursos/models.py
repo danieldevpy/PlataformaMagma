@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.utils import timezone
 
@@ -130,6 +132,12 @@ class Turma(ConteudoRastreavel, ComTimestamps):
         EM_ANDAMENTO = "em_andamento", "Em andamento"
         ENCERRADA = "encerrada", "Encerrada"
 
+    # link estável de cadastro de aluno novo (spec 014) — substitui a
+    # antiga Matrícula-fantasma; reutilizável, nunca expira.
+    token_cadastro = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False
+    )
+
     curso = models.ForeignKey(Curso, related_name="turmas", on_delete=models.CASCADE)
     codigo = models.CharField(max_length=20)
     status = models.CharField(
@@ -140,7 +148,6 @@ class Turma(ConteudoRastreavel, ComTimestamps):
     exibir_inicio = models.BooleanField(default=False)
     dias_e_horario = models.CharField(max_length=80, blank=True)
     capacidade = models.PositiveSmallIntegerField(null=True, blank=True)
-    vagas_restantes = models.PositiveSmallIntegerField(null=True, blank=True)
     exibir_vagas = models.BooleanField(default=False)
 
     exibir_countdown = models.BooleanField(default=False)
@@ -186,6 +193,24 @@ class Turma(ConteudoRastreavel, ComTimestamps):
             and self.countdown_ate
             and self.countdown_ate > timezone.now()
         )
+
+    @property
+    def vagas_restantes(self):
+        """Calculado (spec 014) — nunca mais um número digitado à mão.
+        `None` quando `capacidade` está em branco (nada a contar)."""
+        if self.capacidade is None:
+            return None
+        # import local: evita ciclo educacional↔cursos no boot dos apps.
+        from apps.educacional.models import Matricula
+
+        ativas = self.matriculas.filter(
+            status__in=[Matricula.Status.ATIVA, Matricula.Status.CONCLUIDA]
+        ).count()
+        return max(0, self.capacidade - ativas)
+
+    @property
+    def lotada(self):
+        return self.vagas_restantes == 0
 
 
 class AnotacaoTurma(ComTimestamps):

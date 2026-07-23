@@ -2,41 +2,52 @@ from rest_framework import serializers
 
 from config.drf import RelativeMediaModelSerializer
 
-from apps.educacional.models import Aluno
+from apps.educacional.models import Aluno, normalizar_cpf
 
 
-class AlunoCarteirinhaSerializer(RelativeMediaModelSerializer):
+class CarteirinhaAlunoSerializer(RelativeMediaModelSerializer):
+    """Card digital do aluno (spec 014). A carteirinha (código/validade) e
+    a identidade agora pertencem ao `Aluno` — um card por pessoa,
+    acessível por `Aluno.token`. Inclui as matrículas (curso/turma/status)
+    pra a tela mostrar onde a pessoa estuda/estudou."""
+
+    token = serializers.CharField(read_only=True)
+    url = serializers.CharField(read_only=True)
+    matriculas = serializers.SerializerMethodField()
+
     class Meta:
         model = Aluno
-        fields = ["nome", "cpf", "data_nascimento", "foto"]
+        fields = [
+            "token",
+            "url",
+            "nome",
+            "cpf",
+            "data_nascimento",
+            "foto",
+            "codigo_carteirinha",
+            "validade_carteirinha",
+            "matriculas",
+        ]
 
-
-class MatriculaConvitePublicoSerializer(serializers.Serializer):
-    """Retrato do convite (preenchido ou não) para a tela da carteirinha."""
-
-    # Exposto pra o frontend saber o token da Matrícula individual gerada a
-    # partir de um link de turma (resposta do POST difere do token da URL
-    # nesse caso) e guardar localmente pra "lembrar" o aluno em revisitas.
-    token = serializers.CharField()
-    curso = serializers.CharField(source="turma.curso.nome")
-    turma_codigo = serializers.CharField(source="turma.codigo")
-    codigo_carteirinha = serializers.CharField()
-    validade_carteirinha = serializers.DateField()
-    preenchida = serializers.SerializerMethodField()
-    aluno = serializers.SerializerMethodField()
-
-    def get_preenchida(self, matricula):
-        return matricula.preenchida_em is not None
-
-    def get_aluno(self, matricula):
-        if not matricula.aluno:
-            return None
-        return AlunoCarteirinhaSerializer(
-            matricula.aluno, context=self.context
-        ).data
+    def get_matriculas(self, aluno):
+        return [
+            {
+                "curso": matricula.turma.curso.nome,
+                "turma_codigo": matricula.turma.codigo,
+                "status": matricula.status,
+            }
+            for matricula in aluno.matriculas.select_related("turma__curso").order_by(
+                "-criado_em"
+            )
+        ]
 
 
 class PreencherCarteirinhaSerializer(serializers.Serializer):
+    """Payload do cadastro de aluno novo (POST no link de cadastro da
+    turma). Continua exigindo CPF de 11 dígitos e normaliza pra só dígitos
+    antes de gravar (o dedup por CPF depende disso — ver
+    `Aluno.buscar_ou_criar_por_cpf`)."""
+
     nome = serializers.CharField(max_length=120)
     cpf = serializers.CharField(max_length=14)
     data_nascimento = serializers.DateField()
@@ -49,7 +60,7 @@ class PreencherCarteirinhaSerializer(serializers.Serializer):
         return value
 
     def validate_cpf(self, value):
-        digitos = "".join(ch for ch in value if ch.isdigit())
-        if len(digitos) != 11:
+        digitos = normalizar_cpf(value)
+        if not digitos or len(digitos) != 11:
             raise serializers.ValidationError("CPF precisa ter 11 dígitos.")
-        return value
+        return digitos

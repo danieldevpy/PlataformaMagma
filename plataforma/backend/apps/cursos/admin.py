@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, render
@@ -13,6 +14,19 @@ from apps.cursos.models import (
     Turma,
 )
 from apps.educacional.models import Matricula
+
+
+class OcultoParaEquipeAdminMixin:
+    """Esconde o model da lateral do admin pra quem não é superuser —
+    reduz a poluição pra quem não tem experiência com Django. Não é
+    barreira de segurança: inlines (ex.: AnotacaoTurmaInline dentro de
+    Turma) continuam acessíveis normalmente, pois checam permissão
+    própria, não `has_module_permission`."""
+
+    def has_module_permission(self, request):
+        if not request.user.is_superuser:
+            return False
+        return super().has_module_permission(request)
 
 
 class HabilidadeInline(admin.TabularInline):
@@ -61,7 +75,7 @@ class CursoAdmin(admin.ModelAdmin):
 
 
 @admin.register(Habilidade)
-class HabilidadeAdmin(admin.ModelAdmin):
+class HabilidadeAdmin(OcultoParaEquipeAdminMixin, admin.ModelAdmin):
     list_display = ("titulo", "curso", "ordem", "icone", "conteudo_origem")
     list_filter = ("curso", "conteudo_origem")
     search_fields = ("titulo", "descricao")
@@ -69,7 +83,7 @@ class HabilidadeAdmin(admin.ModelAdmin):
 
 
 @admin.register(PerguntaFrequente)
-class PerguntaFrequenteAdmin(admin.ModelAdmin):
+class PerguntaFrequenteAdmin(OcultoParaEquipeAdminMixin, admin.ModelAdmin):
     list_display = ("pergunta", "curso", "ordem", "conteudo_origem")
     list_filter = ("curso", "conteudo_origem")
     search_fields = ("pergunta", "resposta")
@@ -77,7 +91,7 @@ class PerguntaFrequenteAdmin(admin.ModelAdmin):
 
 
 @admin.register(Instrutor)
-class InstrutorAdmin(admin.ModelAdmin):
+class InstrutorAdmin(OcultoParaEquipeAdminMixin, admin.ModelAdmin):
     list_display = ("nome", "registro", "especializacao", "usuario", "conteudo_origem")
     list_filter = ("conteudo_origem", "cursos")
     search_fields = ("nome", "registro", "especializacao")
@@ -88,6 +102,18 @@ class AnotacaoTurmaInline(admin.TabularInline):
     model = AnotacaoTurma
     extra = 0
     fields = ("autor", "texto")
+
+
+class MatriculaInline(admin.TabularInline):
+    """Quem está matriculado nesta turma (spec 014) — visão direta na
+    página da Turma, sem precisar ir filtrar em Matrícula à parte."""
+
+    model = Matricula
+    extra = 0
+    fields = ("aluno", "status", "valor_fechado", "forma_pagamento", "criado_em")
+    readonly_fields = ("criado_em",)
+    autocomplete_fields = ("aluno",)
+    show_change_link = True
 
 
 @admin.register(Turma)
@@ -107,8 +133,8 @@ class TurmaAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "curso", "exibir_preco", "exibir_countdown")
     search_fields = ("codigo", "curso__nome")
-    inlines = (AnotacaoTurmaInline,)
-    actions = ("gerar_link_carteirinha_turma", "gerar_link_carteirinha_individual")
+    inlines = (MatriculaInline, AnotacaoTurmaInline)
+    actions = ("mostrar_link_cadastro",)
 
     def get_urls(self):
         # Páginas staff (Mesa de Luz e Studio) servidas DENTRO do namespace
@@ -146,34 +172,18 @@ class TurmaAdmin(admin.ModelAdmin):
         contexto = self._contexto_pagina_midia(request, turma_id)
         return render(request, "midia/studio.html", contexto)
 
-    @admin.action(description="Gerar link de carteirinha (turma toda — compartilhado)")
-    def gerar_link_carteirinha_turma(self, request, queryset):
-        # Idempotente: um só link de turma por Turma. Reaproveita o
-        # existente em vez de acumular vários links compartilhados pra
-        # mesma turma a cada clique.
+    @admin.action(description="Mostrar link de cadastro de aluno novo (carteirinha)")
+    def mostrar_link_cadastro(self, request, queryset):
+        # Link estável de cadastro da turma (spec 014): um por Turma
+        # (Turma.token_cadastro), reutilizável — não cria mais Matrícula.
+        # Aluno abre, preenche o CPF e já nasce matriculado.
         for turma in queryset:
-            matricula, criada = Matricula.objects.get_or_create(
-                turma=turma,
-                escopo=Matricula.Escopo.TURMA,
-                defaults={"enviado_por": request.user},
-            )
-            prefixo = "Novo link" if criada else "Link já existente"
-            self.message_user(request, f"{prefixo} — {turma}: {matricula.url}")
-
-    @admin.action(description="Gerar link de carteirinha (pessoa específica)")
-    def gerar_link_carteirinha_individual(self, request, queryset):
-        # Aqui sim um link novo por clique — é pra 1 aluno específico.
-        for turma in queryset:
-            matricula = Matricula.objects.create(
-                turma=turma,
-                escopo=Matricula.Escopo.INDIVIDUAL,
-                enviado_por=request.user,
-            )
-            self.message_user(request, f"{turma}: {matricula.url}")
+            url = f"{settings.FRONTEND_URL}/carteirinha/nova/{turma.token_cadastro}"
+            self.message_user(request, f"{turma}: {url}")
 
 
 @admin.register(AnotacaoTurma)
-class AnotacaoTurmaAdmin(admin.ModelAdmin):
+class AnotacaoTurmaAdmin(OcultoParaEquipeAdminMixin, admin.ModelAdmin):
     list_display = ("turma", "autor", "criado_em")
     list_filter = ("turma__curso",)
     search_fields = ("texto",)

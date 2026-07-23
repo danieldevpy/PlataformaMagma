@@ -295,9 +295,9 @@ class TurmaAnotacoesActionTests(TestCase):
 
 
 class TurmaAdminAcoesCarteirinhaTests(TestCase):
-    """Ações do Django Admin em TurmaAdmin (apps/cursos/admin.py) — geram
-    link de carteirinha em lote. Lógica real (idempotência do link de
-    turma) sem nenhuma cobertura até aqui."""
+    """Ação do Django Admin em TurmaAdmin (apps/cursos/admin.py) — mostra o
+    link estável de cadastro de aluno novo (spec 014: token_cadastro da
+    Turma, sem criar Matrícula)."""
 
     def setUp(self):
         self.superusuario = criar_gestor(
@@ -306,46 +306,71 @@ class TurmaAdminAcoesCarteirinhaTests(TestCase):
         self.client.force_login(self.superusuario)
         self.curso, self.turma = criar_curso_turma(slug="admin-acoes-teste")
 
-    def test_gerar_link_turma_e_idempotente(self):
+    def test_mostrar_link_cadastro_nao_cria_matricula(self):
         from apps.educacional.models import Matricula
 
         url = "/dj-admin/cursos/turma/"
-        for _ in range(2):
-            resposta = self.client.post(
-                url,
-                data={
-                    "action": "gerar_link_carteirinha_turma",
-                    "_selected_action": [str(self.turma.id)],
-                },
-                follow=True,
-            )
-            self.assertEqual(resposta.status_code, 200)
+        resposta = self.client.post(
+            url,
+            data={
+                "action": "mostrar_link_cadastro",
+                "_selected_action": [str(self.turma.id)],
+            },
+            follow=True,
+        )
+        self.assertEqual(resposta.status_code, 200)
+        # a ação só exibe o link — não cria/altera Matrícula.
+        self.assertEqual(Matricula.objects.filter(turma=self.turma).count(), 0)
+        # e o link mostrado carrega o token_cadastro estável da turma.
+        self.assertContains(resposta, str(self.turma.token_cadastro))
 
-        self.assertEqual(
-            Matricula.objects.filter(
-                turma=self.turma, escopo=Matricula.Escopo.TURMA
-            ).count(),
-            1,
+
+class VagasRestantesPropertyTests(TestCase):
+    """`Turma.vagas_restantes`/`lotada` (spec 014) — deixou de ser campo
+    digitado à mão e virou cálculo: capacidade − matrículas ativas ou
+    concluídas, nunca negativo."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno, Matricula
+
+        self.Aluno = Aluno
+        self.Matricula = Matricula
+        self.curso, self.turma = criar_curso_turma(
+            slug="vagas-teste", capacidade=2
         )
 
-    def test_gerar_link_individual_cria_um_novo_por_clique(self):
-        from apps.educacional.models import Matricula
-
-        url = "/dj-admin/cursos/turma/"
-        for _ in range(2):
-            resposta = self.client.post(
-                url,
-                data={
-                    "action": "gerar_link_carteirinha_individual",
-                    "_selected_action": [str(self.turma.id)],
-                },
-                follow=True,
-            )
-            self.assertEqual(resposta.status_code, 200)
-
-        self.assertEqual(
-            Matricula.objects.filter(
-                turma=self.turma, escopo=Matricula.Escopo.INDIVIDUAL
-            ).count(),
-            2,
+    def _matricular(self, nome, cpf, status):
+        aluno = self.Aluno.objects.create(nome=nome, cpf=cpf)
+        return self.Matricula.objects.create(
+            aluno=aluno, turma=self.turma, status=status
         )
+
+    def test_sem_capacidade_devolve_none(self):
+        _curso, turma_sem_capacidade = criar_curso_turma(slug="vagas-sem-capacidade")
+        self.assertIsNone(turma_sem_capacidade.vagas_restantes)
+        self.assertFalse(turma_sem_capacidade.lotada)
+
+    def test_sem_matricula_vagas_igual_capacidade(self):
+        self.assertEqual(self.turma.vagas_restantes, 2)
+        self.assertFalse(self.turma.lotada)
+
+    def test_desconta_so_ativa_e_concluida(self):
+        self._matricular("Ativa", "11111111111", self.Matricula.Status.ATIVA)
+        self._matricular("Convidado", "22222222222", self.Matricula.Status.CONVIDADO)
+        self._matricular("Cancelada", "33333333333", self.Matricula.Status.CANCELADA)
+        # só a ATIVA conta — convidado/cancelada não ocupam vaga.
+        self.assertEqual(self.turma.vagas_restantes, 1)
+
+    def test_concluida_tambem_conta(self):
+        self._matricular("Ativa", "11111111111", self.Matricula.Status.ATIVA)
+        self._matricular("Concluida", "22222222222", self.Matricula.Status.CONCLUIDA)
+        self.assertEqual(self.turma.vagas_restantes, 0)
+        self.assertTrue(self.turma.lotada)
+
+    def test_nunca_fica_negativo(self):
+        # capacidade=2, mas 3 matrículas ativas (ex.: capacidade reduzida
+        # depois de já ter gente matriculada) — vagas_restantes não vira -1.
+        for i in range(3):
+            self._matricular(f"Aluno {i}", f"{i}1111111111", self.Matricula.Status.ATIVA)
+        self.assertEqual(self.turma.vagas_restantes, 0)
+        self.assertTrue(self.turma.lotada)

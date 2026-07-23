@@ -1,93 +1,115 @@
-from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.cursos.models import Turma
 from apps.educacional.models import Aluno, Matricula
 from apps.educacional.serializers import (
-    MatriculaConvitePublicoSerializer,
+    CarteirinhaAlunoSerializer,
     PreencherCarteirinhaSerializer,
 )
 
-
-def motivo_invalidez(matricula):
-    if matricula is None:
-        return "inexistente"
-    # depois de preenchida a carteirinha vira definitiva — só expira
-    # o convite que nunca chegou a ser usado.
-    if matricula.preenchida_em is None and matricula.expira_em < timezone.now():
-        return "expirado"
-    return None
+# Status de turma que aceitam cadastro de aluno novo pelo link público
+# (spec 014): inscrições abertas ou turma já em andamento. Rascunho, lotada
+# e encerrada recusam. Gate pelo campo `status` (ciclo de vida manual da
+# turma), não pela property `lotada` calculada — vender/lotar por vaga é
+# decisão do gestor, não bloqueio automático do cadastro.
+STATUS_ACEITA_CADASTRO = {Turma.Status.INSCRICOES, Turma.Status.EM_ANDAMENTO}
 
 
-class MatriculaConvitePublicoView(APIView):
+class CadastroTurmaView(APIView):
+    """Cadastro de aluno novo (spec 014). Resolve a turma pelo
+    `token_cadastro` (link estável e reutilizável, um por turma — não mais
+    a Matrícula-fantasma). GET devolve os dados pra montar a página; POST
+    faz busca-ou-cria do Aluno por CPF e o matricula na turma."""
+
     permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def _buscar(self, token):
         return (
-            Matricula.objects.select_related("turma__curso", "aluno")
-            .filter(token=token)
-            .first()
+            Turma.objects.select_related("curso").filter(token_cadastro=token).first()
         )
 
     def get(self, request, token):
-        matricula = self._buscar(token)
-        motivo = motivo_invalidez(matricula)
-        if motivo:
-            return Response({"valido": False, "motivo": motivo})
-        dados = MatriculaConvitePublicoSerializer(
-            matricula, context={"request": request}
-        ).data
-        return Response({"valido": True, **dados})
+        turma = self._buscar(token)
+        if turma is None:
+            return Response({"valido": False, "motivo": "inexistente"})
+        if turma.status not in STATUS_ACEITA_CADASTRO:
+            return Response({"valido": False, "motivo": "fechada"})
+        return Response(
+            {
+                "valido": True,
+                "turma_codigo": turma.codigo,
+                "curso": turma.curso.nome,
+            }
+        )
 
     def post(self, request, token):
-        matricula = self._buscar(token)
-        motivo = motivo_invalidez(matricula)
-        if motivo:
-            mensagens = {
-                "inexistente": "Convite de carteirinha não encontrado.",
-                "expirado": "Este convite expirou. Peça um novo link para a equipe da Magma.",
-            }
+        turma = self._buscar(token)
+        if turma is None:
             return Response(
-                {"detail": mensagens[motivo]}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Link de cadastro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if turma.status not in STATUS_ACEITA_CADASTRO:
+            return Response(
+                {
+                    "detail": (
+                        "As inscrições desta turma não estão abertas. "
+                        "Fale com a equipe da Magma pelo WhatsApp."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = PreencherCarteirinhaSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         dados = serializer.validated_data
 
-        # Turma toda: link compartilhado — preencher NUNCA mexe na Matrícula
-        # do link em si (ela continua "em branco", disponível pro próximo
-        # colega da turma abrir e preencher a dele). Em vez disso nasce uma
-        # Matrícula individual nova, com sua própria carteirinha.
-        alvo = (
-            Matricula.objects.create(
-                turma=matricula.turma,
-                escopo=Matricula.Escopo.INDIVIDUAL,
-                enviado_por=matricula.enviado_por,
-                validade_carteirinha_meses=matricula.validade_carteirinha_meses,
-            )
-            if matricula.escopo == Matricula.Escopo.TURMA
-            else matricula
+        # Busca-ou-cria por CPF: reabrir o cadastro com um CPF já existente
+        # não duplica o Aluno — só adiciona a matrícula nova (dedup central
+        # no model, ver Aluno.buscar_ou_criar_por_cpf).
+        aluno, _criado = Aluno.buscar_ou_criar_por_cpf(
+            dados["cpf"],
+            defaults={
+                "nome": dados["nome"],
+                "data_nascimento": dados["data_nascimento"],
+            },
         )
-
-        aluno = alvo.aluno or Aluno()
-        aluno.nome = dados["nome"]
-        aluno.cpf = dados["cpf"]
-        aluno.data_nascimento = dados["data_nascimento"]
         if dados.get("foto"):
             aluno.foto = dados["foto"]
-        aluno.save()
+            aluno.save(update_fields=["foto", "atualizado_em"])
 
-        alvo.aluno = aluno
-        alvo.status = Matricula.Status.ATIVA
-        alvo.preenchida_em = timezone.now()
-        alvo.save(update_fields=["aluno", "status", "preenchida_em", "atualizado_em"])
+        # Matrícula ATIVA explícita — o default do model é CONVIDADO, que
+        # NÃO conta vaga. get_or_create garante idempotência: reabrir o
+        # link não estoura a UniqueConstraint (aluno, turma), só devolve a
+        # matrícula que já existe.
+        Matricula.objects.get_or_create(
+            aluno=aluno,
+            turma=turma,
+            defaults={"status": Matricula.Status.ATIVA},
+        )
 
-        dados_resposta = MatriculaConvitePublicoSerializer(
-            alvo, context={"request": request}
+        dados_resposta = CarteirinhaAlunoSerializer(
+            aluno, context={"request": request}
         ).data
-        return Response({"valido": True, **dados_resposta}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"valido": True, **dados_resposta}, status=status.HTTP_201_CREATED
+        )
+
+
+class CarteirinhaAlunoView(APIView):
+    """Card digital do aluno (spec 014) — resolve por `Aluno.token`, um
+    card por pessoa."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, token):
+        aluno = Aluno.objects.filter(token=token).first()
+        if aluno is None:
+            return Response({"valido": False, "motivo": "inexistente"})
+        dados = CarteirinhaAlunoSerializer(aluno, context={"request": request}).data
+        return Response({"valido": True, **dados})

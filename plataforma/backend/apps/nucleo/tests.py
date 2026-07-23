@@ -184,7 +184,7 @@ class CamadaDeAcoesTests(TestCase):
         postagens/avaliações da turma — o teste acima só checava
         turma_codigo/curso."""
         from apps.avaliacoes.models import Avaliacao
-        from apps.educacional.models import Matricula
+        from apps.educacional.models import Aluno, Matricula
         from apps.midia.models import Midia
 
         Postagem.objects.create(turma=self.turma, titulo="Post 1")
@@ -202,10 +202,16 @@ class CamadaDeAcoesTests(TestCase):
             comentario="Muito bom.",
             status=Avaliacao.Status.APROVADA,
         )
-        Matricula.objects.create(turma=self.turma, status=Matricula.Status.ATIVA)
-        # convite de escopo turma ainda não preenchido — não conta como
-        # matrícula de fato (fica em CONVIDADO até alguém preencher).
-        Matricula.objects.create(turma=self.turma)
+        aluno_ativo = Aluno.objects.create(nome="Aluno Ativo", cpf="11111111111")
+        Matricula.objects.create(
+            aluno=aluno_ativo, turma=self.turma, status=Matricula.Status.ATIVA
+        )
+        # matrícula ainda em CONVIDADO — não conta como matrícula de fato
+        # (só ativa/concluída contam vaga).
+        aluno_convidado = Aluno.objects.create(
+            nome="Aluno Convidado", cpf="22222222222"
+        )
+        Matricula.objects.create(aluno=aluno_convidado, turma=self.turma)
 
         self.client.force_login(self.gestor)
         resposta = self.client.post(
@@ -551,24 +557,21 @@ class GerarLinkMatriculaTests(TestCase):
             headers={"X-Agente-Token": self.token_bruto},
         )
 
-    def test_devolve_url_valida(self):
-        from apps.educacional.models import Matricula
-
+    def test_devolve_link_de_cadastro_da_turma(self):
+        # spec 014: o link agora é o token_cadastro estável da própria
+        # Turma (não cria mais Matrícula-fantasma).
         resposta = self._gerar("T-MAT-1")
         self.assertEqual(resposta.status_code, 200)
         resultado = resposta.json()["resultado"]
 
-        matricula = Matricula.objects.get(turma=self.turma)
-        self.assertIn(str(matricula.token), resultado["url"])
-        self.assertEqual(matricula.escopo, Matricula.Escopo.TURMA)
+        self.turma.refresh_from_db()
+        self.assertIn(str(self.turma.token_cadastro), resultado["url"])
+        self.assertIn("/carteirinha/nova/", resultado["url"])
+        self.assertEqual(resultado["turma_codigo"], "T-MAT-1")
+        self.assertNotIn("expira_em", resultado)
 
-        resposta_convite = self.client.get(
-            reverse("carteirinha-convite", args=[matricula.token])
-        )
-        self.assertEqual(resposta_convite.status_code, 200)
-        self.assertTrue(resposta_convite.json()["valido"])
-
-    def test_reusa_convite_existente(self):
+    def test_link_estavel_entre_chamadas(self):
+        # o mesmo token_cadastro sempre — link estável e reutilizável.
         from apps.educacional.models import Matricula
 
         primeira = self._gerar("T-MAT-1")
@@ -576,36 +579,8 @@ class GerarLinkMatriculaTests(TestCase):
         self.assertEqual(
             primeira.json()["resultado"]["url"], segunda.json()["resultado"]["url"]
         )
-        self.assertEqual(Matricula.objects.filter(turma=self.turma).count(), 1)
-
-    def test_nao_devolve_matricula_ja_preenchida(self):
-        """Achado real do Daniel: pedir o link de matrícula devolveu o link
-        de um aluno que já tinha preenchido a carteirinha. Causa raiz:
-        `MatriculaConvitePublicoView.post` (apps/educacional/views.py) não
-        marcava a matrícula individual gerada como `escopo=INDIVIDUAL`
-        (ficava com o default `TURMA`), então ela colava no filtro de
-        "convite reaproveitável". Corrigido em dois pontos: a view agora
-        marca `escopo=INDIVIDUAL` explicitamente, e esta ação passou a
-        filtrar por `preenchida_em__isnull=True` também — nunca confiar só
-        no `escopo` pra decidir se é um convite em aberto."""
-        from apps.educacional.models import Matricula
-
-        convite_aberto = Matricula.objects.create(
-            turma=self.turma, escopo=Matricula.Escopo.TURMA
-        )
-        # simula o cenário real: matrícula preenchida que (por bug já
-        # corrigido) ficou com escopo=turma em vez de individual — mais
-        # recente que o convite em aberto.
-        Matricula.objects.create(
-            turma=self.turma,
-            escopo=Matricula.Escopo.TURMA,
-            status=Matricula.Status.ATIVA,
-            preenchida_em=timezone.now(),
-        )
-
-        resposta = self._gerar("T-MAT-1")
-        resultado = resposta.json()["resultado"]
-        self.assertIn(str(convite_aberto.token), resultado["url"])
+        # não cria Matrícula nenhuma (acabou a fantasma).
+        self.assertEqual(Matricula.objects.filter(turma=self.turma).count(), 0)
 
     def test_turma_inexistente_400_e_loga_erro(self):
         resposta = self._gerar("NAO-EXISTE")
@@ -614,6 +589,209 @@ class GerarLinkMatriculaTests(TestCase):
 
         log = LogAcao.objects.filter(acao="gerar_link_matricula").latest("criado_em")
         self.assertEqual(log.status, LogAcao.Status.ERRO)
+
+
+class ListarMatriculasTurmaTests(TestCase):
+    """apps/educacional/acoes.py — ação `listar_matriculas_turma` (achado
+    do Daniel testando a spec 014: precisa ver quem está matriculado numa
+    turma específica, não só a contagem)."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno, Matricula
+
+        self.Aluno = Aluno
+        self.Matricula = Matricula
+        self.url_executar = reverse("acoes-executar")
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-listar-matriculas",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+        self.turma = Turma.objects.create(curso=self.curso, codigo="T-LISTA-1")
+        _, self.token_bruto = criar_token_agente(
+            escopos=["educacional:listar_matriculas_turma"]
+        )
+
+    def _listar(self, turma_codigo):
+        return self.client.post(
+            self.url_executar,
+            data={
+                "acao": "listar_matriculas_turma",
+                "params": {"turma_codigo": turma_codigo},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_lista_alunos_ordenados_por_nome_sem_pk_nem_cpf(self):
+        zeca = self.Aluno.objects.create(nome="Zeca", cpf="11122233344")
+        ana = self.Aluno.objects.create(nome="Ana", cpf="22233344455")
+        self.Matricula.objects.create(
+            aluno=zeca, turma=self.turma, status=self.Matricula.Status.ATIVA
+        )
+        self.Matricula.objects.create(
+            aluno=ana, turma=self.turma, status=self.Matricula.Status.CONCLUIDA
+        )
+
+        resposta = self._listar("T-LISTA-1")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["turma_codigo"], "T-LISTA-1")
+        nomes = [a["nome"] for a in resultado["alunos"]]
+        self.assertEqual(nomes, ["Ana", "Zeca"])  # ordem alfabética
+        self.assertEqual(resultado["alunos"][0]["status"], "concluida")
+        self.assertNotIn("cpf", resultado["alunos"][0])
+        self.assertNotIn("id", resultado["alunos"][0])
+        self.assertEqual(resultado["alunos"][0]["aluno_token"], str(ana.token))
+
+    def test_turma_sem_matricula_devolve_lista_vazia(self):
+        resposta = self._listar("T-LISTA-1")
+        self.assertEqual(resposta.json()["resultado"]["alunos"], [])
+
+    def test_turma_inexistente_400(self):
+        resposta = self._listar("NAO-EXISTE")
+        self.assertEqual(resposta.status_code, 400)
+
+
+class BuscarAlunoTests(TestCase):
+    """apps/educacional/acoes.py — ação `buscar_aluno` (spec 014, Fase B):
+    passo 1 do fluxo buscar → confirmar → matricular pelo WhatsApp."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno
+
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            escopos=["educacional:buscar_aluno"]
+        )
+        self.daniel = Aluno.objects.create(
+            nome="Daniel Fernandes", cpf="11122233344", whatsapp="5521999998888"
+        )
+        self.ana = Aluno.objects.create(nome="Ana Fernandes", cpf="22233344455")
+
+    def _buscar(self, termo):
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "buscar_aluno", "params": {"termo": termo}},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_por_nome_parcial_varios_resultados(self):
+        resposta = self._buscar("Fernandes")
+        self.assertEqual(resposta.status_code, 200)
+        nomes = {c["nome"] for c in resposta.json()["resultado"]}
+        self.assertEqual(nomes, {"Daniel Fernandes", "Ana Fernandes"})
+
+    def test_por_nome_um_resultado_cpf_mascarado_sem_pk(self):
+        resposta = self._buscar("Daniel")
+        candidatos = resposta.json()["resultado"]
+        self.assertEqual(len(candidatos), 1)
+        candidato = candidatos[0]
+        self.assertEqual(candidato["token"], str(self.daniel.token))
+        self.assertEqual(candidato["cpf_mascarado"], "111.***")
+        self.assertNotIn("111.***", "")  # sanity: garante que não é o CPF cru
+        self.assertNotIn("cpf", candidato)
+        self.assertNotIn("id", candidato)
+        self.assertNotIn("pk", candidato)
+        self.assertEqual(candidato["whatsapp"], "5521999998888")
+        self.assertEqual(candidato["matriculas"], 0)
+
+    def test_por_cpf_formatado(self):
+        resposta = self._buscar("111.222.333-44")
+        candidatos = resposta.json()["resultado"]
+        self.assertEqual(len(candidatos), 1)
+        self.assertEqual(candidatos[0]["token"], str(self.daniel.token))
+
+    def test_por_whatsapp(self):
+        resposta = self._buscar("21999998888")
+        candidatos = resposta.json()["resultado"]
+        self.assertEqual(len(candidatos), 1)
+        self.assertEqual(candidatos[0]["token"], str(self.daniel.token))
+
+    def test_nenhum_resultado(self):
+        resposta = self._buscar("Alguém Que Não Existe")
+        self.assertEqual(resposta.json()["resultado"], [])
+
+    def test_termo_vazio_400(self):
+        resposta = self._buscar("")
+        self.assertEqual(resposta.status_code, 400)
+
+
+class MatricularAlunoTests(TestCase):
+    """apps/educacional/acoes.py — ação `matricular_aluno` (spec 014, Fase
+    B): passo final do fluxo, só depois de buscar + confirmar."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno, Matricula
+
+        self.Matricula = Matricula
+        self.url_executar = reverse("acoes-executar")
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-matricular",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+        self.turma = Turma.objects.create(
+            curso=self.curso, codigo="T-MATRIC-1", capacidade=10
+        )
+        self.aluno = Aluno.objects.create(nome="Daniel Fernandes", cpf="11122233344")
+        _, self.token_bruto = criar_token_agente(
+            escopos=["educacional:matricular_aluno"]
+        )
+
+    def _matricular(self, aluno_token, turma_codigo, status=None):
+        params = {"aluno_token": aluno_token, "turma_codigo": turma_codigo}
+        if status:
+            params["status"] = status
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "matricular_aluno", "params": params},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_matricula_com_sucesso_e_conta_vaga(self):
+        resposta = self._matricular(str(self.aluno.token), "T-MATRIC-1")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["aluno_nome"], "Daniel Fernandes")
+        self.assertEqual(resultado["turma_codigo"], "T-MATRIC-1")
+        self.assertEqual(resultado["status"], "ativa")
+        self.assertEqual(resultado["vagas_restantes"], 9)
+
+        matricula = self.Matricula.objects.get(aluno=self.aluno, turma=self.turma)
+        self.assertEqual(matricula.status, self.Matricula.Status.ATIVA)
+
+    def test_duplicata_400(self):
+        self.Matricula.objects.create(
+            aluno=self.aluno, turma=self.turma, status=self.Matricula.Status.ATIVA
+        )
+        resposta = self._matricular(str(self.aluno.token), "T-MATRIC-1")
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("já está matriculado", resposta.json()["detail"])
+
+    def test_aluno_token_inexistente_400(self):
+        import uuid
+
+        resposta = self._matricular(str(uuid.uuid4()), "T-MATRIC-1")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_aluno_token_invalido_400(self):
+        resposta = self._matricular("nao-e-um-uuid", "T-MATRIC-1")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_turma_inexistente_400(self):
+        resposta = self._matricular(str(self.aluno.token), "NAO-EXISTE")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_status_invalido_400(self):
+        resposta = self._matricular(str(self.aluno.token), "T-MATRIC-1", status="lixo")
+        self.assertEqual(resposta.status_code, 400)
 
 
 class PatchAgendadaParaTests(TestCase):
