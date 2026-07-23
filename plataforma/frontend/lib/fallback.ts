@@ -21,7 +21,7 @@ export const FALLBACK_IMAGENS = {
 } as const;
 
 export const FALLBACK_CONFIG: SiteConfig = {
-  whatsapp_principal: "5521964946079",
+  whatsapp_principal: "5521979767821",
   instagram: "@magma_curso",
   email: "curso.magma21@gmail.com",
   endereco: "Rua Nossa Senhora de Fátima, 495 — Olinda, Nilópolis/RJ",

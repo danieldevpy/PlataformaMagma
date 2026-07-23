@@ -8,7 +8,7 @@
 ### `GET /api/site/config/`
 ```json
 {
-  "whatsapp_principal": "5521964946079",
+  "whatsapp_principal": "5521979767821",
   "instagram": "@magma_curso",
   "email": "curso.magma21@gmail.com",
   "endereco": "Rua Nossa Senhora de Fátima, 495 — Olinda, Nilópolis/RJ",
@@ -103,7 +103,7 @@
 {"nome": "Maria", "curso_slug": "socorrista-aph", "quando_pretende": "O quanto antes",
  "utm_source": "instagram", "utm_campaign": "bio", "pagina_origem": "/cursos/socorrista-aph"}
 // response 201
-{"ok": true, "whatsapp_url": "https://wa.me/5521964946079?text=..."}
+{"ok": true, "whatsapp_url": "https://wa.me/5521979767821?text=..."}
 ```
 O back monta a mensagem do WhatsApp (fonte única) e devolve pronta.
 
@@ -445,13 +445,13 @@ Ações v1 registradas:
 | Ação | App | Escopo | Params | Retorno |
 |---|---|---|---|---|
 | `gerar_link_avaliacao` | avaliacoes | `avaliacoes:gerar_link_avaliacao` | `turma_codigo` | `{turma_codigo, url, expira_em}` — reusa convite de escopo turma ainda válido; cria um novo só se não houver |
-| `status_turma` | cursos | `cursos:status_turma` | `turma_codigo` | `{turma_codigo, curso, status, inicio_aulas, capacidade, vagas_restantes, matriculas, midias, postagens, avaliacoes}` — `matriculas` conta só `Matricula` com status `ativa`\|`concluida` (convite de escopo turma ainda não preenchido não conta) |
+| `status_turma` | cursos | `cursos:status_turma` | `turma_codigo` | `{turma_codigo, curso, status, inicio_aulas, capacidade, vagas_restantes, matriculas, midias, postagens, avaliacoes}` — `vagas_restantes` é calculado (`max(0, capacidade − matrículas ativas/concluídas)`; `null` se `capacidade` em branco), não mais um campo digitado (spec 014); `matriculas` conta só `Matricula` com status `ativa`\|`concluida` |
 | `listar_turmas` | cursos | `cursos:listar_turmas` | `status` (opcional, exato) | lista de `{turma_codigo, curso, status, inicio_aulas, capacidade, vagas_restantes}` (sem `id`), mais recente primeiro — pra achar o código de uma turma sem lembrar de cabeça |
 | `listar_postagens_agendadas` | midia | `midia:listar_postagens_agendadas` | `{}` | lista de `{turma_codigo, titulo, legenda, canal, status, agendada_para}` (sem `id` — PK nunca é identificador público, constituição §6; `turma_codigo` + `agendada_para` já identificam a postagem sem ambiguidade prática), ordenada por `agendada_para` asc |
 | `identificar_contato` | nucleo | `nucleo:identificar_contato` | `numero` | `{papel, nome, escalado}` — `papel` em `gestor`\|`instrutor` (via `Usuario.whatsapp`/`papel`, sem modelo novo) \| `lead` (via `Lead.whatsapp`) \| `desconhecido` (`nome: null`, nunca inventa dado); `Usuario` tem prioridade sobre `Lead` no mesmo número; `escalado` = existe `ContatoEscalado` pra esse número (silenciado até liberação manual) |
 | `escalar_contato` | nucleo | `nucleo:escalar_contato` | `numero`, `motivo` | `{ok: true}` — cria/atualiza `ContatoEscalado`; reescalar com novo motivo não é erro (`update_or_create`) |
 | `listar_leads` | leads | `leads:listar_leads` | `dias` (opcional, padrão 1 = hoje), `status` (opcional, exato) | lista de `{nome, whatsapp, curso, quando_pretende, status, utm_source, criado_em}` (sem `id`), mais recente primeiro; `dias` conta dias corridos (calendário), não janela rolante de 24h |
-| `gerar_link_matricula` | educacional | `educacional:gerar_link_matricula` | `turma_codigo` | `{turma_codigo, url, expira_em}` — reusa convite de `Matricula` escopo turma ainda válido (link de matrícula/carteirinha); cria um novo só se não houver, mesmo padrão de `gerar_link_avaliacao` |
+| `gerar_link_matricula` | educacional | `educacional:gerar_link_matricula` | `turma_codigo` | `{turma_codigo, url}` — devolve o link estável de cadastro de aluno novo da turma (`{FRONTEND_URL}/carteirinha/nova/{turma.token_cadastro}`); reutilizável, um por turma, sem `expira_em` (validade agora é o `status` da turma). Spec 014: acabou a `Matrícula`-fantasma — a ação não cria mais Matrícula |
 
 ```bash
 # humano (Session/JWT) — sempre autorizado, sem checar escopo

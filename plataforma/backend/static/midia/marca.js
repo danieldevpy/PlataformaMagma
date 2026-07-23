@@ -16,8 +16,8 @@
      contatos: {
        instagram: "@magma_curso",
        instagramUrl: "https://instagram.com/magma_curso",
-       whatsapp: ["(21) 97100-5197", "(21) 96494-6079"],
-       whatsappUrls: ["https://wa.me/5521971005197", "https://wa.me/5521964946079"],
+       whatsapp: ["(21) 97976-7821", "(21) 96494-6079"],
+       whatsappUrls: ["https://wa.me/5521979767821", "https://wa.me/5521964946079"],
        email: "curso.magma21@gmail.com",
        endereco: "Rua Nossa Senhora de Fátima, 495, Olinda, Nilópolis/RJ",
        cidade: "Nilópolis/RJ",
@@ -47,7 +47,7 @@
   'use strict';
 
   /* ---------- Contatos oficiais (AGENTS.md §1) ---------- */
-  var WHATSAPP_NUMEROS = ['(21) 97100-5197', '(21) 96494-6079'];
+  var WHATSAPP_NUMEROS = ['(21) 97976-7821', '(21) 96494-6079'];
 
   var CONTATOS = {
     instagram: '@magma_curso',

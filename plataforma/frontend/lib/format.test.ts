@@ -42,7 +42,7 @@ describe("fmtMoeda", () => {
 
 describe("fmtTelefone", () => {
   it("formata E.164 BR (55 + DDD + 9 dígitos)", () => {
-    expect(fmtTelefone("5521964946079")).toBe("(21) 96494-6079");
+    expect(fmtTelefone("5521979767821")).toBe("(21) 97976-7821");
   });
 
   it("devolve o valor original quando não casa o padrão", () => {

@@ -31,7 +31,7 @@ class ComTimestamps(models.Model):
 class ConfiguracaoSite(ConteudoRastreavel, ComTimestamps):
     """Singleton com as configurações globais do site (get_or_create(pk=1))."""
 
-    whatsapp_principal = models.CharField(max_length=20, default="5521964946079")
+    whatsapp_principal = models.CharField(max_length=20, default="5521979767821")
     instagram = models.CharField(max_length=60, default="@magma_curso")
     email = models.EmailField(default="curso.magma21@gmail.com")
     endereco = models.TextField(

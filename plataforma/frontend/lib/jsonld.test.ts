@@ -41,7 +41,7 @@ describe("faqJsonLd", () => {
 describe("localBusinessJsonLd", () => {
   it("telefone vem com + na frente do E.164", () => {
     const jsonld = localBusinessJsonLd(FALLBACK_CONFIG);
-    expect(jsonld.telephone).toBe("+5521964946079");
+    expect(jsonld.telephone).toBe("+5521979767821");
   });
 
   it("endereço com travessão separa rua do resto (padrão 'Rua X — Bairro, Cidade/UF')", () => {

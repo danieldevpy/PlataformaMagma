@@ -20,7 +20,7 @@
 - **Negócio:** escola de cursos profissionalizantes de saúde na Baixada Fluminense — carro-chefe: **Socorrista APH (120h)**; especializações (Punção Venosa/ICVP), treinamentos Lei Lucas para escolas.
 - **Público:** pessoas que querem entrar na área da saúde, muitas trabalham durante a semana (por isso turmas aos sábados).
 - **Posicionamento:** prática de verdade + credencial verificável. "Educar também é cuidar."
-- **Dados:** Curso Magma LTDA — CNPJ 48.330.206/0001-06 · Rua Nossa Senhora de Fátima, 495, Olinda, Nilópolis/RJ · WhatsApp (21) 97100-5197 / (21) 96494-6079 · @magma_curso · curso.magma21@gmail.com
+- **Dados:** Curso Magma LTDA — CNPJ 48.330.206/0001-06 · Rua Nossa Senhora de Fátima, 495, Olinda, Nilópolis/RJ · WhatsApp (21) 97976-7821 / (21) 96494-6079 · @magma_curso · curso.magma21@gmail.com
 
 ## 2. O símbolo (NUNCA inventar outro)
 

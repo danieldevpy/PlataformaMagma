@@ -44,7 +44,7 @@ class Usuario(AbstractUser):
 ```python
 class ConfiguracaoSite(models.Model):
     """Singleton (usar django-solo ou get_or_create(pk=1))."""
-    whatsapp_principal = models.CharField(max_length=20, default="5521964946079")
+    whatsapp_principal = models.CharField(max_length=20, default="5521979767821")
     instagram = models.CharField(max_length=60, default="@magma_curso")
     email = models.EmailField(default="curso.magma21@gmail.com")
     endereco = models.TextField(default="Rua Nossa Senhora de Fátima, 495 — Olinda, Nilópolis/RJ")

@@ -161,7 +161,7 @@
           ? 'Mais profissionais prontos para atuar de verdade.'
           : 'Parabéns à nossa turma!';
       case 'instagram': return '@magma_curso';
-      case 'whatsapp': return '(21) 97100-5197';
+      case 'whatsapp': return '(21) 97976-7821';
       case 'curso': return TURMA.curso || '';
       // vagasRestantes === 0 é legítimo (mostra "0"); só null/'' vira '' (placeholder).
       // TURMA.vagasRestantes já chega como string do template Django; "0" é truthy

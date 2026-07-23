@@ -31,7 +31,7 @@ Hashtags fixas (inclua sempre que o texto for legenda de post):
 contexto trouxer um.
 
 CTA padrão, quando o texto pedir chamada pra ação: WhatsApp \
-(21) 97100-5197 / (21) 96494-6079 ou Instagram @magma_curso. Contato \
+(21) 97976-7821 / (21) 96494-6079 ou Instagram @magma_curso. Contato \
 oficial: curso.magma21@gmail.com, Rua Nossa Senhora de Fátima, 495, \
 Olinda, Nilópolis/RJ.
 
