@@ -40,7 +40,7 @@ export const HOME_CARDS: HomeCard[] = [
     destaque: true,
   },
   {
-    slug: "bls",
+    slug: "bls-suporte-basico-de-vida",
     chip: "Especialização",
     horas: "20h",
     nome: "BLS — Suporte Básico de Vida",
@@ -49,7 +49,7 @@ export const HOME_CARDS: HomeCard[] = [
     cta: { tipo: "wa", msg: "Olá! Tenho interesse no curso de BLS (20h).", label: "Saber mais" },
   },
   {
-    slug: "puncao-venosa",
+    slug: "puncao-venosa-coleta-exames",
     chip: "Especialização",
     horas: "8h",
     nome: "ICVP — Punção Venosa",
@@ -161,8 +161,8 @@ export interface OpcaoCursoHome {
 
 const OPCOES_ESTATICAS: OpcaoCursoHome[] = [
   { slug: "socorrista-aph", label: "Socorrista APH (120h)" },
-  { slug: "bls", label: "BLS — Suporte Básico de Vida (20h)" },
-  { slug: "puncao-venosa", label: "ICVP — Punção Venosa (8h)" },
+  { slug: "bls-suporte-basico-de-vida", label: "BLS — Suporte Básico de Vida (20h)" },
+  { slug: "puncao-venosa-coleta-exames", label: "ICVP — Punção Venosa (8h)" },
   { slug: "stop-the-bleed", label: "Stop the Bleed (8h)" },
   { slug: "feridas-e-coberturas", label: "Feridas e Coberturas (10h)" },
   { slug: "cuidador-de-idosos", label: "Cuidador de Idosos" },
