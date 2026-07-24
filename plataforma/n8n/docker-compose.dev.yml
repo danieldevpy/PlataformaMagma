@@ -16,6 +16,17 @@
 # http://evolution-api:8080/...
 
 services:
+  n8n-redis:
+    # Redis dedicado ao n8n (buffer de mensagens fragmentadas do WhatsApp —
+    # protótipo do fluxo "aguardar e juntar" antes de acionar os agentes).
+    # Container próprio, não reaproveita o Redis do Evolution API.
+    image: redis:7-alpine
+    container_name: magma-n8n-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - n8n_redis_dev_data:/data
+
   n8n:
     image: n8nio/n8n:latest
     container_name: magma-n8n-dev
@@ -59,6 +70,7 @@ services:
 
 volumes:
   n8n_dev_data:
+  n8n_redis_dev_data:
 
 networks:
   default:

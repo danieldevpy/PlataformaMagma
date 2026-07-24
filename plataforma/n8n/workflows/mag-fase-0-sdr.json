@@ -218,7 +218,9 @@
         "url": "http://magma-backend-interno:8000/api/cursos/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         }
       },
       "id": "tool-listar-cursos",
@@ -233,11 +235,17 @@
         "url": "http://magma-backend-interno:8000/api/cursos/{slug}/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "placeholderDefinitions": {
           "values": [
-            { "name": "slug", "description": "Código do curso (slug), obtido a partir da tool listar_cursos", "type": "string" }
+            {
+              "name": "slug",
+              "description": "Código do curso (slug), obtido a partir da tool listar_cursos",
+              "type": "string"
+            }
           ]
         }
       },
@@ -254,7 +262,9 @@
         "url": "http://magma-backend-interno:8000/api/leads/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "parametersBody": {
@@ -302,13 +312,13 @@
               "id": "p1",
               "name": "numero",
               "type": "string",
-              "value": "={{ $('Extrair dados').item.json.numero }}"
+              "value": "={{ $('Consolidar mensagens').item.json.numero }}"
             },
             {
               "id": "p2",
               "name": "texto",
               "type": "string",
-              "value": "={{ $('Extrair dados').item.json.texto }}"
+              "value": "={{ $('Consolidar mensagens').item.json.texto }}"
             },
             {
               "id": "p3",
@@ -374,15 +384,25 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"escalar_contato\", \"params\": {\"numero\": \"{numero_esc}\", \"motivo\": \"{motivo_esc}\"}}",
         "placeholderDefinitions": {
           "values": [
-            { "name": "numero_esc", "description": "O numero exato do contato, mencionado no prompt como 'Numero do contato'", "type": "string" },
-            { "name": "motivo_esc", "description": "Motivo curto do encaminhamento pra humano", "type": "string" }
+            {
+              "name": "numero_esc",
+              "description": "O numero exato do contato, mencionado no prompt como 'Numero do contato'",
+              "type": "string"
+            },
+            {
+              "name": "motivo_esc",
+              "description": "Motivo curto do encaminhamento pra humano",
+              "type": "string"
+            }
           ]
         }
       },
@@ -407,7 +427,11 @@
         "jsonBody": "{\"number\": \"5521991920338\", \"text\": \"{mensagem}\"}",
         "placeholderDefinitions": {
           "values": [
-            { "name": "mensagem", "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.", "type": "string" }
+            {
+              "name": "mensagem",
+              "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.",
+              "type": "string"
+            }
           ]
         }
       },
@@ -457,13 +481,21 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"status_turma\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "turma_codigo", "description": "Código da turma perguntada (ex.: 03/2026 ou T027)", "type": "string" }]
+          "values": [
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma perguntada (ex.: 03/2026 ou T027)",
+              "type": "string"
+            }
+          ]
         }
       },
       "id": "tool-status-turma",
@@ -484,13 +516,21 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"gerar_link_avaliacao\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
+          "values": [
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma (ex.: 03/2026 ou T027)",
+              "type": "string"
+            }
+          ]
         }
       },
       "id": "tool-gerar-link-avaliacao",
@@ -511,15 +551,25 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_leads\", \"params\": {\"dias\": \"{dias}\", \"status\": \"{status}\"}}",
         "placeholderDefinitions": {
           "values": [
-            { "name": "dias", "description": "Número de dias corridos pra trás, incluindo hoje (ex.: '1' = hoje, '3' = últimos 3 dias); deixe vazio pra hoje.", "type": "string" },
-            { "name": "status", "description": "Status exato do lead pra filtrar (ex.: 'novo', 'contatado'); deixe vazio pra não filtrar.", "type": "string" }
+            {
+              "name": "dias",
+              "description": "Número de dias corridos pra trás, incluindo hoje (ex.: '1' = hoje, '3' = últimos 3 dias); deixe vazio pra hoje.",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "description": "Status exato do lead pra filtrar (ex.: 'novo', 'contatado'); deixe vazio pra não filtrar.",
+              "type": "string"
+            }
           ]
         }
       },
@@ -561,13 +611,21 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"gerar_link_matricula\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
+          "values": [
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma (ex.: 03/2026 ou T027)",
+              "type": "string"
+            }
+          ]
         }
       },
       "id": "tool-gerar-link-matricula",
@@ -588,13 +646,21 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_turmas\", \"params\": {\"status\": \"{status}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "status", "description": "Status exato pra filtrar (inscricoes, lotada, em_andamento, encerrada, rascunho); deixe vazio pra listar todas.", "type": "string" }]
+          "values": [
+            {
+              "name": "status",
+              "description": "Status exato pra filtrar (inscricoes, lotada, em_andamento, encerrada, rascunho); deixe vazio pra listar todas.",
+              "type": "string"
+            }
+          ]
         }
       },
       "id": "tool-listar-turmas",
@@ -615,13 +681,21 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"buscar_aluno\", \"params\": {\"termo\": \"{termo}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "termo", "description": "Nome (parcial), CPF ou número de WhatsApp da pessoa a buscar", "type": "string" }]
+          "values": [
+            {
+              "name": "termo",
+              "description": "Nome (parcial), CPF ou número de WhatsApp da pessoa a buscar",
+              "type": "string"
+            }
+          ]
         }
       },
       "id": "tool-buscar-aluno",
@@ -642,14 +716,20 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"matricular_aluno\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
           "values": [
-            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
+            {
+              "name": "aluno_token",
+              "description": "Token do aluno devolvido por buscar_aluno",
+              "type": "string"
+            },
             { "name": "turma_codigo", "description": "Código da turma", "type": "string" }
           ]
         }
@@ -679,42 +759,18 @@
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_matriculas_turma\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
-        },
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
-        }
-      },
-      "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
-      }
-    },
-    {
-      "id": "tool-gerar-cobranca",
-      "name": "gerar_cobranca",
-      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-      "typeVersion": 1.1,
-      "position": [2976, 720],
-      "parameters": {
-        "toolDescription": "Gera uma cobrança real no Asaas (PIX, boleto, cartão ou vazio = aluno escolhe) pra uma matrícula existente e devolve o link de pagamento. NUNCA chame sem repetir valor e destinatário pro gestor e receber confirmação explícita ('confirma?' -> 'sim').",
-        "method": "POST",
-        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"acao\": \"gerar_cobranca\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\", \"valor\": \"{valor}\", \"forma_pagamento\": \"{forma_pagamento}\"}}",
-        "placeholderDefinitions": {
           "values": [
-            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
-            { "name": "turma_codigo", "description": "Código da turma da matrícula", "type": "string" },
-            { "name": "valor", "description": "Valor da cobrança em reais (ex.: 150.00) — já confirmado com o gestor", "type": "string" },
-            { "name": "forma_pagamento", "description": "PIX, BOLETO ou CREDIT_CARD — deixe vazio se o gestor disser 'o aluno escolhe'", "type": "string" }
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma (ex.: 03/2026 ou T027)",
+              "type": "string"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
           ]
         }
       },
@@ -736,28 +792,225 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"consultar_pagamento\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
           "values": [
-            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
-            { "name": "turma_codigo", "description": "Código da turma — obrigatório se o aluno tiver mais de uma matrícula, opcional se só tiver uma", "type": "string" }
+            {
+              "name": "aluno_token",
+              "description": "Token do aluno devolvido por buscar_aluno",
+              "type": "string"
+            },
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma — obrigatório se o aluno tiver mais de uma matrícula, opcional se só tiver uma",
+              "type": "string"
+            }
           ]
         }
       },
       "credentials": {
         "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
+    },
+    {
+      "id": "tool-gerar-cobranca-v3",
+      "name": "gerar_cobranca",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, 720],
+      "parameters": {
+        "toolDescription": "Gera uma cobrança real no Asaas (PIX, boleto, cartão ou vazio = aluno escolhe) pra uma matrícula existente e devolve o link de pagamento. NUNCA chame sem repetir valor e destinatário pro gestor e receber confirmação explícita ('confirma?' -> 'sim').",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"gerar_cobranca\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\", \"valor\": \"{valor}\", \"forma_pagamento\": \"{forma_pagamento}\"}}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "aluno_token",
+              "description": "Token do aluno devolvido por buscar_aluno",
+              "type": "string"
+            },
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma da matrícula",
+              "type": "string"
+            },
+            {
+              "name": "valor",
+              "description": "Valor da cobrança em reais (ex.: 150.00) — já confirmado com o gestor",
+              "type": "string"
+            },
+            {
+              "name": "forma_pagamento",
+              "description": "PIX, BOLETO ou CREDIT_CARD — deixe vazio se o gestor disser 'o aluno escolhe'",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "buffer-push",
+      "name": "Buffer: guardar mensagem",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [896, -80],
+      "parameters": {
+        "operation": "push",
+        "list": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}",
+        "messageData": "={{ JSON.stringify({ texto: $('Extrair dados').item.json.texto, recebidoEm: $now.toISO() }) }}",
+        "tail": true
+      },
+      "credentials": {
+        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+      }
+    },
+    {
+      "id": "buffer-set-lastseen",
+      "name": "Buffer: marcar visto",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1120, -80],
+      "parameters": {
+        "operation": "set",
+        "key": "={{ \"wpp:lastseen:\" + $('Extrair dados').item.json.numero }}",
+        "value": "={{ $execution.id }}",
+        "expire": true,
+        "ttl": 30
+      },
+      "credentials": {
+        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+      }
+    },
+    {
+      "id": "buffer-wait",
+      "name": "Buffer: aguardar debounce",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1344, -80],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "webhookId": "bb4c9c6f-9d4c-4b9b-8e6a-18969ed4e6b5"
+    },
+    {
+      "id": "buffer-get-lastseen",
+      "name": "Buffer: consultar visto",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1568, -80],
+      "parameters": {
+        "operation": "get",
+        "key": "={{ \"wpp:lastseen:\" + $('Extrair dados').item.json.numero }}",
+        "keyType": "string",
+        "propertyName": "lastSeenAtual"
+      },
+      "credentials": {
+        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+      }
+    },
+    {
+      "id": "buffer-if-ultima",
+      "name": "Buffer: sou a última mensagem?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1792, -80],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "buf1",
+              "leftValue": "={{ $json.lastSeenAtual }}",
+              "rightValue": "={{ $execution.id }}",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "buffer-get-mensagens",
+      "name": "Buffer: ler mensagens",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2016, -160],
+      "parameters": {
+        "operation": "get",
+        "key": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}",
+        "keyType": "list",
+        "propertyName": "mensagens"
+      },
+      "credentials": {
+        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+      }
+    },
+    {
+      "id": "buffer-delete",
+      "name": "Buffer: limpar",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2240, -160],
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}"
+      },
+      "credentials": {
+        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+      }
+    },
+    {
+      "id": "buffer-consolidar",
+      "name": "Consolidar mensagens",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2464, -160],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const raw = $json.mensagens || [];\nconst parsed = raw.map(x => {\n  try { return typeof x === 'string' ? JSON.parse(x) : x; } catch (e) { return null; }\n}).filter(Boolean);\nparsed.sort((a, b) => new Date(a.recebidoEm) - new Date(b.recebidoEm));\nconst texto = parsed.map(m => (m.texto || '').trim()).filter(Boolean).join(' ');\nreturn [{\n  json: {\n    numero: $('Extrair dados').item.json.numero,\n    texto,\n    nome: $('Extrair dados').item.json.nome,\n  }\n}];"
+      }
+    },
+    {
+      "id": "buffer-descartar",
+      "name": "Buffer: descartar (mensagem já absorvida)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2016, 80],
+      "parameters": {}
     }
   ],
   "connections": {
     "WhatsApp In": { "main": [[{ "node": "Log payload cru", "type": "main", "index": 0 }]] },
     "Log payload cru": { "main": [[{ "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }]] },
     "É mensagem de texto recebida?": { "main": [[{ "node": "Extrair dados", "type": "main", "index": 0 }]] },
-    "Extrair dados": { "main": [[{ "node": "Identificar Contato", "type": "main", "index": 0 }]] },
     "É gestor ou instrutor?": {
       "main": [
         [{ "node": "Operadora - Secretária Digital", "type": "main", "index": 0 }],
@@ -797,8 +1050,22 @@
     "buscar_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
     "matricular_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
     "listar_matriculas_turma": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "consultar_pagamento": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
     "gerar_cobranca": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "consultar_pagamento": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] }
+    "Extrair dados": { "main": [[{ "node": "Buffer: guardar mensagem", "type": "main", "index": 0 }]] },
+    "Buffer: guardar mensagem": { "main": [[{ "node": "Buffer: marcar visto", "type": "main", "index": 0 }]] },
+    "Buffer: marcar visto": { "main": [[{ "node": "Buffer: aguardar debounce", "type": "main", "index": 0 }]] },
+    "Buffer: aguardar debounce": { "main": [[{ "node": "Buffer: consultar visto", "type": "main", "index": 0 }]] },
+    "Buffer: consultar visto": { "main": [[{ "node": "Buffer: sou a última mensagem?", "type": "main", "index": 0 }]] },
+    "Buffer: sou a última mensagem?": {
+      "main": [
+        [{ "node": "Buffer: ler mensagens", "type": "main", "index": 0 }],
+        [{ "node": "Buffer: descartar (mensagem já absorvida)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Buffer: ler mensagens": { "main": [[{ "node": "Buffer: limpar", "type": "main", "index": 0 }]] },
+    "Buffer: limpar": { "main": [[{ "node": "Consolidar mensagens", "type": "main", "index": 0 }]] },
+    "Consolidar mensagens": { "main": [[{ "node": "Identificar Contato", "type": "main", "index": 0 }]] }
   },
   "settings": {
     "executionOrder": "v1",
