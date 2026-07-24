@@ -1,0 +1,106 @@
+{
+  "name": "MAG - Avisar Equipe",
+  "nodes": [
+    {
+      "id": "avisar-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "avisar-equipe",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "a45fed04-6908-44c1-b560-4960e2784921"
+    },
+    {
+      "id": "avisar-buscar-gestores",
+      "name": "Avisar: buscar gestores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [224, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Forwarded-Proto", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"listar_gestores\", \"params\": {}}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "avisar-separar-gestores",
+      "name": "Avisar: separar gestores",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [448, 0],
+      "parameters": {
+        "fieldToSplitOut": "resultado",
+        "options": {}
+      }
+    },
+    {
+      "id": "avisar-enviar",
+      "name": "Avisar: enviar no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.whatsapp, \"text\": $('Webhook').first().json.body.mensagem } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Avisar: buscar gestores", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Avisar: buscar gestores": {
+      "main": [
+        [
+          { "node": "Avisar: separar gestores", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Avisar: separar gestores": {
+      "main": [
+        [
+          { "node": "Avisar: enviar no WhatsApp", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  }
+}

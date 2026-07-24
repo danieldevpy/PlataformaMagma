@@ -391,12 +391,12 @@
       "parameters": {
         "toolDescription": "Avisa a equipe (WhatsApp do gestor) que um contato precisa de atenção humana. Chame com o numero do contato (mencionado no início da mensagem do usuário como 'Numero do contato') e um motivo curto. Chame sempre junto com escalar_contato.",
         "method": "POST",
-        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "url": "http://localhost:5678/webhook/avisar-equipe",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\"number\": \"5521991920338\", \"text\": \"{mensagem}\"}",
+        "jsonBody": "{\"mensagem\": \"{mensagem}\"}",
         "placeholderDefinitions": {
           "values": [
             {

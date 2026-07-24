@@ -10,18 +10,25 @@ direto no n8n (dev ou prod) sem atualizar este arquivo diverge silenciosamente.
 | `mag-nutridora-t0.json` | `MAG - Nutridora (T+0)` | 011 |
 | `mag-radar-resumo-diario.json` | `MAG - Radar (resumo diário)` | 019 — dispara por `Schedule Trigger` (cron, não webhook); sem AI Agent, é relatório factual formatado por código; manda pra **todos** os gestores (busca `listar_gestores` no backend, adendo 019-T9), não mais número fixo |
 | `mag-nutridora-t1-t3-t7.json` | `MAG - Nutridora (T+1/3/7)` | 020 — `Schedule Trigger` diário; sem AI Agent; usa `Split Out` (`n8n-nodes-base.splitOut`) pra transformar o array de leads elegíveis em N itens antes do envio |
+| `mag-avisar-equipe.json` | `MAG - Avisar Equipe` | 012, adendo 019-T9 — sub-workflow chamado pela tool `avisar_equipe` do SDR (dentro de `mag-fase-0-sdr.json`) via `toolHttpRequest` apontando pro próprio n8n (`http://localhost:5678/webhook/avisar-equipe`); busca `listar_gestores` e manda a notificação de handoff pra cada um, em vez de um número fixo |
 
-`mag-radar-resumo-diario.json` e `mag-nutridora-t1-t3-t7.json` reusam as
-mesmas credenciais `MAG - X-Agente-Token` e `MAG - Evolution apikey` dos
-outros workflows (não precisam de `MAG - Gemini` — nenhum dos dois tem AI
-Agent). Nenhum dos dois está em `ids-prod.json` ainda (nunca foram
-promovidos) — na primeira promoção, seguir a seção "Importar em prod pela
-primeira vez" abaixo pra cada arquivo, e **ativar manualmente** depois de
-importar (workflows com `Schedule Trigger` não disparam sozinhos se
-ficarem inativos). **`mag-nutridora-t1-t3-t7.json` é prioridade alta pra
-promover** — a campanha de tráfego pago (spec 018) pode trazer leads reais
-a qualquer momento, e sem esse workflow em prod eles só recebem o T+0 e
-depois silêncio.
+`mag-radar-resumo-diario.json`, `mag-nutridora-t1-t3-t7.json` e
+`mag-avisar-equipe.json` reusam as mesmas credenciais `MAG - X-Agente-Token`
+e `MAG - Evolution apikey` dos outros workflows (não precisam de
+`MAG - Gemini` — nenhum tem AI Agent). Nenhum dos três está em
+`ids-prod.json` ainda (nunca foram promovidos) — na primeira promoção,
+seguir a seção "Importar em prod pela primeira vez" abaixo pra cada
+arquivo. `mag-radar-resumo-diario.json` e `mag-nutridora-t1-t3-t7.json`
+precisam ser **ativados manualmente** depois de importar (workflows com
+`Schedule Trigger` não disparam sozinhos se ficarem inativos);
+`mag-avisar-equipe.json` também precisa estar ativo (é chamado por
+webhook a qualquer momento, não só por cron). **`mag-nutridora-t1-t3-t7.json`
+é prioridade alta pra promover** — a campanha de tráfego pago (spec 018)
+pode trazer leads reais a qualquer momento, e sem esse workflow em prod
+eles só recebem o T+0 e depois silêncio. **`mag-avisar-equipe.json` é
+pré-requisito de `mag-fase-0-sdr.json`** — se promover o SDR sem promover
+esse sub-workflow junto (e sem ativá-lo), a tool `avisar_equipe` do
+handoff vai falhar (chamando um webhook que não existe em prod).
 
 ## Por que dá pra usar o MESMO arquivo em dev e prod
 
@@ -36,6 +43,14 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
   2026-07-20, ver `.context/decisoes.md`).
 - **URL da Evolution**: `http://evolution-api:8080/...` — já é igual nos dois
   ambientes (mesmo nome de serviço nos dois composes), não precisou de nada.
+- **URL do sub-workflow `avisar_equipe`**: `http://localhost:5678/webhook/avisar-equipe`
+  — o n8n chamando a si mesmo (mesmo container, mesma porta interna em
+  qualquer ambiente), então nunca muda entre dev e prod. Padrão adotado
+  pra contornar a mesma limitação do `toolHttpRequest` (não dá pra usar
+  `{{ }}` no campo `url`): em vez de fazer o tool falar direto com a
+  Evolution (que exigiria repetir a lógica de "buscar todos os gestores"
+  dentro de cada tool que precisa avisar alguém), o tool chama um
+  workflow pequeno (`mag-avisar-equipe.json`) que faz isso uma vez só.
 - **Filtro de números de teste**: os 2 nós IF que restringem quem o bot
   responde em dev usam `{{ $env.MAGMA_NUMEROS_TESTE_REGEX }}` — essa aqui É
   uma env var comum (não é campo de `toolHttpRequest`, então não tem o

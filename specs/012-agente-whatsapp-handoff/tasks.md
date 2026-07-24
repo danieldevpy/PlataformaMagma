@@ -8,6 +8,7 @@
 | T4 | Workflow: IF "Está escalado?" (silêncio) + tools `escalar_contato`/`avisar_equipe` + system prompt | DONE | claude |
 | T5 | `docs/plataforma/03-api-contratos.md` — atualizar `identificar_contato`, registrar `escalar_contato` | DONE | claude |
 | T6 | Teste real: mensagem de handoff → Daniel avisado → contato silenciado → libera no admin → volta a responder | DONE | claude |
+| T7 | Adendo 2026-07-24: `avisar_equipe` para de usar número fixo, manda pra todos os gestores | DONE | claude |
 
 ## Ondas
 
@@ -24,6 +25,26 @@
   do plano-mãe; nenhuma das três ainda tinha spec própria. Handoff
   escolhido por ser o que mais falta pro SDR não ficar "sozinho" numa
   conversa que precisa de humano.
+- (2026-07-24) **Adendo T7**: em produção vão existir 2 gestores; a tool
+  `avisar_equipe` mandava só pro número fixo `5521991920338` (mesma
+  limitação corrigida no Radar, spec 019-T9). Como `avisar_equipe` é
+  chamada de dentro do raciocínio do AI Agent (não um pipeline linear), a
+  correção não podia ser só "trocar a URL por um HTTP Request comum" —
+  precisava continuar sendo UMA chamada de tool. Solução: sub-workflow
+  novo `MAG - Avisar Equipe` (`mag-avisar-equipe.json`) — recebe
+  `{mensagem}` por webhook, chama `listar_gestores`, separa com `Split
+  Out` e manda a mensagem pra cada gestor via Evolution. O node
+  `avisar_equipe` no SDR (`mag-fase-0-sdr.json`) só mudou a `url` (de
+  `http://evolution-api:8080/...` pra `http://localhost:5678/webhook/avisar-equipe`
+  — o n8n chamando a si mesmo, mesma porta interna em qualquer ambiente,
+  não muda entre dev/prod) e o `jsonBody` (só `{mensagem}`, sem mais
+  `number` fixo); `toolDescription`/`placeholderDefinitions` intocados,
+  então o prompt do SDR não precisou mudar. **Teste real completo**: mensagem
+  simulando pedido de matrícula ("quero pagar agora...") → SDR chamou
+  `escalar_contato` e `avisar_equipe` na ordem certa → aviso chegou de
+  verdade no WhatsApp (Evolution real rodando nesta sessão, `status:
+  PENDING`) → resposta final ao lead também confirmada. Suíte completa
+  249/249 (ver testes de `listar_gestores` na spec 019-T9).
 - (2026-07-20) Spec ENTREGUE e validada — mas com um bug novo do n8n
   descoberto no caminho (registrar pra não repetir a investigação):
   **`toolHttpRequest` com `sendHeaders: true` e header definido manualmente
