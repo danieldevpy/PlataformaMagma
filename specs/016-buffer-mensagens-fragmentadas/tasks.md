@@ -11,7 +11,7 @@
 | T7 | `.context/decisoes.md` + `.context/status.md` + `.context/historico/` | DONE | claude |
 | T8 | Documentar como spec formal (esta pasta) | DONE | claude |
 | T9 | Critério de aceite do gestor: teste com mensagem real via Evolution API (celular) | PENDENTE | — |
-| T10 | Promover pra produção (Redis + workflow) | PENDENTE | — |
+| T10 | Promover pra produção (Redis + workflow) | DONE | claude |
 
 ## Ondas
 
@@ -40,3 +40,16 @@
   retroativamente documentando o que já foi implementado, testado e
   commitado. T9/T10 ficam como próximos passos, não bloqueiam o "DONE"
   do que já está pronto no dev.
+- (2026-07-24, à noite) **T10 concluída** como parte da promoção de
+  outras specs (017/019/020/012-T7) pra prod: ao promover
+  `mag-fase-0-sdr.json` (que já carrega os nós do buffer desde o commit
+  `9432549`), a ausência do Redis dedicado e da credencial em prod
+  bloqueou o deploy — confirmado com o Daniel (`AskUserQuestion`) que
+  preferia subir o buffer junto em vez de adiar o resto. Redis dedicado
+  adicionado ao `docker-compose.prod.yml` (serviço `n8n-redis`, mesmo
+  padrão do dev — container próprio, não reaproveita o Redis do
+  Evolution) + credencial `MAG - Redis Buffer (dev)` criada em prod n8n
+  (nome idêntico ao de dev de propósito, pro remapeamento automático do
+  `promover-prod.sh` funcionar sem editar o JSON). T9 (teste com mensagem
+  real via Evolution, celular) continua pendente — ninguém mandou
+  mensagem fragmentada de verdade ainda.

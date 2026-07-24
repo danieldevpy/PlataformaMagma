@@ -75,6 +75,16 @@ services:
     ports:
       - "3000:3000"
 
+  n8n-redis:
+    # Redis dedicado ao n8n — buffer de mensagens fragmentadas do WhatsApp
+    # (debounce antes de acionar os agentes, spec 016). Container próprio,
+    # não reaproveita o Redis do Evolution API (evolution-redis abaixo).
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - n8n_redis_data:/data
+
   # n8n (automações / agente WhatsApp). Banco: SQLite interno no volume —
   # o n8n NÃO suporta MySQL (só SQLite/Postgres), então não reaproveita o db
   # acima; para o volume de automações atual, SQLite dá conta. Se um dia
@@ -192,6 +202,7 @@ services:
 volumes:
   mysql_data:
   n8n_data:
+  n8n_redis_data:
   evolution_postgres_data:
   evolution_redis_data:
   evolution_instances:
