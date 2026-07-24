@@ -12,6 +12,7 @@
 | T6 | Exportar `mag-radar-resumo-diario.json`, atualizar `workflows/README.md` | DONE | claude |
 | T7 | `.context/status.md` + `historico/2026-07-24-...md` | DONE | claude |
 | T8 | Promover pra prod (escopo no TokenAgente prod + import do workflow + ativar) | PENDENTE | — (decisão do Daniel) |
+| T9 | Adendo: buscar todos os gestores no backend em vez de número fixo (`listar_gestores`) | DONE | claude |
 
 ## Ondas
 
@@ -46,3 +47,24 @@
   **Pendente**: T8 — promover pra prod (workflow ainda não está em
   `ids-prod.json`; escopo novo no `TokenAgente` de prod; ativar depois de
   importar), decisão do Daniel.
+- (2026-07-24, mesmo dia) **Adendo T9**: Daniel avisou que em produção vão
+  ter 2 gestores, e pediu pra buscar a lista no backend em vez do número
+  fixo hardcoded (mesmo padrão do `avisar_equipe`, spec 012). Ação nova
+  `listar_gestores` (`apps/nucleo/acoes_gestores.py`, escopo
+  `nucleo:listar_gestores`) — gestores ativos com WhatsApp cadastrado,
+  exclui instrutor e quem não tem número. 4 testes novos, suíte completa
+  249/249. Workflow ganhou 2 nós (`HTTP Request` busca gestores → `Split
+  Out` separa por gestor) entre "formatar mensagem" e "enviar no
+  WhatsApp"; o texto final referencia o node de formatação direto
+  (`$('Radar: formatar mensagem').first().json.texto`) em vez de precisar
+  de um merge — cada gestor recebe o mesmo resumo, um envio por pessoa.
+  **Teste real**: nesta sessão a Evolution API estava rodando de verdade
+  (o Daniel deve ter subido em paralelo) — a mensagem chegou de fato no
+  WhatsApp real do Daniel (`status: PENDING`, confirmado pela própria
+  Evolution), com os 2 gestores buscados dinamicamente do banco (só 1
+  tinha WhatsApp válido de verdade; o outro, criado só pra testar a
+  lógica de "mais de um", usava um número fake e a própria Evolution
+  recusou, "exists: false" — removido antes de fechar). `handoff`
+  (`avisar_equipe`, spec 012) tem a mesma limitação de número fixo, mas
+  fica fora do escopo deste adendo (não foi pedido); registrado como
+  lacuna conhecida.

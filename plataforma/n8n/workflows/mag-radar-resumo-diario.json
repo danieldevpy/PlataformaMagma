@@ -57,7 +57,7 @@
       "name": "Radar: enviar no WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [672, 0],
+      "position": [1120, 0],
       "parameters": {
         "method": "POST",
         "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
@@ -65,11 +65,48 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"number\": \"5521991920338\", \"text\": $json.texto } }}",
+        "jsonBody": "={{ { \"number\": $json.whatsapp, \"text\": $('Radar: formatar mensagem').first().json.texto } }}",
         "options": {}
       },
       "credentials": {
         "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    },
+    {
+      "id": "radar-buscar-gestores",
+      "name": "Radar: buscar gestores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Forwarded-Proto", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"listar_gestores\", \"params\": {}}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "radar-separar-gestores",
+      "name": "Radar: separar gestores",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [896, 0],
+      "parameters": {
+        "fieldToSplitOut": "resultado",
+        "options": {}
       }
     }
   ],
@@ -89,6 +126,20 @@
       ]
     },
     "Radar: formatar mensagem": {
+      "main": [
+        [
+          { "node": "Radar: buscar gestores", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Radar: buscar gestores": {
+      "main": [
+        [
+          { "node": "Radar: separar gestores", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Radar: separar gestores": {
       "main": [
         [
           { "node": "Radar: enviar no WhatsApp", "type": "main", "index": 0 }

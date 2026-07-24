@@ -9,5 +9,6 @@ class NucleoConfig(AppConfig):
 
     def ready(self):
         from apps.nucleo import acoes_contato  # noqa: F401 — registra em apps.nucleo.acoes
+        from apps.nucleo import acoes_gestores  # noqa: F401 — idem
         from apps.nucleo import acoes_institucional  # noqa: F401 — idem
         from apps.nucleo import acoes_resumo  # noqa: F401 — idem

@@ -432,6 +432,75 @@ class ResumoDiarioTests(TestCase):
         self.assertEqual(resultado["uso_ia_mes"]["tokens_saida"], 50)
 
 
+class ListarGestoresTests(TestCase):
+    """apps/nucleo/acoes_gestores.py — ação `listar_gestores`, usada pelos
+    workflows proativos (Radar) pra descobrir todos os gestores em vez de
+    um número fixo no n8n (specs/019, adendo 2026-07-24)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-listagem",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+            whatsapp="5521900000001",
+        )
+
+    def _executar(self):
+        self.client.force_login(self.gestor)
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "listar_gestores", "params": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        return resposta.json()["resultado"]
+
+    def test_lista_gestores_com_whatsapp(self):
+        Usuario.objects.create_user(
+            username="gestor-2",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+            whatsapp="5521900000002",
+        )
+        resultado = self._executar()
+        numeros = {g["whatsapp"] for g in resultado}
+        self.assertEqual(numeros, {"5521900000001", "5521900000002"})
+
+    def test_exclui_gestor_sem_whatsapp(self):
+        Usuario.objects.create_user(
+            username="gestor-sem-numero",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+        )
+        resultado = self._executar()
+        numeros = {g["whatsapp"] for g in resultado}
+        self.assertEqual(numeros, {"5521900000001"})
+
+    def test_exclui_instrutor(self):
+        Usuario.objects.create_user(
+            username="instrutor-nao-conta",
+            password="senha-teste-123",
+            papel=Usuario.Papel.INSTRUTOR,
+            whatsapp="5521900000003",
+        )
+        resultado = self._executar()
+        numeros = {g["whatsapp"] for g in resultado}
+        self.assertEqual(numeros, {"5521900000001"})
+
+    def test_exclui_gestor_inativo(self):
+        Usuario.objects.create_user(
+            username="gestor-inativo",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+            whatsapp="5521900000004",
+            is_active=False,
+        )
+        resultado = self._executar()
+        numeros = {g["whatsapp"] for g in resultado}
+        self.assertEqual(numeros, {"5521900000001"})
+
+
 class InfoInstitucionalTests(TestCase):
     """apps/nucleo/acoes_institucional.py — ação `info_institucional`, usada
     pela SDR do agente WhatsApp pra responder pergunta institucional sem
