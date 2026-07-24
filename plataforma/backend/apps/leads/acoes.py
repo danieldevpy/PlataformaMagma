@@ -4,8 +4,11 @@ from datetime import timedelta
 
 from django.utils import timezone
 
+from apps.avaliacoes.models import Avaliacao
+from apps.cursos.serializers import turma_destaque_de
 from apps.leads.models import Lead
 from apps.nucleo.acoes import ErroAcao, registrar_acao
+from apps.nucleo.models import ContatoEscalado
 
 
 @registrar_acao(
@@ -48,3 +51,138 @@ def listar_leads(params, request):
         }
         for lead in leads.order_by("-criado_em")
     ]
+
+
+def _texto_t1(lead):
+    """T+1 — conteúdo real do curso (habilidades) se houver; genérico
+    senão. Sempre tem conteúdo válido (não fica esperando)."""
+    if lead.curso_id:
+        habilidades = list(lead.curso.habilidades.order_by("ordem")[:3])
+        if habilidades:
+            itens = "\n".join(f"✅ {h.titulo}" for h in habilidades)
+            return (
+                f"Oi, {lead.nome}! Aqui é a MAG de novo 🚑\n\n"
+                f"Separei um gostinho do que você vai aprender no "
+                f"{lead.curso.nome}:\n\n{itens}\n\n"
+                "Quer que eu tire alguma dúvida sobre o curso?"
+            )
+        return (
+            f"Oi, {lead.nome}! Aqui é a MAG 🚑\n\n"
+            f"Vi que você se interessou pelo {lead.curso.nome} — quer que "
+            "eu te conte mais sobre como funciona a formação?"
+        )
+    return (
+        f"Oi, {lead.nome}! Aqui é a MAG, da Magma Cursos 🚑\n\n"
+        "Ainda dá tempo de me contar qual curso te interessou — assim já "
+        "te mando os detalhes certos."
+    )
+
+
+def _texto_t3(lead):
+    """T+3 — prova social com avaliação real aprovada (do curso de
+    interesse, senão qualquer uma aprovada). Devolve None se ainda não
+    existir nenhuma — nunca inventa depoimento."""
+    aprovadas = Avaliacao.objects.filter(status=Avaliacao.Status.APROVADA)
+    avaliacao = None
+    if lead.curso_id:
+        avaliacao = aprovadas.filter(curso=lead.curso).order_by("-criado_em").first()
+    if avaliacao is None:
+        avaliacao = aprovadas.order_by("-criado_em").first()
+    if avaliacao is None:
+        return None
+
+    estrelas = "⭐" * avaliacao.estrelas
+    return (
+        f"Oi, {lead.nome}! Olha o que quem já se formou com a gente diz:\n\n"
+        f"{estrelas}\n\"{avaliacao.comentario}\" — {avaliacao.nome}\n\n"
+        "Se quiser, te ajudo a garantir sua vaga também. É só responder "
+        "aqui."
+    )
+
+
+def _texto_t7(lead):
+    """T+7 — urgência com vagas reais se `exibir_vagas` estiver ligado;
+    genérico senão. Sempre tem conteúdo válido (não fica esperando)."""
+    if lead.curso_id:
+        turma = turma_destaque_de(lead.curso)
+        if turma and turma.exibir_vagas and turma.vagas_restantes is not None:
+            return (
+                f"Oi, {lead.nome}! Passando pra avisar: restam "
+                f"{turma.vagas_restantes} vaga(s) na turma de "
+                f"{lead.curso.nome} com inscrições abertas. Se ainda tiver "
+                "interesse, responde aqui que eu te ajudo a garantir a sua."
+            )
+        return (
+            f"Oi, {lead.nome}! As vagas do {lead.curso.nome} são "
+            "limitadas — se ainda tiver interesse, responde aqui que eu "
+            "vejo a disponibilidade certinha pra você."
+        )
+    return (
+        f"Oi, {lead.nome}! Ainda dá tempo de garantir sua vaga na Magma — "
+        "responde aqui que eu te ajudo a encontrar o curso certo."
+    )
+
+
+@registrar_acao(
+    nome="processar_nutridora",
+    descricao=(
+        "Processa a régua de nutrição automática (T+1/T+3/T+7): busca "
+        "leads elegíveis pra cada janela, monta o texto com dado real, "
+        "marca o toque no Lead e devolve {numero, texto} de cada um pra "
+        "mandar pelo WhatsApp. Sem parâmetros — chamada pelo Schedule "
+        "Trigger do n8n, não pelo AI Agent."
+    ),
+    params={},
+    escopo="leads:processar_nutridora",
+)
+def processar_nutridora(params, request):
+    agora = timezone.now()
+    numeros_escalados = set(ContatoEscalado.objects.values_list("numero", flat=True))
+
+    base = (
+        Lead.objects.exclude(whatsapp="")
+        .exclude(utm_source="whatsapp")
+        .exclude(whatsapp__in=numeros_escalados)
+        .select_related("curso")
+    )
+
+    processados = []
+    ja_processados_nesta_rodada = set()
+
+    def _processar(queryset, novo_toque, montar_texto):
+        for lead in queryset:
+            if lead.pk in ja_processados_nesta_rodada:
+                continue
+            texto = montar_texto(lead)
+            if texto is None:
+                continue
+            processados.append({"numero": lead.whatsapp, "texto": texto})
+            lead.nutridora_ultimo_toque = novo_toque
+            lead.save(update_fields=["nutridora_ultimo_toque"])
+            ja_processados_nesta_rodada.add(lead.pk)
+
+    _processar(
+        base.filter(
+            criado_em__lte=agora - timedelta(days=1), nutridora_ultimo_toque=""
+        ),
+        Lead.ToqueNutridora.T1,
+        _texto_t1,
+    )
+    _processar(
+        base.filter(
+            criado_em__lte=agora - timedelta(days=3),
+            nutridora_ultimo_toque=Lead.ToqueNutridora.T1,
+        ),
+        Lead.ToqueNutridora.T3,
+        _texto_t3,
+    )
+    _processar(
+        base.filter(
+            criado_em__lte=agora - timedelta(days=7),
+            nutridora_ultimo_toque=Lead.ToqueNutridora.T3,
+        ),
+        Lead.ToqueNutridora.T7,
+        _texto_t7,
+    )
+
+    return {"processados": processados, "total": len(processados)}

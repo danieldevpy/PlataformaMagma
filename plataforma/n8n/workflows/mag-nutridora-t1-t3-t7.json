@@ -1,0 +1,106 @@
+{
+  "name": "MAG - Nutridora (T+1/3/7)",
+  "nodes": [
+    {
+      "id": "nutridora-schedule",
+      "name": "Nutridora: agendamento diário",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "days", "daysInterval": 1, "triggerAtHour": 9, "triggerAtMinute": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "nutridora-processar",
+      "name": "Nutridora: processar régua",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [224, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Forwarded-Proto", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"processar_nutridora\", \"params\": {}}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "nutridora-split",
+      "name": "Nutridora: separar por lead",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [448, 0],
+      "parameters": {
+        "fieldToSplitOut": "resultado.processados",
+        "options": {}
+      }
+    },
+    {
+      "id": "nutridora-enviar",
+      "name": "Nutridora: enviar no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.numero, \"text\": $json.texto } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    }
+  ],
+  "connections": {
+    "Nutridora: agendamento di\u00e1rio": {
+      "main": [
+        [
+          { "node": "Nutridora: processar régua", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Nutridora: processar r\u00e9gua": {
+      "main": [
+        [
+          { "node": "Nutridora: separar por lead", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Nutridora: separar por lead": {
+      "main": [
+        [
+          { "node": "Nutridora: enviar no WhatsApp", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  }
+}

@@ -9,14 +9,19 @@ direto no n8n (dev ou prod) sem atualizar este arquivo diverge silenciosamente.
 | `mag-fase-0-sdr.json` | `MAG - Fase 0 (eco WhatsApp)` | 009 (identificação), 010 (SDR), 012 (handoff), 017 (info institucional) |
 | `mag-nutridora-t0.json` | `MAG - Nutridora (T+0)` | 011 |
 | `mag-radar-resumo-diario.json` | `MAG - Radar (resumo diário)` | 019 — dispara por `Schedule Trigger` (cron, não webhook); sem AI Agent, é relatório factual formatado por código |
+| `mag-nutridora-t1-t3-t7.json` | `MAG - Nutridora (T+1/3/7)` | 020 — `Schedule Trigger` diário; sem AI Agent; usa `Split Out` (`n8n-nodes-base.splitOut`) pra transformar o array de leads elegíveis em N itens antes do envio |
 
-`mag-radar-resumo-diario.json` reusa as mesmas credenciais `MAG - X-Agente-Token`
-e `MAG - Evolution apikey` dos outros dois workflows (não precisa de
-`MAG - Gemini` — não tem AI Agent). Ainda não está em `ids-prod.json`
-(nunca foi promovido) — na primeira promoção, seguir a seção "Importar em
-prod pela primeira vez" abaixo pra esse arquivo também, e **ativar
-manualmente** depois de importar (workflows com `Schedule Trigger` não
-disparam sozinhos se ficarem inativos).
+`mag-radar-resumo-diario.json` e `mag-nutridora-t1-t3-t7.json` reusam as
+mesmas credenciais `MAG - X-Agente-Token` e `MAG - Evolution apikey` dos
+outros workflows (não precisam de `MAG - Gemini` — nenhum dos dois tem AI
+Agent). Nenhum dos dois está em `ids-prod.json` ainda (nunca foram
+promovidos) — na primeira promoção, seguir a seção "Importar em prod pela
+primeira vez" abaixo pra cada arquivo, e **ativar manualmente** depois de
+importar (workflows com `Schedule Trigger` não disparam sozinhos se
+ficarem inativos). **`mag-nutridora-t1-t3-t7.json` é prioridade alta pra
+promover** — a campanha de tráfego pago (spec 018) pode trazer leads reais
+a qualquer momento, e sem esse workflow em prod eles só recebem o T+0 e
+depois silêncio.
 
 ## Por que dá pra usar o MESMO arquivo em dev e prod
 
@@ -59,7 +64,8 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
      `ConfiguracaoAsaas` de produção cadastrada, ver `.context/status.md`) +
      `nucleo:info_institucional` (spec 017 — SDR responde endereço/
      Instagram/e-mail sem inventar) + `nucleo:resumo_diario` (spec 019 —
-     Radar diário) —
+     Radar diário) + `leads:processar_nutridora` (spec 020 — régua
+     T+1/3/7) —
      ver `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).
