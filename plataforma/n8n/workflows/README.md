@@ -6,8 +6,17 @@ direto no n8n (dev ou prod) sem atualizar este arquivo diverge silenciosamente.
 
 | Arquivo | Workflow no n8n | Spec |
 |---|---|---|
-| `mag-fase-0-sdr.json` | `MAG - Fase 0 (eco WhatsApp)` | 009 (identificação), 010 (SDR), 012 (handoff) |
+| `mag-fase-0-sdr.json` | `MAG - Fase 0 (eco WhatsApp)` | 009 (identificação), 010 (SDR), 012 (handoff), 017 (info institucional) |
 | `mag-nutridora-t0.json` | `MAG - Nutridora (T+0)` | 011 |
+| `mag-radar-resumo-diario.json` | `MAG - Radar (resumo diário)` | 019 — dispara por `Schedule Trigger` (cron, não webhook); sem AI Agent, é relatório factual formatado por código |
+
+`mag-radar-resumo-diario.json` reusa as mesmas credenciais `MAG - X-Agente-Token`
+e `MAG - Evolution apikey` dos outros dois workflows (não precisa de
+`MAG - Gemini` — não tem AI Agent). Ainda não está em `ids-prod.json`
+(nunca foi promovido) — na primeira promoção, seguir a seção "Importar em
+prod pela primeira vez" abaixo pra esse arquivo também, e **ativar
+manualmente** depois de importar (workflows com `Schedule Trigger` não
+disparam sozinhos se ficarem inativos).
 
 ## Por que dá pra usar o MESMO arquivo em dev e prod
 
@@ -49,7 +58,8 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
      pagamento Asaas e consulta status pelo WhatsApp; exige também
      `ConfiguracaoAsaas` de produção cadastrada, ver `.context/status.md`) +
      `nucleo:info_institucional` (spec 017 — SDR responde endereço/
-     Instagram/e-mail sem inventar) —
+     Instagram/e-mail sem inventar) + `nucleo:resumo_diario` (spec 019 —
+     Radar diário) —
      ver `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).

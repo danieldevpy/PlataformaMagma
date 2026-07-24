@@ -1,0 +1,106 @@
+{
+  "name": "MAG - Radar (resumo diário)",
+  "nodes": [
+    {
+      "id": "radar-schedule",
+      "name": "Radar: agendamento diário",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "days", "daysInterval": 1, "triggerAtHour": 8, "triggerAtMinute": 0 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "radar-buscar-resumo",
+      "name": "Radar: buscar resumo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [224, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Forwarded-Proto", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"resumo_diario\", \"params\": {}}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "radar-formatar",
+      "name": "Radar: formatar mensagem",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [448, 0],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const r = $json.resultado;\nconst turmas = (r.turmas_abertas || []).map(t => `- ${t.turma_codigo} (${t.curso}): ${t.vagas_restantes ?? '?'} vagas`).join('\\n') || 'Nenhuma turma com inscrições abertas no momento.';\nconst ia = r.uso_ia_mes;\nconst iaTexto = ia ? `${ia.execucoes_ok} execuções OK, ${ia.execucoes_erro} com erro, ${(ia.tokens_entrada || 0) + (ia.tokens_saida || 0)} tokens` : 'sem dado';\nconst texto = `Bom dia, Magma! ☀️\\n\\n📋 Leads novos (últimas 24h): ${r.leads_24h}\\n\\n🎓 Turmas com inscrições abertas:\\n${turmas}\\n\\n⭐ Avaliações pendentes de aprovação: ${r.avaliacoes_pendentes ?? '—'}\\n📅 Postagens agendadas pra hoje: ${r.postagens_hoje ?? '—'}\\n🤖 Uso de IA no mês: ${iaTexto}`;\nreturn [{ json: { texto } }];"
+      }
+    },
+    {
+      "id": "radar-enviar-wpp",
+      "name": "Radar: enviar no WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": \"5521991920338\", \"text\": $json.texto } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+      }
+    }
+  ],
+  "connections": {
+    "Radar: agendamento di\u00e1rio": {
+      "main": [
+        [
+          { "node": "Radar: buscar resumo", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Radar: buscar resumo": {
+      "main": [
+        [
+          { "node": "Radar: formatar mensagem", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Radar: formatar mensagem": {
+      "main": [
+        [
+          { "node": "Radar: enviar no WhatsApp", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  }
+}

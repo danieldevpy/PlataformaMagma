@@ -305,6 +305,133 @@ class CamadaDeAcoesTests(TestCase):
         self.assertEqual(log.status, LogAcao.Status.ERRO)
 
 
+class ResumoDiarioTests(TestCase):
+    """apps/nucleo/acoes_resumo.py — ação `resumo_diario`, usada pelo
+    workflow `MAG - Radar` (Schedule Trigger, sem AI Agent) pra montar o
+    resumo do funil que a MAG manda pro gestor toda manhã
+    (specs/018-agente-whatsapp-radar-diario)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-radar",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+        )
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-radar",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+
+    def _executar(self):
+        self.client.force_login(self.gestor)
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "resumo_diario", "params": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        return resposta.json()["resultado"]
+
+    def test_conta_leads_das_ultimas_24h(self):
+        from apps.leads.models import Lead
+
+        recente = Lead.objects.create(nome="Lead recente", curso=self.curso)
+        Lead.objects.filter(pk=recente.pk).update(
+            criado_em=timezone.now() - timedelta(hours=2)
+        )
+        antigo = Lead.objects.create(nome="Lead antigo", curso=self.curso)
+        Lead.objects.filter(pk=antigo.pk).update(
+            criado_em=timezone.now() - timedelta(days=3)
+        )
+
+        resultado = self._executar()
+        self.assertEqual(resultado["leads_24h"], 1)
+
+    def test_lista_so_turmas_com_inscricoes_abertas(self):
+        aberta = Turma.objects.create(
+            curso=self.curso,
+            codigo="T-RADAR-ABERTA",
+            status=Turma.Status.INSCRICOES,
+            capacidade=20,
+        )
+        Turma.objects.create(
+            curso=self.curso, codigo="T-RADAR-ENCERRADA", status=Turma.Status.ENCERRADA
+        )
+
+        resultado = self._executar()
+        codigos = {t["turma_codigo"] for t in resultado["turmas_abertas"]}
+        self.assertEqual(codigos, {aberta.codigo})
+        item = resultado["turmas_abertas"][0]
+        self.assertEqual(item["vagas_restantes"], 20)
+
+    def test_conta_avaliacoes_pendentes(self):
+        from apps.avaliacoes.models import Avaliacao
+
+        Avaliacao.objects.create(
+            curso=self.curso,
+            nome="Fulana",
+            estrelas=5,
+            comentario="Muito bom.",
+            status=Avaliacao.Status.PENDENTE,
+        )
+        Avaliacao.objects.create(
+            curso=self.curso,
+            nome="Beltrano",
+            estrelas=4,
+            comentario="Bom.",
+            status=Avaliacao.Status.APROVADA,
+        )
+
+        resultado = self._executar()
+        self.assertEqual(resultado["avaliacoes_pendentes"], 1)
+
+    def test_conta_postagens_agendadas_pra_hoje_excluindo_publicadas(self):
+        agora = timezone.now()
+        Postagem.objects.create(
+            curso=self.curso, titulo="Hoje", agendada_para=agora
+        )
+        Postagem.objects.create(
+            curso=self.curso,
+            titulo="Hoje mas já publicada",
+            agendada_para=agora,
+            status=Postagem.Status.PUBLICADA,
+        )
+        Postagem.objects.create(
+            curso=self.curso,
+            titulo="Amanhã",
+            agendada_para=agora + timedelta(days=1),
+        )
+
+        resultado = self._executar()
+        self.assertEqual(resultado["postagens_hoje"], 1)
+
+    def test_uso_ia_mes_agrega_execucoes_e_tokens(self):
+        from apps.ia.models import ExecucaoIA
+
+        ExecucaoIA.objects.create(
+            capacidade="texto.gerar",
+            status=ExecucaoIA.Status.OK,
+            tokens_entrada=100,
+            tokens_saida=50,
+        )
+        ExecucaoIA.objects.create(
+            capacidade="texto.gerar",
+            status=ExecucaoIA.Status.ERRO,
+            tokens_entrada=10,
+            tokens_saida=0,
+        )
+
+        resultado = self._executar()
+        self.assertEqual(resultado["uso_ia_mes"]["execucoes_ok"], 1)
+        self.assertEqual(resultado["uso_ia_mes"]["execucoes_erro"], 1)
+        self.assertEqual(resultado["uso_ia_mes"]["tokens_entrada"], 110)
+        self.assertEqual(resultado["uso_ia_mes"]["tokens_saida"], 50)
+
+
 class InfoInstitucionalTests(TestCase):
     """apps/nucleo/acoes_institucional.py — ação `info_institucional`, usada
     pela SDR do agente WhatsApp pra responder pergunta institucional sem
