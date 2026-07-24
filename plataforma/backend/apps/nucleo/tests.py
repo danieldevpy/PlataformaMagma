@@ -305,6 +305,81 @@ class CamadaDeAcoesTests(TestCase):
         self.assertEqual(log.status, LogAcao.Status.ERRO)
 
 
+class InfoInstitucionalTests(TestCase):
+    """apps/nucleo/acoes_institucional.py — ação `info_institucional`, usada
+    pela SDR do agente WhatsApp pra responder pergunta institucional sem
+    inventar (specs/017-agente-whatsapp-info-institucional)."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        self.gestor = Usuario.objects.create_user(
+            username="gestora-institucional",
+            password="senha-teste-123",
+            papel=Usuario.Papel.GESTOR,
+        )
+
+    def _executar(self):
+        self.client.force_login(self.gestor)
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "info_institucional", "params": {}},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 200)
+        return resposta.json()["resultado"]
+
+    def test_devolve_dados_sempre_presentes(self):
+        config = ConfiguracaoSite.obter()
+        config.endereco = "Rua Teste, 123 — Nilópolis/RJ"
+        config.instagram = "@magma_teste"
+        config.email = "contato@teste.com"
+        config.whatsapp_principal = "5521979767821"
+        config.save()
+
+        resultado = self._executar()
+        self.assertEqual(resultado["endereco"], config.endereco)
+        self.assertEqual(resultado["instagram"], config.instagram)
+        self.assertEqual(resultado["email"], config.email)
+        self.assertEqual(resultado["whatsapp_principal"], config.whatsapp_principal)
+
+    def test_nota_google_e_total_formados_nulos_com_toggle_desligado(self):
+        config = ConfiguracaoSite.obter()
+        config.nota_google = "4.9"
+        config.total_alunos_formados = 500
+        config.exibir_nota_google = False
+        config.exibir_total_formados = False
+        config.save()
+
+        resultado = self._executar()
+        self.assertIsNone(resultado["nota_google"])
+        self.assertIsNone(resultado["total_alunos_formados"])
+
+    def test_nota_google_e_total_formados_presentes_com_toggle_ligado(self):
+        config = ConfiguracaoSite.obter()
+        config.nota_google = "4.9"
+        config.total_alunos_formados = 500
+        config.exibir_nota_google = True
+        config.exibir_total_formados = True
+        config.save()
+
+        resultado = self._executar()
+        self.assertEqual(resultado["nota_google"], 4.9)
+        self.assertEqual(resultado["total_alunos_formados"], 500)
+
+    def test_agente_com_escopo_correto_consegue_executar(self):
+        _, token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag-teste",
+            escopos=["nucleo:info_institucional"],
+        )
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "info_institucional", "params": {}},
+            content_type="application/json",
+            headers={"X-Agente-Token": token_bruto},
+        )
+        self.assertEqual(resposta.status_code, 200)
+
+
 class IdentificarContatoTests(TestCase):
     """apps/nucleo/acoes_contato.py — ação `identificar_contato`, usada pelo
     roteador do agente WhatsApp (specs/009-agente-whatsapp-fundacao). Resolve

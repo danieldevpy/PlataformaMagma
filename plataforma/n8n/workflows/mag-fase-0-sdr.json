@@ -18,12 +18,7 @@
       "parameters": {
         "assignments": {
           "assignments": [
-            {
-              "id": "b1",
-              "name": "recebidoEm",
-              "type": "string",
-              "value": "={{ $now.toISO() }}"
-            }
+            { "id": "b1", "name": "recebidoEm", "type": "string", "value": "={{ $now.toISO() }}" }
           ]
         },
         "includeOtherFields": true,
@@ -38,12 +33,7 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
           "combinator": "and",
           "conditions": [
             {
@@ -120,7 +110,9 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "X-Forwarded-Proto", "value": "https" }]
+          "parameters": [
+            { "name": "X-Forwarded-Proto", "value": "https" }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -139,12 +131,7 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
           "combinator": "or",
           "conditions": [
             {
@@ -320,18 +307,8 @@
               "type": "string",
               "value": "={{ $('Consolidar mensagens').item.json.texto }}"
             },
-            {
-              "id": "p3",
-              "name": "papel",
-              "type": "string",
-              "value": "={{ $json.resultado.papel }}"
-            },
-            {
-              "id": "p4",
-              "name": "nome",
-              "type": "string",
-              "value": "={{ $json.resultado.nome }}"
-            },
+            { "id": "p3", "name": "papel", "type": "string", "value": "={{ $json.resultado.papel }}" },
+            { "id": "p4", "name": "nome", "type": "string", "value": "={{ $json.resultado.nome }}" },
             {
               "id": "p5",
               "name": "escalado",
@@ -351,12 +328,7 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
           "conditions": [
             {
               "id": "e1",
@@ -907,11 +879,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [1344, -80],
-      "parameters": {
-        "resume": "timeInterval",
-        "amount": 5,
-        "unit": "seconds"
-      },
+      "parameters": { "resume": "timeInterval", "amount": 5, "unit": "seconds" },
       "webhookId": "bb4c9c6f-9d4c-4b9b-8e6a-18969ed4e6b5"
     },
     {
@@ -938,12 +906,7 @@
       "position": [1792, -80],
       "parameters": {
         "conditions": {
-          "options": {
-            "version": 2,
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
+          "options": { "version": 2, "leftValue": "", "caseSensitive": true, "typeValidation": "strict" },
           "combinator": "and",
           "conditions": [
             {
@@ -1005,16 +968,64 @@
       "typeVersion": 1,
       "position": [2016, 80],
       "parameters": {}
+    },
+    {
+      "id": "tool-info-institucional",
+      "name": "info_institucional",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1584, 2528],
+      "parameters": {
+        "toolDescription": "Devolve dados institucionais da Magma (endereço, WhatsApp principal, Instagram, e-mail, e nota do Google/total de alunos formados quando a escola liga a exibição). Use pra responder perguntas gerais tipo 'onde fica a escola?', 'tem Instagram?', 'qual o email?'. Se nota_google ou total_alunos_formados vierem nulos, NÃO mencione — a escola optou por não exibir esse dado.",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"info_institucional\", \"params\": {}}"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
     }
   ],
   "connections": {
-    "WhatsApp In": { "main": [[{ "node": "Log payload cru", "type": "main", "index": 0 }]] },
-    "Log payload cru": { "main": [[{ "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }]] },
-    "É mensagem de texto recebida?": { "main": [[{ "node": "Extrair dados", "type": "main", "index": 0 }]] },
-    "É gestor ou instrutor?": {
+    "WhatsApp In": {
       "main": [
-        [{ "node": "Operadora - Secretária Digital", "type": "main", "index": 0 }],
-        [{ "node": "SDR - Capitã de Matrículas", "type": "main", "index": 0 }]
+        [
+          { "node": "Log payload cru", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Log payload cru": {
+      "main": [
+        [
+          { "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "\u00c9 mensagem de texto recebida?": {
+      "main": [
+        [
+          { "node": "Extrair dados", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "\u00c9 gestor ou instrutor?": {
+      "main": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "main", "index": 0 }
+        ]
       ]
     },
     "Gemini Chat Model": {
@@ -1025,47 +1036,234 @@
         ]
       ]
     },
-    "Memória da conversa": { "ai_memory": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_memory", "index": 0 }]] },
-    "listar_cursos": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
-    "detalhes_curso": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
-    "registrar_lead": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
-    "SDR - Capitã de Matrículas": { "main": [[{ "node": "Responder no WhatsApp (SDR)", "type": "main", "index": 0 }]] },
-    "Identificar Contato": { "main": [[{ "node": "Preparar contexto SDR", "type": "main", "index": 0 }]] },
-    "Preparar contexto SDR": { "main": [[{ "node": "Está escalado?", "type": "main", "index": 0 }]] },
-    "Está escalado?": {
+    "Mem\u00f3ria da conversa": {
+      "ai_memory": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_memory", "index": 0 }
+        ]
+      ]
+    },
+    "listar_cursos": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "detalhes_curso": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "registrar_lead": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "SDR - Capit\u00e3 de Matr\u00edculas": {
+      "main": [
+        [
+          { "node": "Responder no WhatsApp (SDR)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Identificar Contato": {
+      "main": [
+        [
+          { "node": "Preparar contexto SDR", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar contexto SDR": {
+      "main": [
+        [
+          { "node": "Está escalado?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Est\u00e1 escalado?": {
       "main": [
         [],
-        [{ "node": "É gestor ou instrutor?", "type": "main", "index": 0 }]
+        [
+          { "node": "É gestor ou instrutor?", "type": "main", "index": 0 }
+        ]
       ]
     },
-    "escalar_contato": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
-    "avisar_equipe": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
-    "Memória da conversa (Operadora)": { "ai_memory": [[{ "node": "Operadora - Secretária Digital", "type": "ai_memory", "index": 0 }]] },
-    "status_turma": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "gerar_link_avaliacao": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "listar_leads": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "Operadora - Secretária Digital": { "main": [[{ "node": "Responder no WhatsApp (Operadora)", "type": "main", "index": 0 }]] },
-    "gerar_link_matricula": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "listar_turmas": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "buscar_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "matricular_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "listar_matriculas_turma": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "consultar_pagamento": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "gerar_cobranca": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
-    "Extrair dados": { "main": [[{ "node": "Buffer: guardar mensagem", "type": "main", "index": 0 }]] },
-    "Buffer: guardar mensagem": { "main": [[{ "node": "Buffer: marcar visto", "type": "main", "index": 0 }]] },
-    "Buffer: marcar visto": { "main": [[{ "node": "Buffer: aguardar debounce", "type": "main", "index": 0 }]] },
-    "Buffer: aguardar debounce": { "main": [[{ "node": "Buffer: consultar visto", "type": "main", "index": 0 }]] },
-    "Buffer: consultar visto": { "main": [[{ "node": "Buffer: sou a última mensagem?", "type": "main", "index": 0 }]] },
-    "Buffer: sou a última mensagem?": {
+    "escalar_contato": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "avisar_equipe": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "Mem\u00f3ria da conversa (Operadora)": {
+      "ai_memory": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_memory", "index": 0 }
+        ]
+      ]
+    },
+    "status_turma": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "gerar_link_avaliacao": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "listar_leads": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "Operadora - Secret\u00e1ria Digital": {
       "main": [
-        [{ "node": "Buffer: ler mensagens", "type": "main", "index": 0 }],
-        [{ "node": "Buffer: descartar (mensagem já absorvida)", "type": "main", "index": 0 }]
+        [
+          { "node": "Responder no WhatsApp (Operadora)", "type": "main", "index": 0 }
+        ]
       ]
     },
-    "Buffer: ler mensagens": { "main": [[{ "node": "Buffer: limpar", "type": "main", "index": 0 }]] },
-    "Buffer: limpar": { "main": [[{ "node": "Consolidar mensagens", "type": "main", "index": 0 }]] },
-    "Consolidar mensagens": { "main": [[{ "node": "Identificar Contato", "type": "main", "index": 0 }]] }
+    "gerar_link_matricula": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "listar_turmas": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "buscar_aluno": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "matricular_aluno": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "listar_matriculas_turma": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "consultar_pagamento": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "gerar_cobranca": {
+      "ai_tool": [
+        [
+          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    },
+    "Extrair dados": {
+      "main": [
+        [
+          { "node": "Buffer: guardar mensagem", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: guardar mensagem": {
+      "main": [
+        [
+          { "node": "Buffer: marcar visto", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: marcar visto": {
+      "main": [
+        [
+          { "node": "Buffer: aguardar debounce", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: aguardar debounce": {
+      "main": [
+        [
+          { "node": "Buffer: consultar visto", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: consultar visto": {
+      "main": [
+        [
+          { "node": "Buffer: sou a última mensagem?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: sou a \u00faltima mensagem?": {
+      "main": [
+        [
+          { "node": "Buffer: ler mensagens", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Buffer: descartar (mensagem já absorvida)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: ler mensagens": {
+      "main": [
+        [
+          { "node": "Buffer: limpar", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Buffer: limpar": {
+      "main": [
+        [
+          { "node": "Consolidar mensagens", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Consolidar mensagens": {
+      "main": [
+        [
+          { "node": "Identificar Contato", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "info_institucional": {
+      "ai_tool": [
+        [
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    }
   },
   "settings": {
     "executionOrder": "v1",

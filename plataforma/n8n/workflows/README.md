@@ -47,7 +47,9 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
      de quem está matriculado numa turma) + `financeiro:gerar_cobranca` +
      `financeiro:consultar_pagamento` (spec 015 — Operadora gera link de
      pagamento Asaas e consulta status pelo WhatsApp; exige também
-     `ConfiguracaoAsaas` de produção cadastrada, ver `.context/status.md`) —
+     `ConfiguracaoAsaas` de produção cadastrada, ver `.context/status.md`) +
+     `nucleo:info_institucional` (spec 017 — SDR responde endereço/
+     Instagram/e-mail sem inventar) —
      ver `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).
