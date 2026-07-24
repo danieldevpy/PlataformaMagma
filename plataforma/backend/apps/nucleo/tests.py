@@ -4,6 +4,7 @@ público/painel (spec 001-T2). Ver apps/nucleo/acoes.py, apps/nucleo/views.py
 e specs/005-camada-de-acoes/spec.md."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -12,6 +13,7 @@ from django.utils import timezone
 from apps.avaliacoes.models import ConviteAvaliacao
 from apps.contas.models import Usuario
 from apps.cursos.models import Curso, Turma
+from apps.financeiro.adapters.asaas import ErroAsaas
 from apps.midia.models import Postagem
 from apps.nucleo.models import ConfiguracaoSite, LogAcao, TokenAgente
 from apps.nucleo.serializers import CAMPOS_CONFIG
@@ -792,6 +794,187 @@ class MatricularAlunoTests(TestCase):
     def test_status_invalido_400(self):
         resposta = self._matricular(str(self.aluno.token), "T-MATRIC-1", status="lixo")
         self.assertEqual(resposta.status_code, 400)
+
+
+def criar_config_asaas_ativa():
+    from apps.financeiro.models import ConfiguracaoAsaas
+
+    config = ConfiguracaoAsaas(ambiente=ConfiguracaoAsaas.Ambiente.SANDBOX, ativo=True)
+    config.set_credencial("chave-sandbox-teste")
+    config.save()
+    return config
+
+
+class GerarCobrancaTests(TestCase):
+    """apps/financeiro/acoes.py — ação `gerar_cobranca` (spec 015): nunca
+    chama a API real do Asaas, mocka o adapter (mesma regra de
+    apps/financeiro/tests.py)."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno, Matricula
+
+        self.url_executar = reverse("acoes-executar")
+        criar_config_asaas_ativa()
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-cobranca",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+        self.turma = Turma.objects.create(curso=self.curso, codigo="T-COB-1", capacidade=10)
+        self.aluno = Aluno.objects.create(nome="Daniel Fernandes", cpf="11122233344")
+        Matricula.objects.create(aluno=self.aluno, turma=self.turma, status=Matricula.Status.ATIVA)
+        _, self.token_bruto = criar_token_agente(escopos=["financeiro:gerar_cobranca"])
+
+    def _gerar(self, aluno_token, turma_codigo, valor, forma_pagamento=None):
+        params = {"aluno_token": aluno_token, "turma_codigo": turma_codigo, "valor": valor}
+        if forma_pagamento:
+            params["forma_pagamento"] = forma_pagamento
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "gerar_cobranca", "params": params},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    @patch("apps.financeiro.services.asaas.criar_cobranca")
+    @patch("apps.financeiro.services.asaas.buscar_ou_criar_cliente")
+    def test_sucesso_devolve_link_de_pagamento(self, criar_cliente_mock, criar_cobranca_mock):
+        criar_cliente_mock.return_value = "cus_1"
+        criar_cobranca_mock.return_value = {
+            "id": "pay_1",
+            "link_pagamento": "https://sandbox.asaas.com/i/pay_1",
+            "status": "PENDING",
+        }
+
+        resposta = self._gerar(str(self.aluno.token), "T-COB-1", 150, "PIX")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(resultado["aluno_nome"], "Daniel Fernandes")
+        self.assertEqual(resultado["link_pagamento"], "https://sandbox.asaas.com/i/pay_1")
+        self.assertEqual(resultado["forma_pagamento"], "PIX")
+
+    def test_sem_escopo_403(self):
+        _, token_sem_escopo = criar_token_agente(
+            nome="agente-sem-escopo", escopos=["educacional:matricular_aluno"]
+        )
+        resposta = self.client.post(
+            self.url_executar,
+            data={
+                "acao": "gerar_cobranca",
+                "params": {"aluno_token": str(self.aluno.token), "turma_codigo": "T-COB-1", "valor": 150},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": token_sem_escopo},
+        )
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_valor_ausente_400(self):
+        resposta = self._gerar(str(self.aluno.token), "T-COB-1", None)
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_valor_invalido_400(self):
+        resposta = self._gerar(str(self.aluno.token), "T-COB-1", "lixo")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_forma_pagamento_invalida_400(self):
+        resposta = self._gerar(str(self.aluno.token), "T-COB-1", 150, "DINHEIRO")
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_aluno_nao_matriculado_na_turma_400(self):
+        from apps.educacional.models import Aluno
+
+        outro_aluno = Aluno.objects.create(nome="Ana Fernandes", cpf="22233344455")
+        resposta = self._gerar(str(outro_aluno.token), "T-COB-1", 150)
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("não está matriculado", resposta.json()["detail"])
+
+    @patch("apps.financeiro.services.asaas.buscar_ou_criar_cliente")
+    def test_erro_do_asaas_vira_400_amigavel(self, criar_cliente_mock):
+        criar_cliente_mock.side_effect = ErroAsaas("Asaas fora do ar")
+        resposta = self._gerar(str(self.aluno.token), "T-COB-1", 150)
+        self.assertEqual(resposta.status_code, 400)
+
+
+class ConsultarPagamentoTests(TestCase):
+    """apps/financeiro/acoes.py — ação `consultar_pagamento` (spec 015)."""
+
+    def setUp(self):
+        from apps.educacional.models import Aluno, Matricula
+        from apps.financeiro.models import Cobranca, ConfiguracaoAsaas
+
+        self.Cobranca = Cobranca
+        self.url_executar = reverse("acoes-executar")
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-consulta",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+        self.turma = Turma.objects.create(curso=self.curso, codigo="T-CONS-1", capacidade=10)
+        self.aluno = Aluno.objects.create(nome="Daniel Fernandes", cpf="11122233344")
+        self.matricula = Matricula.objects.create(
+            aluno=self.aluno, turma=self.turma, status=Matricula.Status.ATIVA
+        )
+        Cobranca.objects.create(
+            matricula=self.matricula,
+            valor=150,
+            forma_pagamento=Cobranca.FormaPagamento.PIX,
+            status=Cobranca.Status.PAGA,
+            vencimento=timezone.now().date(),
+            link_pagamento="https://sandbox.asaas.com/i/pay_1",
+            asaas_id="pay_1",
+            ambiente=ConfiguracaoAsaas.Ambiente.SANDBOX,
+        )
+        _, self.token_bruto = criar_token_agente(escopos=["financeiro:consultar_pagamento"])
+
+    def _consultar(self, aluno_token, turma_codigo=None):
+        params = {"aluno_token": aluno_token}
+        if turma_codigo:
+            params["turma_codigo"] = turma_codigo
+        return self.client.post(
+            self.url_executar,
+            data={"acao": "consultar_pagamento", "params": params},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_devolve_cobrancas_da_matricula(self):
+        resposta = self._consultar(str(self.aluno.token), "T-CONS-1")
+        self.assertEqual(resposta.status_code, 200)
+        resultado = resposta.json()["resultado"]
+        self.assertEqual(len(resultado["cobrancas"]), 1)
+        self.assertEqual(resultado["cobrancas"][0]["status"], "paga")
+
+    def test_sem_turma_codigo_funciona_se_so_tem_uma_matricula(self):
+        resposta = self._consultar(str(self.aluno.token))
+        self.assertEqual(resposta.status_code, 200)
+
+    def test_aluno_sem_matricula_400(self):
+        from apps.educacional.models import Aluno
+
+        outro_aluno = Aluno.objects.create(nome="Ana Fernandes", cpf="22233344455")
+        resposta = self._consultar(str(outro_aluno.token))
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_multiplas_matriculas_exige_turma_codigo(self):
+        from apps.educacional.models import Matricula
+
+        curso2 = Curso.objects.create(
+            slug="bls-consulta",
+            nome="BLS",
+            titulo_venda="BLS",
+            subtitulo="Suporte básico",
+            carga_horaria=20,
+        )
+        turma2 = Turma.objects.create(curso=curso2, codigo="T-CONS-2", capacidade=10)
+        Matricula.objects.create(aluno=self.aluno, turma=turma2, status=Matricula.Status.ATIVA)
+
+        resposta = self._consultar(str(self.aluno.token))
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("mais de uma matrícula", resposta.json()["detail"])
 
 
 class PatchAgendadaParaTests(TestCase):
