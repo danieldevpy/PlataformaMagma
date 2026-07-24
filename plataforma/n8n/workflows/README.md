@@ -44,8 +44,11 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
      últimos desde a spec 013, Operadora) + `educacional:buscar_aluno` +
      `educacional:matricular_aluno` + `educacional:listar_matriculas_turma`
      (spec 014, Fase B — Operadora ganha matrícula pelo WhatsApp e a lista
-     de quem está matriculado numa turma) — ver
-     `docs/plataforma/03-api-contratos.md`).
+     de quem está matriculado numa turma) + `financeiro:gerar_cobranca` +
+     `financeiro:consultar_pagamento` (spec 015 — Operadora gera link de
+     pagamento Asaas e consulta status pelo WhatsApp; exige também
+     `ConfiguracaoAsaas` de produção cadastrada, ver `.context/status.md`) —
+     ver `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).
    - `MAG - Gemini` (Google Gemini/PaLM API: chave de produção).

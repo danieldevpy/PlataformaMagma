@@ -11,10 +11,7 @@
       "name": "WhatsApp In",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        0,
-        -320
-      ],
+      "position": [0, -320],
       "webhookId": "bbd69a1d-ca99-464d-a5ff-e549868c4618"
     },
     {
@@ -36,10 +33,7 @@
       "name": "Log payload cru",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        224,
-        -320
-      ]
+      "position": [224, -320]
     },
     {
       "parameters": {
@@ -56,39 +50,25 @@
               "id": "cond-event",
               "leftValue": "={{ $json.body.event }}",
               "rightValue": "messages.upsert",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "operator": { "type": "string", "operation": "equals" }
             },
             {
               "id": "cond-fromme",
               "leftValue": "={{ $json.body.data.key.fromMe }}",
               "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "false",
-                "singleValue": true
-              }
+              "operator": { "type": "boolean", "operation": "false", "singleValue": true }
             },
             {
               "id": "cond-text",
               "leftValue": "={{ $json.body.data.message.conversation }}",
               "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
             },
             {
               "id": "cond-numero-permitido",
               "leftValue": "={{ $json.body.data.key.remoteJid }}",
               "rightValue": "={{ $env.MAGMA_NUMEROS_TESTE_REGEX }}",
-              "operator": {
-                "type": "string",
-                "operation": "regex"
-              }
+              "operator": { "type": "string", "operation": "regex" }
             }
           ]
         },
@@ -98,10 +78,7 @@
       "name": "É mensagem de texto recebida?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        448,
-        -320
-      ]
+      "position": [448, -320]
     },
     {
       "parameters": {
@@ -133,10 +110,7 @@
       "name": "Extrair dados",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        672,
-        -320
-      ]
+      "position": [672, -320]
     },
     {
       "parameters": {
@@ -146,12 +120,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Forwarded-Proto",
-              "value": "https"
-            }
-          ]
+          "parameters": [{ "name": "X-Forwarded-Proto", "value": "https" }]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -162,15 +131,9 @@
       "name": "Identificar Contato",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        896,
-        -320
-      ],
+      "position": [896, -320],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -188,19 +151,13 @@
               "id": "c1",
               "leftValue": "={{ $json.papel }}",
               "rightValue": "gestor",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "operator": { "type": "string", "operation": "equals" }
             },
             {
               "id": "c2",
               "leftValue": "={{ $json.papel }}",
               "rightValue": "instrutor",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
+              "operator": { "type": "string", "operation": "equals" }
             }
           ]
         },
@@ -210,10 +167,7 @@
       "name": "É gestor ou instrutor?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        1568,
-        -320
-      ]
+      "position": [1568, -320]
     },
     {
       "parameters": {
@@ -230,10 +184,7 @@
       "name": "SDR - Capitã de Matrículas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.3,
-      "position": [
-        1936,
-        1136
-      ]
+      "position": [1792, 1728]
     },
     {
       "parameters": {
@@ -244,15 +195,9 @@
       "name": "Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
-      "position": [
-        1808,
-        624
-      ],
+      "position": [3312, 880],
       "credentials": {
-        "googlePalmApi": {
-          "id": "2hfz9nsgW5VRmX93",
-          "name": "MAG - Gemini"
-        }
+        "googlePalmApi": { "id": "2hfz9nsgW5VRmX93", "name": "MAG - Gemini" }
       }
     },
     {
@@ -265,10 +210,7 @@
       "name": "Memória da conversa",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
-      "position": [
-        1728,
-        1584
-      ]
+      "position": [1584, 2352]
     },
     {
       "parameters": {
@@ -276,23 +218,14 @@
         "url": "http://magma-backend-interno:8000/api/cursos/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         }
       },
       "id": "tool-listar-cursos",
       "name": "listar_cursos",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        624
-      ]
+      "position": [1584, 1472]
     },
     {
       "parameters": {
@@ -300,21 +233,11 @@
         "url": "http://magma-backend-interno:8000/api/cursos/{slug}/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "placeholderDefinitions": {
           "values": [
-            {
-              "name": "slug",
-              "description": "Código do curso (slug), obtido a partir da tool listar_cursos",
-              "type": "string"
-            }
+            { "name": "slug", "description": "Código do curso (slug), obtido a partir da tool listar_cursos", "type": "string" }
           ]
         }
       },
@@ -322,10 +245,7 @@
       "name": "detalhes_curso",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        800
-      ]
+      "position": [1584, 1648]
     },
     {
       "parameters": {
@@ -334,42 +254,17 @@
         "url": "http://magma-backend-interno:8000/api/leads/",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "sendBody": true,
         "parametersBody": {
           "values": [
-            {
-              "name": "nome"
-            },
-            {
-              "name": "curso_slug"
-            },
-            {
-              "name": "quando_pretende",
-              "valueProvider": "modelOptional"
-            },
-            {
-              "name": "whatsapp",
-              "valueProvider": "fieldValue",
-              "value": "={{ $json.numero }}"
-            },
-            {
-              "name": "utm_source",
-              "valueProvider": "fieldValue",
-              "value": "whatsapp"
-            },
-            {
-              "name": "pagina_origem",
-              "valueProvider": "fieldValue",
-              "value": "whatsapp"
-            }
+            { "name": "nome" },
+            { "name": "curso_slug" },
+            { "name": "quando_pretende", "valueProvider": "modelOptional" },
+            { "name": "whatsapp", "valueProvider": "fieldValue", "value": "={{ $json.numero }}" },
+            { "name": "utm_source", "valueProvider": "fieldValue", "value": "whatsapp" },
+            { "name": "pagina_origem", "valueProvider": "fieldValue", "value": "whatsapp" }
           ]
         }
       },
@@ -377,10 +272,7 @@
       "name": "registrar_lead",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        976
-      ]
+      "position": [1584, 1824]
     },
     {
       "parameters": {
@@ -397,15 +289,9 @@
       "name": "Responder no WhatsApp (SDR)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        2160,
-        1136
-      ],
+      "position": [2016, 1728],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "TSnVCrBQ2XfFnj5N",
-          "name": "MAG - Evolution apikey"
-        }
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
       }
     },
     {
@@ -450,10 +336,7 @@
       "name": "Preparar contexto SDR",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        1120,
-        -320
-      ]
+      "position": [1120, -320]
     },
     {
       "parameters": {
@@ -469,11 +352,7 @@
               "id": "e1",
               "leftValue": "={{ $json.escalado }}",
               "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
             }
           ],
           "combinator": "and"
@@ -484,10 +363,7 @@
       "name": "Está escalado?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        1344,
-        -320
-      ]
+      "position": [1344, -320]
     },
     {
       "parameters": {
@@ -498,29 +374,15 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"escalar_contato\", \"params\": {\"numero\": \"{numero_esc}\", \"motivo\": \"{motivo_esc}\"}}",
         "placeholderDefinitions": {
           "values": [
-            {
-              "name": "numero_esc",
-              "description": "O numero exato do contato, mencionado no prompt como 'Numero do contato'",
-              "type": "string"
-            },
-            {
-              "name": "motivo_esc",
-              "description": "Motivo curto do encaminhamento pra humano",
-              "type": "string"
-            }
+            { "name": "numero_esc", "description": "O numero exato do contato, mencionado no prompt como 'Numero do contato'", "type": "string" },
+            { "name": "motivo_esc", "description": "Motivo curto do encaminhamento pra humano", "type": "string" }
           ]
         }
       },
@@ -528,15 +390,9 @@
       "name": "escalar_contato",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1728,
-        1232
-      ],
+      "position": [1584, 2000],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -551,11 +407,7 @@
         "jsonBody": "{\"number\": \"5521991920338\", \"text\": \"{mensagem}\"}",
         "placeholderDefinitions": {
           "values": [
-            {
-              "name": "mensagem",
-              "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.",
-              "type": "string"
-            }
+            { "name": "mensagem", "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.", "type": "string" }
           ]
         }
       },
@@ -563,21 +415,15 @@
       "name": "avisar_equipe",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1728,
-        1408
-      ],
+      "position": [1584, 2176],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "TSnVCrBQ2XfFnj5N",
-          "name": "MAG - Evolution apikey"
-        }
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
       }
     },
     {
       "parameters": {
         "options": {
-          "systemMessage": "Você é a MAG, atendente virtual da Magma Cursos (escola de cursos profissionalizantes de saúde na Baixada Fluminense — carro-chefe Socorrista APH 120h). Aqui você fala com quem já é da equipe (gestor ou instrutor identificado), no papel de Operadora — a \"secretária digital\" que ajuda a consultar a operação e matricula aluno já cadastrado, sem precisar abrir o admin.\n\nREGRAS QUE VOCÊ NUNCA QUEBRA:\n- Nunca invente turma_codigo, status, vagas, matrículas, link, dado de lead ou dado de aluno — toda informação vem SEMPRE de uma das tools. Sem ter chamado a tool certa, não afirme nenhum dado concreto.\n- Matricular aluno SEMPRE segue o protocolo buscar → confirmar → matricular (ver abaixo). Nunca chame matricular_aluno sem antes ter chamado buscar_aluno e recebido confirmação explícita do gestor sobre qual pessoa é.\n- O aluno_token usado em matricular_aluno TEM que vir de uma chamada de buscar_aluno feita agora — nunca invente ou reaproveite de cabeça um token mencionado antes na conversa (você nunca fala o token em voz alta pro humano, então não tem como 'lembrar' certo). Se a confirmação do gestor vier numa mensagem separada da busca original, chame buscar_aluno de novo (mesmo termo) IMEDIATAMENTE antes de matricular_aluno pra pegar o token certo.\n- Outras ações que mudam dado (mudar vaga, aprovar avaliação, editar preço, mandar mensagem por você) você ainda não faz — explique com honestidade que por enquanto só consulta e matricula aluno já existente, nunca finja que fez.\n- Se não souber o código da turma (ex.: perguntarem 'quais turmas estão abertas' ou não lembrarem o código), chame listar_turmas ANTES de pedir pro usuário — só pergunte se ainda ficar ambíguo depois disso.\n- Tom direto, profissional, sem enrolação — fala com colega de trabalho, não com lead.\n\nPROTOCOLO DE MATRÍCULA (buscar → confirmar → matricular):\n1. Chame buscar_aluno(termo) com o nome/CPF/WhatsApp que o gestor mencionou.\n2. 0 candidatos: diga que não achou e ofereça o link de cadastro de aluno novo (gerar_link_matricula) — nunca invente ou tente matricular.\n3. 1 candidato: repita nome, CPF mascarado e WhatsApp do candidato e peça confirmação explícita ('é esse mesmo? confirma?') — só chame matricular_aluno depois do 'sim', e chame buscar_aluno de novo nesse momento pra pegar o token fresco (ver regra acima).\n4. Vários candidatos: liste os candidatos (nome + CPF mascarado + WhatsApp) numerados, pergunte qual é a pessoa certa, e só então confirme e matricule.\n5. Nunca afirme que matriculou sem ter recebido matricular_aluno com sucesso — se vier erro (ex.: já matriculado), explique o erro com honestidade.\n\nSUAS TOOLS:\n- listar_turmas(status): lista código, curso, status, início e vagas de todas as turmas (ou filtradas por status) — use pra descobrir o código antes de chamar status_turma/gerar_link_*/matricular_aluno.\n- status_turma(turma_codigo): curso, status, datas, vagas restantes e contagens (matrículas/mídias/postagens/avaliações). 'matriculas' é a contagem de matrículas de fato (não inclui convite ainda não preenchido).\n- gerar_link_avaliacao(turma_codigo): link público de avaliação da turma.\n- gerar_link_matricula(turma_codigo): link público de cadastro de aluno NOVO na turma — use quando a pessoa ainda não existe na base ou pedirem o link de inscrição.\n- buscar_aluno(termo): busca aluno já cadastrado por nome, CPF ou WhatsApp — primeiro passo pra matricular alguém que já existe.\n- matricular_aluno(aluno_token, turma_codigo): matricula um aluno já existente (achado via buscar_aluno e confirmado) numa turma — só chame depois do protocolo de confirmação acima.\n- listar_matriculas_turma(turma_codigo): lista os alunos matriculados numa turma específica (nome, status, data) — use quando pedirem quem está matriculado ou a lista/relação de alunos de uma turma (status_turma só dá a contagem, não os nomes).\n- listar_leads(dias, status): leads recentes (dias vazio = hoje; status vazio = todos).",
+          "systemMessage": "Você é a MAG, atendente virtual da Magma Cursos (escola de cursos profissionalizantes de saúde na Baixada Fluminense — carro-chefe Socorrista APH 120h). Aqui você fala com quem já é da equipe (gestor ou instrutor identificado), no papel de Operadora — a \"secretária digital\" que ajuda a consultar a operação e matricula aluno já cadastrado, sem precisar abrir o admin.\n\nREGRAS QUE VOCÊ NUNCA QUEBRA:\n- Nunca invente turma_codigo, status, vagas, matrículas, link, dado de lead ou dado de aluno — toda informação vem SEMPRE de uma das tools. Sem ter chamado a tool certa, não afirme nenhum dado concreto.\n- Matricular aluno SEMPRE segue o protocolo buscar → confirmar → matricular (ver abaixo). Nunca chame matricular_aluno sem antes ter chamado buscar_aluno e recebido confirmação explícita do gestor sobre qual pessoa é.\n- O aluno_token usado em matricular_aluno TEM que vir de uma chamada de buscar_aluno feita agora — nunca invente ou reaproveite de cabeça um token mencionado antes na conversa (você nunca fala o token em voz alta pro humano, então não tem como 'lembrar' certo). Se a confirmação do gestor vier numa mensagem separada da busca original, chame buscar_aluno de novo (mesmo termo) IMEDIATAMENTE antes de matricular_aluno pra pegar o token certo.\n- Outras ações que mudam dado (mudar vaga, aprovar avaliação, editar preço, mandar mensagem por você) você ainda não faz — explique com honestidade que por enquanto só consulta, matricula aluno já existente e gera cobrança, nunca finja que fez.\n- Gerar cobrança SEMPRE exige confirmação explícita do gestor sobre valor E destinatário (ver PROTOCOLO DE COBRANÇA abaixo) antes de chamar gerar_cobranca — nunca gere cobrança no automático.\n- Se não souber o código da turma (ex.: perguntarem 'quais turmas estão abertas' ou não lembrarem o código), chame listar_turmas ANTES de pedir pro usuário — só pergunte se ainda ficar ambíguo depois disso.\n- Tom direto, profissional, sem enrolação — fala com colega de trabalho, não com lead.\n\nPROTOCOLO DE MATRÍCULA (buscar → confirmar → matricular):\n1. Chame buscar_aluno(termo) com o nome/CPF/WhatsApp que o gestor mencionou.\n2. 0 candidatos: diga que não achou e ofereça o link de cadastro de aluno novo (gerar_link_matricula) — nunca invente ou tente matricular.\n3. 1 candidato: repita nome, CPF mascarado e WhatsApp do candidato e peça confirmação explícita ('é esse mesmo? confirma?') — só chame matricular_aluno depois do 'sim', e chame buscar_aluno de novo nesse momento pra pegar o token fresco (ver regra acima).\n4. Vários candidatos: liste os candidatos (nome + CPF mascarado + WhatsApp) numerados, pergunte qual é a pessoa certa, e só então confirme e matricule.\n5. Nunca afirme que matriculou sem ter recebido matricular_aluno com sucesso — se vier erro (ex.: já matriculado), explique o erro com honestidade.\n\nPROTOCOLO DE COBRANÇA (buscar → confirmar → gerar):\n1. Se ainda não tiver o aluno_token fresco desta conversa, chame buscar_aluno(termo) e confirme com o gestor qual é a pessoa certa — mesmo cuidado do protocolo de matrícula (nunca reaproveite um token de memória).\n2. Confirme com o gestor o valor exato em reais e a forma de pagamento (PIX, boleto, cartão ou 'você escolhe') — nunca assuma um valor.\n3. Repita de volta: 'Vou gerar uma cobrança de R$ X pra <nome> na <turma_codigo>, <forma> — confirma?' — só chame gerar_cobranca depois do 'sim'.\n4. Devolva o link de pagamento exatamente como veio da tool — nunca invente ou reformate.\n5. Se o Asaas recusar (ex.: aluno sem CPF cadastrado, Pix indisponível), explique o erro com honestidade — nunca diga que gerou se não gerou.\n\nSUAS TOOLS:\n- listar_turmas(status): lista código, curso, status, início e vagas de todas as turmas (ou filtradas por status) — use pra descobrir o código antes de chamar status_turma/gerar_link_*/matricular_aluno.\n- status_turma(turma_codigo): curso, status, datas, vagas restantes e contagens (matrículas/mídias/postagens/avaliações). 'matriculas' é a contagem de matrículas de fato (não inclui convite ainda não preenchido).\n- gerar_link_avaliacao(turma_codigo): link público de avaliação da turma.\n- gerar_link_matricula(turma_codigo): link público de cadastro de aluno NOVO na turma — use quando a pessoa ainda não existe na base ou pedirem o link de inscrição.\n- buscar_aluno(termo): busca aluno já cadastrado por nome, CPF ou WhatsApp — primeiro passo pra matricular alguém que já existe.\n- matricular_aluno(aluno_token, turma_codigo): matricula um aluno já existente (achado via buscar_aluno e confirmado) numa turma — só chame depois do protocolo de confirmação acima.\n- listar_matriculas_turma(turma_codigo): lista os alunos matriculados numa turma específica (nome, status, data) — use quando pedirem quem está matriculado ou a lista/relação de alunos de uma turma (status_turma só dá a contagem, não os nomes).\n- listar_leads(dias, status): leads recentes (dias vazio = hoje; status vazio = todos).\n- gerar_cobranca(aluno_token, turma_codigo, valor, forma_pagamento): gera cobrança real no Asaas (PIX, boleto, cartão ou vazio = aluno escolhe) pra uma matrícula existente e devolve o link de pagamento — SEMPRE siga o PROTOCOLO DE COBRANÇA acima antes de chamar.\n- consultar_pagamento(aluno_token, turma_codigo): consulta as cobranças e status de pagamento (pendente/paga/vencida/cancelada/estornada) de um aluno numa turma — use quando perguntarem se alguém já pagou.",
           "maxIterations": 8,
           "returnIntermediateSteps": true
         },
@@ -588,10 +434,7 @@
       "name": "Operadora - Secretária Digital",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.3,
-      "position": [
-        1792,
-        176
-      ]
+      "position": [2480, 560]
     },
     {
       "parameters": {
@@ -603,10 +446,7 @@
       "name": "Memória da conversa (Operadora)",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
-      "position": [
-        1584,
-        624
-      ]
+      "position": [2288, 592]
     },
     {
       "parameters": {
@@ -617,40 +457,22 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"status_turma\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "turma_codigo",
-              "description": "Código da turma perguntada (ex.: 03/2026 ou T027)",
-              "type": "string"
-            }
-          ]
+          "values": [{ "name": "turma_codigo", "description": "Código da turma perguntada (ex.: 03/2026 ou T027)", "type": "string" }]
         }
       },
       "id": "tool-status-turma",
       "name": "status_turma",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        -80
-      ],
+      "position": [2976, -336],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -662,40 +484,22 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"gerar_link_avaliacao\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "turma_codigo",
-              "description": "Código da turma (ex.: 03/2026 ou T027)",
-              "type": "string"
-            }
-          ]
+          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
         }
       },
       "id": "tool-gerar-link-avaliacao",
       "name": "gerar_link_avaliacao",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        96
-      ],
+      "position": [2976, 16],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -707,29 +511,15 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
         },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_leads\", \"params\": {\"dias\": \"{dias}\", \"status\": \"{status}\"}}",
         "placeholderDefinitions": {
           "values": [
-            {
-              "name": "dias",
-              "description": "Número de dias corridos pra trás, incluindo hoje (ex.: '1' = hoje, '3' = últimos 3 dias); deixe vazio pra hoje.",
-              "type": "string"
-            },
-            {
-              "name": "status",
-              "description": "Status exato do lead pra filtrar (ex.: 'novo', 'contatado'); deixe vazio pra não filtrar.",
-              "type": "string"
-            }
+            { "name": "dias", "description": "Número de dias corridos pra trás, incluindo hoje (ex.: '1' = hoje, '3' = últimos 3 dias); deixe vazio pra hoje.", "type": "string" },
+            { "name": "status", "description": "Status exato do lead pra filtrar (ex.: 'novo', 'contatado'); deixe vazio pra não filtrar.", "type": "string" }
           ]
         }
       },
@@ -737,15 +527,9 @@
       "name": "listar_leads",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1584,
-        272
-      ],
+      "position": [2976, 192],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -763,200 +547,120 @@
       "name": "Responder no WhatsApp (Operadora)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [
-        2016,
-        176
-      ],
+      "position": [2560, 768],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "TSnVCrBQ2XfFnj5N",
-          "name": "MAG - Evolution apikey"
-        }
+        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
       }
     },
     {
-      "id": "tool-gerar-link-matricula",
-      "name": "gerar_link_matricula",
-      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-      "typeVersion": 1.1,
-      "position": [
-        1584,
-        448
-      ],
       "parameters": {
         "toolDescription": "Devolve o link público de matrícula/carteirinha da turma pelo código (reusa um convite ainda válido, ou cria um novo). Chame com o código da turma.",
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"gerar_link_matricula\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "turma_codigo",
-              "description": "Código da turma (ex.: 03/2026 ou T027)",
-              "type": "string"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
         }
       },
+      "id": "tool-gerar-link-matricula",
+      "name": "gerar_link_matricula",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, 368],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
-      "id": "tool-listar-turmas",
-      "name": "listar_turmas",
-      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-      "typeVersion": 1.1,
-      "position": [
-        1584,
-        -256
-      ],
       "parameters": {
         "toolDescription": "Lista as turmas cadastradas com código, curso, status, início das aulas e vagas. Use quando o gestor/instrutor não lembrar o código exato da turma, ou quiser saber quais turmas estão abertas. 'status' vazio lista todas; um valor exato (inscricoes, lotada, em_andamento, encerrada, rascunho) filtra.",
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_turmas\", \"params\": {\"status\": \"{status}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "status",
-              "description": "Status exato pra filtrar (inscricoes, lotada, em_andamento, encerrada, rascunho); deixe vazio pra listar todas.",
-              "type": "string"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "status", "description": "Status exato pra filtrar (inscricoes, lotada, em_andamento, encerrada, rascunho); deixe vazio pra listar todas.", "type": "string" }]
         }
       },
+      "id": "tool-listar-turmas",
+      "name": "listar_turmas",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [1584, -128],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
-      "id": "tool-buscar-aluno",
-      "name": "buscar_aluno",
-      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-      "typeVersion": 1.1,
-      "position": [
-        1408,
-        624
-      ],
       "parameters": {
         "toolDescription": "Busca aluno já cadastrado por nome, CPF ou WhatsApp. Devolve candidatos com token, nome, CPF mascarado, WhatsApp e quantidade de matrículas. SEMPRE chame esta ferramenta ANTES de matricular_aluno — nunca matricule sem antes buscar e o gestor confirmar qual é a pessoa certa.",
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"buscar_aluno\", \"params\": {\"termo\": \"{termo}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "termo",
-              "description": "Nome (parcial), CPF ou número de WhatsApp da pessoa a buscar",
-              "type": "string"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
-          ]
+          "values": [{ "name": "termo", "description": "Nome (parcial), CPF ou número de WhatsApp da pessoa a buscar", "type": "string" }]
         }
       },
+      "id": "tool-buscar-aluno",
+      "name": "buscar_aluno",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, 544],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
-      "id": "tool-matricular-aluno",
-      "name": "matricular_aluno",
-      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
-      "typeVersion": 1.1,
-      "position": [
-        1408,
-        800
-      ],
       "parameters": {
         "toolDescription": "Matricula um aluno JÁ EXISTENTE (achado via buscar_aluno e CONFIRMADO com o gestor) numa turma. Recusa se o aluno já estiver matriculado nela. NUNCA chame sem antes ter usado buscar_aluno e recebido confirmação explícita do gestor sobre qual pessoa é.",
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"matricular_aluno\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
           "values": [
-            {
-              "name": "aluno_token",
-              "description": "Token do aluno devolvido por buscar_aluno",
-              "type": "string"
-            },
-            {
-              "name": "turma_codigo",
-              "description": "Código da turma",
-              "type": "string"
-            }
-          ]
-        },
-        "sendHeaders": true,
-        "parametersHeaders": {
-          "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
+            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
+            { "name": "turma_codigo", "description": "Código da turma", "type": "string" }
           ]
         }
       },
+      "id": "tool-matricular-aluno",
+      "name": "matricular_aluno",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, -160],
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
-        }
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     },
     {
@@ -964,10 +668,7 @@
       "name": "listar_matriculas_turma",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [
-        1408,
-        448
-      ],
+      "position": [1408, 448],
       "parameters": {
         "toolDescription": "Lista os alunos matriculados numa turma pelo código — nome, status da matrícula e data. Use quando o gestor perguntar quem está matriculado, ou pedir a lista/relação de alunos de uma turma.",
         "method": "POST",
@@ -978,333 +679,126 @@
         "specifyBody": "json",
         "jsonBody": "{\"acao\": \"listar_matriculas_turma\", \"params\": {\"turma_codigo\": \"{turma_codigo}\"}}",
         "placeholderDefinitions": {
-          "values": [
-            {
-              "name": "turma_codigo",
-              "description": "Código da turma (ex.: 03/2026 ou T027)",
-              "type": "string"
-            }
-          ]
+          "values": [{ "name": "turma_codigo", "description": "Código da turma (ex.: 03/2026 ou T027)", "type": "string" }]
         },
         "sendHeaders": true,
         "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "tool-gerar-cobranca",
+      "name": "gerar_cobranca",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, 720],
+      "parameters": {
+        "toolDescription": "Gera uma cobrança real no Asaas (PIX, boleto, cartão ou vazio = aluno escolhe) pra uma matrícula existente e devolve o link de pagamento. NUNCA chame sem repetir valor e destinatário pro gestor e receber confirmação explícita ('confirma?' -> 'sim').",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"gerar_cobranca\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\", \"valor\": \"{valor}\", \"forma_pagamento\": \"{forma_pagamento}\"}}",
+        "placeholderDefinitions": {
           "values": [
-            {
-              "name": "X-Forwarded-Proto",
-              "valueProvider": "fieldValue",
-              "value": "https"
-            }
+            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
+            { "name": "turma_codigo", "description": "Código da turma da matrícula", "type": "string" },
+            { "name": "valor", "description": "Valor da cobrança em reais (ex.: 150.00) — já confirmado com o gestor", "type": "string" },
+            { "name": "forma_pagamento", "description": "PIX, BOLETO ou CREDIT_CARD — deixe vazio se o gestor disser 'o aluno escolhe'", "type": "string" }
           ]
         }
       },
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "9aPJmxbhrMSs5qYJ",
-          "name": "MAG - X-Agente-Token"
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+      }
+    },
+    {
+      "id": "tool-consultar-pagamento",
+      "name": "consultar_pagamento",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [2976, 896],
+      "parameters": {
+        "toolDescription": "Consulta as cobranças e status de pagamento (pendente, paga, vencida, cancelada, estornada) de um aluno numa turma. Use quando perguntarem se alguém já pagou.",
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [{ "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"acao\": \"consultar_pagamento\", \"params\": {\"aluno_token\": \"{aluno_token}\", \"turma_codigo\": \"{turma_codigo}\"}}",
+        "placeholderDefinitions": {
+          "values": [
+            { "name": "aluno_token", "description": "Token do aluno devolvido por buscar_aluno", "type": "string" },
+            { "name": "turma_codigo", "description": "Código da turma — obrigatório se o aluno tiver mais de uma matrícula, opcional se só tiver uma", "type": "string" }
+          ]
         }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
       }
     }
   ],
   "connections": {
-    "WhatsApp In": {
-      "main": [
-        [
-          {
-            "node": "Log payload cru",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Log payload cru": {
-      "main": [
-        [
-          {
-            "node": "É mensagem de texto recebida?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "É mensagem de texto recebida?": {
-      "main": [
-        [
-          {
-            "node": "Extrair dados",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extrair dados": {
-      "main": [
-        [
-          {
-            "node": "Identificar Contato",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
+    "WhatsApp In": { "main": [[{ "node": "Log payload cru", "type": "main", "index": 0 }]] },
+    "Log payload cru": { "main": [[{ "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }]] },
+    "É mensagem de texto recebida?": { "main": [[{ "node": "Extrair dados", "type": "main", "index": 0 }]] },
+    "Extrair dados": { "main": [[{ "node": "Identificar Contato", "type": "main", "index": 0 }]] },
     "É gestor ou instrutor?": {
       "main": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Operadora - Secretária Digital", "type": "main", "index": 0 }],
+        [{ "node": "SDR - Capitã de Matrículas", "type": "main", "index": 0 }]
       ]
     },
     "Gemini Chat Model": {
       "ai_languageModel": [
         [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_languageModel",
-            "index": 0
-          },
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_languageModel",
-            "index": 0
-          }
+          { "node": "SDR - Capitã de Matrículas", "type": "ai_languageModel", "index": 0 },
+          { "node": "Operadora - Secretária Digital", "type": "ai_languageModel", "index": 0 }
         ]
       ]
     },
-    "Memória da conversa": {
-      "ai_memory": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "listar_cursos": {
-      "ai_tool": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "detalhes_curso": {
-      "ai_tool": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "registrar_lead": {
-      "ai_tool": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "SDR - Capitã de Matrículas": {
-      "main": [
-        [
-          {
-            "node": "Responder no WhatsApp (SDR)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Identificar Contato": {
-      "main": [
-        [
-          {
-            "node": "Preparar contexto SDR",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Preparar contexto SDR": {
-      "main": [
-        [
-          {
-            "node": "Está escalado?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
+    "Memória da conversa": { "ai_memory": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_memory", "index": 0 }]] },
+    "listar_cursos": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
+    "detalhes_curso": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
+    "registrar_lead": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
+    "SDR - Capitã de Matrículas": { "main": [[{ "node": "Responder no WhatsApp (SDR)", "type": "main", "index": 0 }]] },
+    "Identificar Contato": { "main": [[{ "node": "Preparar contexto SDR", "type": "main", "index": 0 }]] },
+    "Preparar contexto SDR": { "main": [[{ "node": "Está escalado?", "type": "main", "index": 0 }]] },
     "Está escalado?": {
       "main": [
         [],
-        [
-          {
-            "node": "É gestor ou instrutor?",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "É gestor ou instrutor?", "type": "main", "index": 0 }]
       ]
     },
-    "escalar_contato": {
-      "ai_tool": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "avisar_equipe": {
-      "ai_tool": [
-        [
-          {
-            "node": "SDR - Capitã de Matrículas",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Memória da conversa (Operadora)": {
-      "ai_memory": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "status_turma": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "gerar_link_avaliacao": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "listar_leads": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Operadora - Secretária Digital": {
-      "main": [
-        [
-          {
-            "node": "Responder no WhatsApp (Operadora)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "gerar_link_matricula": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "listar_turmas": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "listar_matriculas_turma": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "buscar_aluno": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "matricular_aluno": {
-      "ai_tool": [
-        [
-          {
-            "node": "Operadora - Secretária Digital",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "escalar_contato": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
+    "avisar_equipe": { "ai_tool": [[{ "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }]] },
+    "Memória da conversa (Operadora)": { "ai_memory": [[{ "node": "Operadora - Secretária Digital", "type": "ai_memory", "index": 0 }]] },
+    "status_turma": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "gerar_link_avaliacao": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "listar_leads": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "Operadora - Secretária Digital": { "main": [[{ "node": "Responder no WhatsApp (Operadora)", "type": "main", "index": 0 }]] },
+    "gerar_link_matricula": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "listar_turmas": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "buscar_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "matricular_aluno": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "listar_matriculas_turma": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "gerar_cobranca": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] },
+    "consultar_pagamento": { "ai_tool": [[{ "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }]] }
   },
   "settings": {
     "executionOrder": "v1",
