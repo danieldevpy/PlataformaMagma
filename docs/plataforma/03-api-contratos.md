@@ -487,6 +487,8 @@ Ações v1 registradas:
 | `buscar_aluno` | educacional | `educacional:buscar_aluno` | `termo` (nome parcial, CPF ou WhatsApp) | lista (máx. 10) de `{token, nome, cpf_mascarado, whatsapp, matriculas}` (sem CPF cru nem `id` — constituição §6). 11 dígitos tenta CPF **e** WhatsApp (ambíguo sem DDI); outro tamanho numérico só WhatsApp; senão busca por nome (`icontains`). Passo 1 do fluxo buscar→confirmar→matricular — spec 014 |
 | `listar_matriculas_turma` | educacional | `educacional:listar_matriculas_turma` | `turma_codigo` | `{turma_codigo, alunos: [{aluno_token, nome, status, matriculado_em}]}`, alunos em ordem alfabética (sem CPF nem `id`) — quem está matriculado numa turma específica, não só a contagem que `status_turma` já dá |
 | `matricular_aluno` | educacional | `educacional:matricular_aluno` | `aluno_token` (de `buscar_aluno`), `turma_codigo`, `status` (opcional, padrão `ativa`) | `{aluno_nome, turma_codigo, status, vagas_restantes}` — cria a `Matrícula`; recusa (`ErroAcao`) se o aluno já estiver matriculado nessa turma, ou se `aluno_token`/`turma_codigo` não existirem. **Nunca chamar sem antes confirmar com `buscar_aluno`** — spec 014 |
+| `gerar_cobranca` | financeiro | `financeiro:gerar_cobranca` | `aluno_token`, `turma_codigo`, `valor`, `forma_pagamento` (opcional, padrão `UNDEFINED` = aluno escolhe; `PIX`\|`BOLETO`\|`CREDIT_CARD`) | `{aluno_nome, turma_codigo, valor, forma_pagamento, vencimento, link_pagamento}` — gera cobrança real no Asaas (ambiente = `ConfiguracaoAsaas` ativa) e persiste `Cobranca` ligada à `Matrícula`; recusa se aluno sem CPF, matrícula inexistente ou Asaas recusar a chamada. **Nunca chamar sem o gestor confirmar valor e destinatário** — spec 015 |
+| `consultar_pagamento` | financeiro | `financeiro:consultar_pagamento` | `aluno_token`, `turma_codigo` (opcional — obrigatório se o aluno tiver mais de uma matrícula) | `{aluno_nome, turma_codigo, cobrancas: [{valor, forma_pagamento, status, vencimento, criado_em}]}`, mais recente primeiro — `status` em `pendente`\|`paga`\|`vencida`\|`cancelada`\|`estornada`, atualizado pelo webhook do Asaas — spec 015 |
 
 ```bash
 # humano (Session/JWT) — sempre autorizado, sem checar escopo
@@ -534,6 +536,29 @@ curl -X POST -H "X-Agente-Token: $TOKEN_AGENTE" -H "Content-Type: application/js
   chamadas via rota REST própria com Session/JWT.
 - `TokenAgente.ultimo_uso_em` é atualizado a cada request autenticado com
   aquele token.
+
+### `POST /api/financeiro/webhook/asaas/` — webhook Asaas (spec 015)
+
+**Primeiro webhook HTTP externo do projeto** — `AllowAny`/sem Session/JWT,
+autenticado por header `asaas-access-token` (configurado no painel do
+Asaas em Webhooks; comparado contra `ConfiguracaoAsaas.get_webhook_token()`
+das linhas sandbox e produção, cifrado no banco). Recebe notificação de
+mudança de status de `Cobranca` (pago, vencido, cancelado, estornado) e
+atualiza sozinho — nenhuma ação manual do gestor.
+
+- Sem token válido → 401. Com token válido, **sempre** responde 200 (mesmo
+  se `payment.id` não bater com nenhuma `Cobranca` conhecida) — evita
+  reenvio agressivo do Asaas; todo evento recebido fica auditado em
+  `EventoWebhookAsaas` (`processado`\|`ignorado`).
+- Mapeamento `payment.status` → `Cobranca.status`: `RECEIVED`/`CONFIRMED`/
+  `RECEIVED_IN_CASH` → `paga`; `OVERDUE` → `vencida`; `REFUNDED`/
+  `REFUND_REQUESTED` → `estornada`; `CANCELLED`/`DELETED` → `cancelada`;
+  `PENDING` → `pendente`. Status fora dessa lista só fica registrado no
+  evento, sem alterar a cobrança.
+- Testado de ponta a ponta em sandbox real (2026-07-23): cobrança criada
+  via `gerar_cobranca`, pagamento simulado (`POST /payments/{id}/receiveInCash`
+  no Asaas), webhook chegou (`Asaas_Hmlg/3.0`) e `Cobranca` virou `paga`
+  sem intervenção manual.
 
 ## Utilitário
 

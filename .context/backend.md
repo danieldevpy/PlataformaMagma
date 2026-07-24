@@ -14,6 +14,7 @@
 | `ia` | Provedores de IA (`ProvedorIA` c/ credencial **cifrada Fernet** write-only, `ExecucaoIA` auditoria/custo), adaptadores Anthropic/OpenAI (texto), `/api/ia/` (capacidades, executar, provedores, uso), página staff "Integrações de IA", botão ✨ no Studio (proposta, nunca sobrescreve) |
 | `contas` | Contas/usuários |
 | `educacional` | Gestão escolar: `Aluno` é identidade durável (`token` uuid, `cpf` unique/null, dono da carteirinha código+validade — spec 014); `Matrícula` pura (`aluno`+`turma`+status, `unique(aluno,turma)`, conta vaga); cadastro público por `Turma.token_cadastro` (link estável, busca-ou-cria por CPF) e card por `Aluno.token`; ações `buscar_aluno`/`matricular_aluno` (gestor matricula existente pelo WhatsApp, protocolo buscar→confirmar→matricular) |
+| `financeiro` | Integração de pagamento Asaas (spec 015): `ConfiguracaoAsaas` (credencial + token de webhook **cifrados**, reusa `apps.ia.crypto`; 1 ambiente `ativo` entre sandbox/produção por vez) e `Cobranca` (ligada à `Matrícula`, campos vindos do Asaas nunca digitados). `adapters/asaas.py` é o único ponto que fala HTTP com o Asaas; `services.py::criar_cobranca_para_matricula` orquestra e é usado tanto pela ação do agente quanto pelo Admin (fallback). Ações `gerar_cobranca`/`consultar_pagamento`. `POST /api/financeiro/webhook/asaas/` é o **1º webhook HTTP externo do projeto** (auth por header `asaas-access-token`, nunca Session/JWT), auditado em `EventoWebhookAsaas`. Testado de ponta a ponta com sandbox real (2026-07-23) |
 
 ## Convenções
 
