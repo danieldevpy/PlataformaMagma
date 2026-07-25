@@ -19,6 +19,7 @@ Meta imediata: **encher a turma de Socorrista APH até 08/08/2026** via campanha
 ## Onde vive cada verdade
 
 - **Status global do projeto (onde começou e parou):** `.context/status.md`
+- **O que fazer em seguida (ordem acordada com o Daniel):** `.context/roteiro.md`
 - **Decisões de arquitetura (ADRs):** `.context/decisoes.md`
 - **Histórico de prompts/sessões:** `.context/historico/`
 - **Princípios inegociáveis:** `.specify/memory/constitution.md`
