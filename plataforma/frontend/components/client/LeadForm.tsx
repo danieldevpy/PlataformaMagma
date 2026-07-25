@@ -5,6 +5,12 @@ import { API_URL } from "@/lib/api";
 import { waUrl } from "@/lib/whatsapp";
 import type { LeadPayload, LeadResposta } from "@/lib/types";
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void;
+  }
+}
+
 export interface OpcaoCurso {
   slug: string;
   label: string;
@@ -89,6 +95,9 @@ export default function LeadForm({
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as LeadResposta;
+      if (typeof window.fbq === "function") {
+        window.fbq("track", "Lead");
+      }
       window.open(data.whatsapp_url, "_blank", "noopener");
       setStatus("idle");
       form.reset();

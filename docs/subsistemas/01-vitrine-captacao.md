@@ -24,7 +24,7 @@ Interessados (alunos em potencial e pais), empregadores pesquisando a escola, em
 **Geração de demanda**
 - **Quiz público gratuito** ("Você saberia agir numa parada cardíaca?") — isca de lead compartilhável; ao final, captura contato e recomenda curso.
 - Blog com SEO local ("curso de socorrista em Nova Iguaçu", "quanto ganha um cuidador de idosos na Baixada") — tráfego orgânico que o Instagram não entrega.
-- Landing pages por campanha (tráfego pago), com pixel e rastreamento de conversão.
+- Landing pages por campanha (tráfego pago), com pixel e rastreamento de conversão — ver `01b-trafego-pago-meta-ads.md` (plano da 1ª campanha, Meta Ads) e `specs/018-rastreamento-trafego-pago/` (pixel).
 
 **Institucional / B2B**
 - Página "Treinamentos para empresas" com formulário próprio.
