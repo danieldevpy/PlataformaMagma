@@ -93,15 +93,18 @@ services:
   # https://N8N_DOMAIN (ver nginx/nginx.conf). Workflows chamam a API da
   # plataforma pela rede interna: http://backend:8000/api/...
   n8n:
-    # PENDENTE (spec 027-T6/T7): fixar a versão e pôr `mem_limit`, como já foi
-    # feito no dev (n8n/docker-compose.dev.yml). Não dá pra escrever aqui às
-    # cegas: dev roda 2.31.5, e se prod já estiver numa versão mais nova,
-    # fixar em 2.31.5 vira DOWNGRADE — as migrações de banco do n8n não voltam
-    # atrás. Antes de trocar esta linha, rodar na VPS:
-    #   docker exec plataforma-n8n-1 n8n --version   # versão a fixar
-    #   free -m                                      # RAM pro mem_limit
-    image: n8nio/n8n:latest
+    # Versão FIXADA (spec 027-T6), medida na VPS em 25/07: prod rodava
+    # 2.31.4 sob a tag `latest`. Fixada no que JÁ roda, de propósito — o
+    # objetivo da T6 é que um `pull` não troque o motor do atendimento sem
+    # ninguém pedir, não subir de versão no meio de um deploy. Dev está em
+    # 2.31.5: alinhar os dois é decisão à parte, deliberada, com teste.
+    image: n8nio/n8n:2.31.4
     restart: unless-stopped
+    # Cerca de memória (spec 027-T7). Menor que os 2g do dev de propósito:
+    # a VPS tem 3 GB no total, com ~1 GB livre, e o n8n de prod usa 470 MiB.
+    # Teto que a máquina não consegue honrar não é cerca — 1g dá o dobro do
+    # uso atual e ainda fica acima dos 580 MiB do travamento de 25/07.
+    mem_limit: 1g
     environment:
       N8N_HOST: ${N8N_DOMAIN}
       N8N_PROTOCOL: https

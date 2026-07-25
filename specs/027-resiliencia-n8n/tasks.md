@@ -9,8 +9,8 @@
 | T3 | Watchdog que reinicia o n8n travado (healthz sem resposta), em dev e prod | PENDENTE | — |
 | T4 | Alarme no WhatsApp dos gestores quando o watchdog agir | PENDENTE | — |
 | T5 | `EXECUTIONS_DATA_PRUNE` (~7 dias) nos dois ambientes — seguro desde a spec 021, que moveu o histórico pro Django | ENTREGUE | claude |
-| T6 | Fixar a imagem do n8n em `2.31.5` (dev e prod), tirando o `latest` | ENTREGUE (só dev) | claude |
-| T7 | Limite de memória no container do n8n (cerca, não solução) | ENTREGUE (só dev) | claude |
+| T6 | Fixar a imagem do n8n (dev `2.31.5`, prod `2.31.4` — medido na VPS), tirando o `latest` | ENTREGUE | claude |
+| T7 | Limite de memória no container do n8n (dev 2g, prod 1g — VPS tem 3 GB) | ENTREGUE | claude |
 | T8 | Registrar o patamar de carga suportado em `plataforma/n8n/README.md` | PENDENTE | — |
 | T9 | ADR em `.context/decisoes.md` + `historico/` com a conclusão da T1 | PENDENTE | — |
 | T10 | Decidir com o Daniel se vai pra **queue mode** — só faz sentido se a T1 apontar concorrência | PENDENTE | — (decisão do Daniel) |
@@ -80,3 +80,18 @@ inteiro, mesmo sem a causa raiz na mão.
   Pedido do Daniel: *"quero até analisar sobre o que de fato ocorreu de
   verdade, para saber se teria acontecido em produção, vamos analisar
   para depois poder reforçar todo o sistema"*.
+
+- (2026-07-25, deploy) **T6 e T7 fechadas em prod, com os números medidos
+  na VPS.** `n8n --version` em produção devolveu **2.31.4** — ou seja, a
+  hipótese que travou a tarefa (prod mais novo que dev, fixar viraria
+  downgrade) estava invertida: prod está **um patch atrás** do dev. Fixado
+  em `2.31.4`, o que já roda, de propósito: o objetivo da T6 é impedir
+  troca acidental de motor, não subir de versão no meio de um deploy com
+  cinco workflows e quatro migrações. **Fica registrada a divergência
+  dev 2.31.5 × prod 2.31.4** — alinhar é decisão à parte.
+
+  `mem_limit` de prod ficou em **1g**, metade do dev. `free -m` na VPS:
+  3013 MB no total, ~1059 MB disponíveis, com `docker stats` mostrando o
+  n8n em **470 MiB**. Um teto de 2g aqui nunca seria alcançado antes de a
+  máquina inteira sofrer — cerca que não cerca. 1g dá o dobro do uso atual
+  e ainda fica acima dos 580 MiB medidos no travamento de 25/07.
