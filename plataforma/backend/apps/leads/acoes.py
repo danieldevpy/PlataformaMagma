@@ -10,6 +10,7 @@ from apps.cursos.serializers import turma_destaque_de
 from apps.leads.models import Lead
 from apps.nucleo.acoes import ErroAcao, registrar_acao
 from apps.nucleo.models import ConfiguracaoSite, ContatoEscalado
+from apps.nucleo.numeros import numero_de_pessoa
 
 
 @registrar_acao(
@@ -166,6 +167,12 @@ def processar_nutridora(params, request):
     def _processar(queryset, novo_toque, montar_texto):
         for lead in queryset:
             if lead.pk in ja_processados_nesta_rodada:
+                continue
+            # Último cadeado antes de a mensagem sair: nada é enviado pra
+            # um "número" que não é de gente. Leads assim não deveriam mais
+            # nascer (o serializer barra), mas os que já estão na base de
+            # antes da correção não podem receber toque automático.
+            if not numero_de_pessoa(lead.whatsapp):
                 continue
             texto = montar_texto(lead)
             if texto is None:

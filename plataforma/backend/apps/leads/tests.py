@@ -46,6 +46,31 @@ class CriarLeadPublicoViewTests(TestCase):
         )
         self.assertEqual(resposta.status_code, 400)
 
+    def test_id_de_grupo_no_whatsapp_retorna_400(self):
+        """`registrar_lead` do agente posta aqui. Se o "número" for um id
+        de grupo (incidente de 25/07), o lead não pode nascer — senão a
+        Nutridora manda toque automático pra dentro do grupo."""
+        resposta = self.client.post(
+            reverse("leads-criar"),
+            data={"nome": "Grupo Qualquer", "whatsapp": "120363428559042188"},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 400)
+        self.assertFalse(Lead.objects.exists())
+
+    def test_lead_sem_whatsapp_continua_valido(self):
+        """A LP não coleta WhatsApp — manda só nome/curso/quando e
+        redireciona pro WhatsApp depois. A checagem nova não pode quebrar
+        esse caminho, que é o do formulário do site."""
+        curso, _turma = criar_curso_turma(slug="lead-sem-whats")
+        resposta = self.client.post(
+            reverse("leads-criar"),
+            data={"nome": "Fulana", "curso_slug": curso.slug},
+            content_type="application/json",
+        )
+        self.assertEqual(resposta.status_code, 201)
+        self.assertEqual(Lead.objects.get().whatsapp, "")
+
     def test_curso_slug_inexistente_nao_quebra_cria_lead_sem_curso(self):
         resposta = self.client.post(
             reverse("leads-criar"),
@@ -364,6 +389,19 @@ class ProcessarNutridoraTests(TestCase):
         resultado = self._executar()
         self.assertEqual(resultado["total"], 1)
         self.assertEqual(resultado["processados"][0]["numero"], lead.whatsapp)
+
+    def test_nunca_manda_toque_pra_id_de_grupo(self):
+        """Último cadeado antes do envio. Leads assim não nascem mais (o
+        serializer barra), mas os criados antes da correção de 25/07 não
+        podem receber toque automático — seria mensagem da Magma dentro de
+        um grupo."""
+        lead = self._criar_lead(dias_atras=2, curso=self.curso)
+        Lead.objects.filter(pk=lead.pk).update(whatsapp="120363428559042188")
+
+        resultado = self._executar()
+        self.assertEqual(resultado["total"], 0)
+        lead.refresh_from_db()
+        self.assertEqual(lead.nutridora_ultimo_toque, "")
 
     def test_exclui_lead_escalado(self):
         lead = self._criar_lead(dias_atras=2, curso=self.curso)

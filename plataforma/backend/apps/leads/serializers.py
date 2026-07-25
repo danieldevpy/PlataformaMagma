@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from apps.cursos.models import Curso
 from apps.leads.models import Lead
+from apps.nucleo.numeros import numero_de_pessoa
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,13 @@ def garantir_lead(whatsapp, curso=None, **campos):
     """
     whatsapp = (whatsapp or "").strip()
 
+    # Número que não é de gente (id de grupo, canal, transmissão) não vira
+    # lead nunca — senão a Nutridora manda toque automático pra dentro de
+    # um grupo. Vazio continua permitido: é o caso do formulário da LP, que
+    # não coleta WhatsApp (a pessoa é redirecionada pro WhatsApp depois).
+    if whatsapp and not numero_de_pessoa(whatsapp):
+        raise ValueError(f"{whatsapp!r} não é o WhatsApp de uma pessoa.")
+
     # Sem número não dá pra saber se é a mesma pessoa — e deduplicar por
     # vazio colapsaria TODOS os leads sem WhatsApp num só (bug pior que o
     # que esta função corrige).
@@ -130,6 +138,21 @@ class LeadPublicoSerializer(serializers.ModelSerializer):
     # formulário da LP (ou é registrado pelo `registrar_lead` da MAG, que
     # só chama depois de perguntar) continua tendo que dizer como se chama.
     nome = serializers.CharField(max_length=120, required=True, allow_blank=False)
+
+    def validate_whatsapp(self, valor):
+        """Recusa id de grupo/canal com 400 em vez de deixar virar lead.
+
+        `garantir_lead` também barra (é ele que protege os dois caminhos),
+        mas lá o erro é `ValueError` — que viraria 500. Aqui vira 400 com
+        mensagem, que é o que o `registrar_lead` do agente precisa ler.
+        """
+        valor = (valor or "").strip()
+        if valor and not numero_de_pessoa(valor):
+            raise serializers.ValidationError(
+                "Não é o WhatsApp de uma pessoa (parece id de grupo, canal "
+                "ou transmissão)."
+            )
+        return valor
 
     class Meta:
         model = Lead

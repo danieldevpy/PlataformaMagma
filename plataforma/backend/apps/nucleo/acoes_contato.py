@@ -12,6 +12,15 @@ from apps.leads.models import Lead
 from apps.leads.serializers import garantir_lead, resolver_curso
 from apps.nucleo.acoes import ErroAcao, registrar_acao
 from apps.nucleo.models import ConfiguracaoSite, ContatoEscalado
+from apps.nucleo.numeros import numero_de_pessoa
+
+# Mensagem única pros dois pontos de entrada — o que o agente lê quando o
+# "número" não é de gente (id de grupo, canal, status). Ver
+# apps/nucleo/numeros.py pro incidente que originou a checagem.
+ERRO_NAO_E_PESSOA = (
+    "Este identificador não é o WhatsApp de uma pessoa (parece um grupo, "
+    "canal ou transmissão). A MAG só atende conversa individual."
+)
 
 # Status do lead que está sendo atendido por gente (spec 025). `Lead.status`
 # é CharField livre, sem `choices`, então isto é constante aqui e não enum
@@ -34,6 +43,12 @@ def identificar_contato(params, request):
     numero = (params.get("numero") or "").strip()
     if not numero:
         raise ErroAcao("Informe 'numero'.")
+    # Falha ALTO de propósito: esta é a primeira ação de toda conversa, e
+    # errar aqui derruba a execução no n8n antes de qualquer mensagem sair.
+    # Devolver "desconhecido" faria a MAG responder normalmente — que é
+    # exatamente o incidente dos grupos.
+    if not numero_de_pessoa(numero):
+        raise ErroAcao(ERRO_NAO_E_PESSOA)
 
     # Só o handoff ATIVO silencia (spec 025) — resolvido ou expirado
     # devolve o contato pro atendimento automático.
@@ -89,6 +104,8 @@ def escalar_contato(params, request):
     motivo = (params.get("motivo") or "").strip()
     if not numero:
         raise ErroAcao("Informe 'numero'.")
+    if not numero_de_pessoa(numero):
+        raise ErroAcao(ERRO_NAO_E_PESSOA)
     if not motivo:
         raise ErroAcao("Informe 'motivo'.")
 

@@ -22,6 +22,7 @@ from apps.nucleo.models import (
     LogAcao,
     TokenAgente,
 )
+from apps.nucleo.numeros import numero_de_pessoa
 from apps.nucleo.serializers import CAMPOS_CONFIG
 from apps.nucleo.testing import criar_gestor, criar_instrutor, jpeg_em_memoria, jwt_headers
 
@@ -603,6 +604,13 @@ class IdentificarContatoTests(TestCase):
             headers={"X-Agente-Token": self.token_bruto},
         )
 
+    def test_id_de_grupo_400_em_vez_de_desconhecido(self):
+        """O caminho do incidente de 25/07: devolver 'desconhecido' aqui
+        faria a MAG responder normalmente — dentro do grupo. Falhar alto
+        derruba a execução antes de qualquer mensagem sair."""
+        resposta = self._identificar("120363428559042188")
+        self.assertEqual(resposta.status_code, 400)
+
     def test_identifica_gestor_por_whatsapp(self):
         Usuario.objects.create_user(
             username="daniel",
@@ -729,6 +737,47 @@ class EscalarContatoTests(TestCase):
     def test_sem_numero_400(self):
         resposta = self._escalar("", "motivo")
         self.assertEqual(resposta.status_code, 400)
+
+    def test_id_de_grupo_400_e_nao_cria_registro(self):
+        from apps.nucleo.models import ContatoEscalado
+
+        # Id real do grupo "Stop + Bls", do incidente de 25/07.
+        resposta = self._escalar("120363428559042188", "quer se inscrever")
+        self.assertEqual(resposta.status_code, 400)
+        self.assertFalse(ContatoEscalado.objects.exists())
+
+
+class NumeroDePessoaTests(TestCase):
+    """apps/nucleo/numeros.py — o que conta como WhatsApp de gente.
+
+    Nasceu do incidente de 2026-07-25: a MAG respondeu dentro de 4 grupos
+    porque `remoteJid.split('@')[0]` transforma o id do grupo num "número"
+    plausível (só dígitos, sem pontuação).
+    """
+
+    def test_aceita_celular_brasileiro_com_ddi(self):
+        self.assertTrue(numero_de_pessoa("5521979767821"))
+
+    def test_aceita_fixo_e_numero_internacional_curto(self):
+        self.assertTrue(numero_de_pessoa("552133334444"))
+        self.assertTrue(numero_de_pessoa("1234567890"))
+
+    def test_recusa_id_de_grupo(self):
+        self.assertFalse(numero_de_pessoa("120363428559042188"))
+
+    def test_recusa_jid_inteiro_em_vez_do_numero(self):
+        self.assertFalse(numero_de_pessoa("5521979767821@s.whatsapp.net"))
+        self.assertFalse(numero_de_pessoa("120363428559042188@g.us"))
+
+    def test_recusa_status_e_vazio(self):
+        self.assertFalse(numero_de_pessoa("status@broadcast"))
+        self.assertFalse(numero_de_pessoa(""))
+        self.assertFalse(numero_de_pessoa(None))
+
+    def test_recusa_numero_formatado(self):
+        # Não é caso real hoje (a LP não coleta WhatsApp), mas se um dia
+        # coletar, o normalizador tem que vir ANTES desta checagem.
+        self.assertFalse(numero_de_pessoa("(21) 97976-7821"))
 
 
 class HandoffGaranteLeadTests(TestCase):
