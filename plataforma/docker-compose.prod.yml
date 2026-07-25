@@ -93,6 +93,13 @@ services:
   # https://N8N_DOMAIN (ver nginx/nginx.conf). Workflows chamam a API da
   # plataforma pela rede interna: http://backend:8000/api/...
   n8n:
+    # PENDENTE (spec 027-T6/T7): fixar a versão e pôr `mem_limit`, como já foi
+    # feito no dev (n8n/docker-compose.dev.yml). Não dá pra escrever aqui às
+    # cegas: dev roda 2.31.5, e se prod já estiver numa versão mais nova,
+    # fixar em 2.31.5 vira DOWNGRADE — as migrações de banco do n8n não voltam
+    # atrás. Antes de trocar esta linha, rodar na VPS:
+    #   docker exec plataforma-n8n-1 n8n --version   # versão a fixar
+    #   free -m                                      # RAM pro mem_limit
     image: n8nio/n8n:latest
     restart: unless-stopped
     environment:
@@ -110,6 +117,12 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       GENERIC_TIMEZONE: America/Sao_Paulo
       TZ: America/Sao_Paulo
+      # Poda de execuções antigas (spec 027-T5). Virou seguro depois da spec
+      # 021: o histórico que importa (conversa, ferramentas, desfecho) vive no
+      # Django, não aqui. Sem isso o SQLite do n8n cresce sem teto, porque
+      # `returnIntermediateSteps` grava o payload inteiro de cada tool.
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168" # horas = 7 dias
       # Filtro de números de teste (regex, lido pelos workflows via $env).
       # Vazio de propósito: regex vazia casa com qualquer string → sem filtro,
       # o agente responde a qualquer número de verdade em produção. Ver

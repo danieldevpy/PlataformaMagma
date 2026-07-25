@@ -28,9 +28,16 @@ services:
       - n8n_redis_dev_data:/data
 
   n8n:
-    image: n8nio/n8n:latest
+    # Versão FIXADA (spec 027-T6). Com `latest`, um `docker compose pull`
+    # trocava o motor do atendimento sem ninguém pedir. Subir de versão é
+    # decisão, não acidente — mude aqui e teste antes de promover pra prod.
+    image: n8nio/n8n:2.31.5
     container_name: magma-n8n-dev
     restart: unless-stopped
+    # Cerca de memória (spec 027-T7). NÃO foi a causa do travamento de
+    # 25/07 (RSS ficou plano em 580 MiB), mas container sem limite num host
+    # compartilhado é a diferença entre "o n8n travou" e "a máquina travou".
+    mem_limit: 2g
     ports:
       - "127.0.0.1:5678:5678"
     environment:
@@ -43,6 +50,14 @@ services:
       N8N_DIAGNOSTICS_ENABLED: "false"
       GENERIC_TIMEZONE: America/Sao_Paulo
       TZ: America/Sao_Paulo
+      # Poda de execuções antigas (spec 027-T5). Virou seguro depois da spec
+      # 021: o histórico que importa (conversa, ferramentas, desfecho) vive no
+      # Django, não aqui. As execuções voltaram a ser o que sempre deveriam
+      # ter sido — depuração de curto prazo. Sem isso, o SQLite crescia sem
+      # teto (55 MB com 41 execuções, porque `returnIntermediateSteps` grava
+      # o payload inteiro de cada tool).
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168" # horas = 7 dias
       # Filtro de números de teste (regex, lido pelos workflows via $env). Em
       # prod fica vazio — regex vazia casa com qualquer string, ou seja, sem
       # filtro (atende todo mundo). Ver plataforma/n8n/workflows/README.md.
