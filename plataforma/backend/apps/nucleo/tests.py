@@ -608,7 +608,7 @@ class IdentificarContatoTests(TestCase):
         """O caminho do incidente de 25/07: devolver 'desconhecido' aqui
         faria a MAG responder normalmente — dentro do grupo. Falhar alto
         derruba a execução antes de qualquer mensagem sair."""
-        resposta = self._identificar("120363428559042188")
+        resposta = self._identificar("120363000000000000")
         self.assertEqual(resposta.status_code, 400)
 
     def test_identifica_gestor_por_whatsapp(self):
@@ -741,8 +741,8 @@ class EscalarContatoTests(TestCase):
     def test_id_de_grupo_400_e_nao_cria_registro(self):
         from apps.nucleo.models import ContatoEscalado
 
-        # Id real do grupo "Stop + Bls", do incidente de 25/07.
-        resposta = self._escalar("120363428559042188", "quer se inscrever")
+        # Formato de JID de grupo (18 dígitos), sintético.
+        resposta = self._escalar("120363000000000000", "quer se inscrever")
         self.assertEqual(resposta.status_code, 400)
         self.assertFalse(ContatoEscalado.objects.exists())
 
@@ -763,11 +763,11 @@ class NumeroDePessoaTests(TestCase):
         self.assertTrue(numero_de_pessoa("1234567890"))
 
     def test_recusa_id_de_grupo(self):
-        self.assertFalse(numero_de_pessoa("120363428559042188"))
+        self.assertFalse(numero_de_pessoa("120363000000000000"))
 
     def test_recusa_jid_inteiro_em_vez_do_numero(self):
         self.assertFalse(numero_de_pessoa("5521979767821@s.whatsapp.net"))
-        self.assertFalse(numero_de_pessoa("120363428559042188@g.us"))
+        self.assertFalse(numero_de_pessoa("120363000000000000@g.us"))
 
     def test_recusa_status_e_vazio(self):
         self.assertFalse(numero_de_pessoa("status@broadcast"))

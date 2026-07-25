@@ -8,7 +8,7 @@ fosse um lead e acionou a equipe.
 
 A causa é uma linha do workflow: `remoteJid.split('@')[0]`. Num chat
 individual o `remoteJid` é `5521999999999@s.whatsapp.net` e isso devolve o
-telefone; num grupo é `120363428559042188@g.us` e isso devolve o **id do
+telefone; num grupo é `120363000000000000@g.us` e isso devolve o **id do
 grupo**, que passa por número sem levantar suspeita — dígitos, sem
 pontuação, plausível à vista.
 

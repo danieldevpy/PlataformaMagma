@@ -52,7 +52,7 @@ class CriarLeadPublicoViewTests(TestCase):
         Nutridora manda toque automático pra dentro do grupo."""
         resposta = self.client.post(
             reverse("leads-criar"),
-            data={"nome": "Grupo Qualquer", "whatsapp": "120363428559042188"},
+            data={"nome": "Grupo Qualquer", "whatsapp": "120363000000000000"},
             content_type="application/json",
         )
         self.assertEqual(resposta.status_code, 400)
@@ -396,7 +396,7 @@ class ProcessarNutridoraTests(TestCase):
         podem receber toque automático — seria mensagem da Magma dentro de
         um grupo."""
         lead = self._criar_lead(dias_atras=2, curso=self.curso)
-        Lead.objects.filter(pk=lead.pk).update(whatsapp="120363428559042188")
+        Lead.objects.filter(pk=lead.pk).update(whatsapp="120363000000000000")
 
         resultado = self._executar()
         self.assertEqual(resultado["total"], 0)
