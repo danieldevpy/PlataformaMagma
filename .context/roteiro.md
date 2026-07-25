@@ -9,7 +9,7 @@
 | Etapa | O que é | Estado |
 |---|---|---|
 | 1 | T20 — Nutridora passa a excluir por atividade, não por origem | **ENTREGUE em dev (25/07)** |
-| 2 | Produção — commitar e promover 021→025 + blindagens da 027 | PENDENTE |
+| 2 | Produção — commitar e promover 021→025 + blindagens da 027 | **ENTREGUE (25/07)** |
 | 3 | Desenvolver o que falta — specs 026 e 028 | PENDENTE |
 | 4 | Investigar o travamento do n8n — spec 027 (T1, T3/T4, T8–T11) | PENDENTE |
 | 5 | Pixel e campanha — spec 018 T5 + Meta Ads | PENDENTE |
@@ -132,6 +132,38 @@ SDR), 024 (tom e pesos), 025 (handoff de ponta a ponta), 027 parcial
 **Pronto quando:** `git status` limpo, os 5 workflows ativos em prod e a
 `ConfiguracaoSite` de produção com `handoff_expira_horas`,
 `conversas_retencao_dias` e `nutridora_silencio_dias` conferidos.
+
+### ✅ Feita em 2026-07-25
+
+**5 commits** (`d82c09d` pixel · `08a7da8` blindagens 027 · `2d7d7bd`
+specs 021-025 + T20 · `18067b9` docs · `438e1b5` T6/T7 de prod), push e
+`git pull` na VPS. Não deu pra fazer um commit por spec: 021→025 e a T20
+escrevem nos mesmos arquivos (`nucleo/models.py` recebe campo de três
+delas, `mag-fase-0-sdr.json` de cinco), e separar exigiria inventar
+estados intermediários que nunca existiram.
+
+- **Backend**: `build backend` + `up -d backend`, os dois com
+  `--env-file .env.prod`. `db` ficou `Running` (não recriado) — o
+  incidente de 24/07 não se repetiu. As 4 migrações subiram pelo
+  `entrypoint.sh`; dado intacto (4 cursos, 2 turmas, 4 usuários, 1 lead).
+- **`TokenAgente` de prod** (`agente-n8n-mag`): 16 → 19 escopos, com os
+  3 `conversas:*`.
+- **5 workflows** atualizados e ativos. Desviei do `promover-prod.sh`, que
+  reinicia o n8n por arquivo: montei os 5 com `_montar_json_prod.py`,
+  importei e publiquei os 5, e reiniciei **uma vez** — uma janela de
+  segundos em vez de cinco.
+- **027-T6/T7**: prod fixado em `2.31.4` (o que já rodava) e `mem_limit`
+  de `1g`. Ver o §Etapa 4 e o log da spec 027 pros números.
+
+**Verificado**: site e API em 200, 8 containers de pé, n8n `healthy`,
+`EXECUTIONS_DATA_PRUNE=true`/`168`.
+
+**O que NÃO foi verificado:** nenhuma mensagem real passou pela MAG depois
+do deploy. Não disparei mensagem sintética em prod de propósito (criaria
+Lead e custo de IA falsos no banco real) — a confirmação de ponta a ponta
+é o Daniel mandar uma mensagem do WhatsApp dele pro número da MAG e ver a
+resposta, e depois conferir se apareceu `Conversa` no Admin (é o que prova
+que os escopos `conversas:*` estão valendo).
 
 ---
 
