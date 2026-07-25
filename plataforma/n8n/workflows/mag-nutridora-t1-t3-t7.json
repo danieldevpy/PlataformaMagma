@@ -6,11 +6,19 @@
       "name": "Nutridora: agendamento diário",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "days", "daysInterval": 1, "triggerAtHour": 9, "triggerAtMinute": 0 }
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
           ]
         }
       }
@@ -20,7 +28,10 @@
       "name": "Nutridora: processar régua",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [224, 0],
+      "position": [
+        224,
+        0
+      ],
       "parameters": {
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
@@ -29,7 +40,10 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "X-Forwarded-Proto", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -38,7 +52,10 @@
         "options": {}
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -46,7 +63,10 @@
       "name": "Nutridora: separar por lead",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [448, 0],
+      "position": [
+        448,
+        0
+      ],
       "parameters": {
         "fieldToSplitOut": "resultado.processados",
         "options": {}
@@ -57,7 +77,10 @@
       "name": "Nutridora: enviar no WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [672, 0],
+      "position": [
+        672,
+        0
+      ],
       "parameters": {
         "method": "POST",
         "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
@@ -69,29 +92,91 @@
         "options": {}
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
       }
+    },
+    {
+      "id": "35a60264-c231-4501-b1e1-f5995e4dbdb3",
+      "name": "Registrar toque (régua)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"acao\": \"registrar_turnos\", \"params\": { \"numero\": $('Nutridora: separar por lead').item.json.numero, \"texto_agente\": $('Nutridora: separar por lead').item.json.texto, \"agente\": \"nutridora\", \"papel\": \"lead\", \"nome\": $('Nutridora: separar por lead').item.json.nome, \"proativo\": true, \"execucao_n8n\": $execution.id } } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
-    "Nutridora: agendamento di\u00e1rio": {
+    "Nutridora: agendamento diário": {
       "main": [
         [
-          { "node": "Nutridora: processar régua", "type": "main", "index": 0 }
+          {
+            "node": "Nutridora: processar régua",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Nutridora: processar r\u00e9gua": {
+    "Nutridora: processar régua": {
       "main": [
         [
-          { "node": "Nutridora: separar por lead", "type": "main", "index": 0 }
+          {
+            "node": "Nutridora: separar por lead",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Nutridora: separar por lead": {
       "main": [
         [
-          { "node": "Nutridora: enviar no WhatsApp", "type": "main", "index": 0 }
+          {
+            "node": "Nutridora: enviar no WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nutridora: enviar no WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Registrar toque (régua)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }

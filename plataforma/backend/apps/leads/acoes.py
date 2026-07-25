@@ -5,10 +5,11 @@ from datetime import timedelta
 from django.utils import timezone
 
 from apps.avaliacoes.models import Avaliacao
+from apps.conversas.models import Conversa
 from apps.cursos.serializers import turma_destaque_de
 from apps.leads.models import Lead
 from apps.nucleo.acoes import ErroAcao, registrar_acao
-from apps.nucleo.models import ContatoEscalado
+from apps.nucleo.models import ConfiguracaoSite, ContatoEscalado
 
 
 @registrar_acao(
@@ -137,12 +138,25 @@ def _texto_t7(lead):
 )
 def processar_nutridora(params, request):
     agora = timezone.now()
-    numeros_escalados = set(ContatoEscalado.objects.values_list("numero", flat=True))
+    # Só os handoffs ATIVOS excluem da régua (spec 025). Antes, qualquer
+    # registro em `ContatoEscalado` excluía pra sempre — então quem foi
+    # escalado uma vez e já tinha sido atendido nunca mais era nutrido.
+    numeros_escalados = ContatoEscalado.numeros_ativos()
+    # 028-T20: quem está conversando com a MAG AGORA não recebe toque
+    # agendado. Antes isso era `.exclude(utm_source="whatsapp")` — a origem
+    # do lead usada como proxy da atividade dele. Só que o `registrar_lead`
+    # do SDR carimba `utm_source="whatsapp"` fixo no workflow, e origem não
+    # muda nunca: o efeito real era NENHUM lead nascido de conversa entrar
+    # na régua, pra sempre. Como a campanha do Meta é Click-to-WhatsApp,
+    # isso deixava 100% do lead pago fora da nutrição.
+    numeros_em_conversa = Conversa.numeros_ativos_desde(
+        ConfiguracaoSite.obter().nutridora_silencio_dias
+    )
 
     base = (
         Lead.objects.exclude(whatsapp="")
-        .exclude(utm_source="whatsapp")
         .exclude(whatsapp__in=numeros_escalados)
+        .exclude(whatsapp__in=numeros_em_conversa)
         .select_related("curso")
     )
 

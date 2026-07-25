@@ -15,7 +15,13 @@ from apps.contas.models import Usuario
 from apps.cursos.models import Curso, Turma
 from apps.financeiro.adapters.asaas import ErroAsaas
 from apps.midia.models import Postagem
-from apps.nucleo.models import ConfiguracaoSite, LogAcao, TokenAgente
+from apps.leads.models import Lead
+from apps.nucleo.models import (
+    ConfiguracaoSite,
+    ContatoEscalado,
+    LogAcao,
+    TokenAgente,
+)
 from apps.nucleo.serializers import CAMPOS_CONFIG
 from apps.nucleo.testing import criar_gestor, criar_instrutor, jpeg_em_memoria, jwt_headers
 
@@ -723,6 +729,180 @@ class EscalarContatoTests(TestCase):
     def test_sem_numero_400(self):
         resposta = self._escalar("", "motivo")
         self.assertEqual(resposta.status_code, 400)
+
+
+class HandoffGaranteLeadTests(TestCase):
+    """spec 025 — `escalar_contato` garante o `Lead`.
+
+    Na bateria de 6 conversas simuladas, 3 contatos escalados NÃO viraram
+    lead, incluindo quem disse "quero garantir minha vaga": a regra de
+    handoff manda parar de qualificar e a MAG parava antes de registrar.
+    """
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag",
+            escopos=["nucleo:escalar_contato"],
+        )
+        self.curso = Curso.objects.create(
+            slug="socorrista-aph-handoff",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH",
+            subtitulo="Formação prática",
+            carga_horaria=120,
+        )
+
+    def _escalar(self, numero, motivo, **extra):
+        return self.client.post(
+            self.url_executar,
+            data={
+                "acao": "escalar_contato",
+                "params": {"numero": numero, "motivo": motivo, **extra},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def test_cria_lead_mesmo_sem_nome_e_sem_curso(self):
+        """O pior caso da bateria: escalou antes de saber qualquer coisa."""
+        self._escalar("5521988880001", "quer fechar matrícula")
+
+        lead = Lead.objects.get(whatsapp="5521988880001")
+        self.assertEqual(lead.nome, "")
+        self.assertIsNone(lead.curso)
+        self.assertEqual(lead.status, "em_atendimento")
+        self.assertEqual(lead.utm_source, "whatsapp")
+
+    def test_aproveita_nome_e_curso_quando_a_conversa_ja_sabe(self):
+        self._escalar(
+            "5521988880002",
+            "quer fechar matrícula",
+            nome="Bianca",
+            curso_slug="socorrista-aph-handoff",
+        )
+
+        lead = Lead.objects.get(whatsapp="5521988880002")
+        self.assertEqual(lead.nome, "Bianca")
+        self.assertEqual(lead.curso, self.curso)
+
+    def test_curso_slug_inventado_pelo_modelo_ainda_resolve(self):
+        """Mesma tolerância da spec 023 — o modelo erra a string, não o assunto."""
+        self._escalar(
+            "5521988880003", "quer fechar", curso_slug="socorrista-aph-120h"
+        )
+
+        self.assertEqual(
+            Lead.objects.get(whatsapp="5521988880003").curso, self.curso
+        )
+
+    def test_escalar_duas_vezes_nao_duplica_lead(self):
+        self._escalar("5521988880004", "motivo 1", nome="Rafael")
+        self._escalar("5521988880004", "motivo 2")
+
+        self.assertEqual(Lead.objects.filter(whatsapp="5521988880004").count(), 1)
+        # A 2ª escalada não apagou o nome que a 1ª tinha descoberto.
+        self.assertEqual(Lead.objects.get(whatsapp="5521988880004").nome, "Rafael")
+
+    def test_lead_que_ja_existia_nao_e_duplicado_nem_perde_curso(self):
+        Lead.objects.create(
+            nome="Juliana", whatsapp="5521988880005", curso=self.curso
+        )
+        self._escalar("5521988880005", "achou caro")
+
+        leads = Lead.objects.filter(whatsapp="5521988880005")
+        self.assertEqual(leads.count(), 1)
+        self.assertEqual(leads.first().curso, self.curso)
+        self.assertEqual(leads.first().nome, "Juliana")
+
+
+class ContatoEscaladoEstadoTests(TestCase):
+    """spec 025 — `ContatoEscalado` deixa de ser "existe = silenciado"."""
+
+    def setUp(self):
+        self.url_executar = reverse("acoes-executar")
+        _, self.token_bruto = criar_token_agente(
+            nome="agente-recepcionista-mag",
+            escopos=["nucleo:escalar_contato", "nucleo:identificar_contato"],
+        )
+
+    def _escalar(self, numero, motivo="quer fechar matrícula"):
+        return self.client.post(
+            self.url_executar,
+            data={
+                "acao": "escalar_contato",
+                "params": {"numero": numero, "motivo": motivo},
+            },
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+
+    def _esta_escalado(self, numero):
+        resposta = self.client.post(
+            self.url_executar,
+            data={"acao": "identificar_contato", "params": {"numero": numero}},
+            content_type="application/json",
+            headers={"X-Agente-Token": self.token_bruto},
+        )
+        return resposta.json()["resultado"]["escalado"]
+
+    def test_escalado_recem_criado_silencia(self):
+        self._escalar("5521977770001")
+        self.assertTrue(self._esta_escalado("5521977770001"))
+
+    def test_resolvido_devolve_o_contato_sem_apagar_o_historico(self):
+        self._escalar("5521977770002")
+        registro = ContatoEscalado.objects.get(numero="5521977770002")
+        registro.resolvido_em = timezone.now()
+        registro.save()
+
+        self.assertFalse(self._esta_escalado("5521977770002"))
+        # O registro continua lá — resolver não é apagar.
+        self.assertTrue(
+            ContatoEscalado.objects.filter(numero="5521977770002").exists()
+        )
+
+    def test_expirado_devolve_o_contato_sozinho(self):
+        self._escalar("5521977770003")
+        registro = ContatoEscalado.objects.get(numero="5521977770003")
+        registro.expira_em = timezone.now() - timedelta(minutes=1)
+        registro.save()
+
+        self.assertFalse(self._esta_escalado("5521977770003"))
+
+    def test_prazo_zero_na_config_significa_nunca_expira(self):
+        config = ConfiguracaoSite.obter()
+        config.handoff_expira_horas = 0
+        config.save()
+
+        self._escalar("5521977770004")
+        self.assertIsNone(
+            ContatoEscalado.objects.get(numero="5521977770004").expira_em
+        )
+
+    def test_escalar_de_novo_depois_de_resolvido_abre_registro_novo(self):
+        """`numero` deixou de ser unique justamente pra isto."""
+        self._escalar("5521977770005", "reclamação")
+        antigo = ContatoEscalado.objects.get(numero="5521977770005")
+        antigo.resolvido_em = timezone.now()
+        antigo.save()
+
+        self._escalar("5521977770005", "agora quer matricular")
+
+        registros = ContatoEscalado.objects.filter(numero="5521977770005")
+        self.assertEqual(registros.count(), 2)
+        self.assertTrue(self._esta_escalado("5521977770005"))
+
+    def test_nutridora_volta_a_alcancar_quem_foi_resolvido(self):
+        """Antes da 025, ser escalado uma vez tirava o lead da régua pra sempre."""
+        self._escalar("5521977770006")
+        self.assertIn("5521977770006", ContatoEscalado.numeros_ativos())
+
+        registro = ContatoEscalado.objects.get(numero="5521977770006")
+        registro.resolvido_em = timezone.now()
+        registro.save()
+
+        self.assertNotIn("5521977770006", ContatoEscalado.numeros_ativos())
 
 
 class ListarLeadsTests(TestCase):

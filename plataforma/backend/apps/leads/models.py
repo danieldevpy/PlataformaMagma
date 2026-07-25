@@ -9,7 +9,10 @@ class Lead(ComTimestamps):
         T3 = "t3", "T+3"
         T7 = "t7", "T+7"
 
-    nome = models.CharField(max_length=120)
+    # `blank=True` desde a spec 025: o handoff garante o lead mesmo quando
+    # a conversa escalou antes de a MAG perguntar o nome. Lead magro ainda
+    # é um número pra ligar — perder quem ia comprar não tem conserto.
+    nome = models.CharField(max_length=120, blank=True)
     whatsapp = models.CharField(max_length=20, blank=True)
     curso = models.ForeignKey(
         "cursos.Curso", null=True, blank=True, on_delete=models.SET_NULL

@@ -1,13 +1,24 @@
 # Workflows do agente MAG — versionados
 
-Exportados manualmente (via n8n-mcp) a partir da instância de **dev**. Fonte
+Exportados da instância de **dev** com [`exportar-dev.sh`](exportar-dev.sh)
+(CLI `n8n export:workflow` + normalização em `_limpar_export.py`). Fonte
 de verdade é este JSON, não o que está no editor — qualquer edição feita
 direto no n8n (dev ou prod) sem atualizar este arquivo diverge silenciosamente.
 
+```bash
+plataforma/n8n/workflows/exportar-dev.sh                      # todos
+plataforma/n8n/workflows/exportar-dev.sh mag-fase-0-sdr.json  # só um
+```
+
+O script existe porque exportar à mão gerava centenas de linhas de diff
+cosmético (indentação, ordem de chave) que escondiam a mudança real na
+revisão. Agora o formato é canônico: reexportar sem ter mudado nada
+produz zero diff.
+
 | Arquivo | Workflow no n8n | Spec |
 |---|---|---|
-| `mag-fase-0-sdr.json` | `MAG - Fase 0 (eco WhatsApp)` | 009 (identificação), 010 (SDR), 012 (handoff), 017 (info institucional) |
-| `mag-nutridora-t0.json` | `MAG - Nutridora (T+0)` | 011 |
+| `mag-fase-0-sdr.json` | `MAG - Fase 0 (eco WhatsApp)` | 009 (identificação), 010 (SDR), 012 (handoff), 017 (info institucional), 021 (registro de conversa), 022 (memória no Redis) |
+| `mag-nutridora-t0.json` | `MAG - Nutridora (T+0)` | 011, 021 (registra o toque enviado) |
 | `mag-radar-resumo-diario.json` | `MAG - Radar (resumo diário)` | 019 — dispara por `Schedule Trigger` (cron, não webhook); sem AI Agent, é relatório factual formatado por código; manda pra **todos** os gestores (busca `listar_gestores` no backend, adendo 019-T9), não mais número fixo |
 | `mag-nutridora-t1-t3-t7.json` | `MAG - Nutridora (T+1/3/7)` | 020 — `Schedule Trigger` diário; sem AI Agent; usa `Split Out` (`n8n-nodes-base.splitOut`) pra transformar o array de leads elegíveis em N itens antes do envio |
 | `mag-avisar-equipe.json` | `MAG - Avisar Equipe` | 012, adendo 019-T9 — sub-workflow chamado pela tool `avisar_equipe` do SDR (dentro de `mag-fase-0-sdr.json`) via `toolHttpRequest` apontando pro próprio n8n (`http://localhost:5678/webhook/avisar-equipe`); busca `listar_gestores` e manda a notificação de handoff pra cada um, em vez de um número fixo |
@@ -81,11 +92,19 @@ Todo valor que muda entre ambientes foi tirado de dentro dos nós:
      Instagram/e-mail sem inventar) + `nucleo:resumo_diario` (spec 019 —
      Radar diário) + `leads:processar_nutridora` (spec 020 — régua
      T+1/3/7) + `nucleo:listar_gestores` (spec 019-T9 — Radar manda pra
-     todos os gestores, não só um número fixo) —
+     todos os gestores, não só um número fixo) + `conversas:registrar_turnos`
+     + `conversas:exportar_conversas` + `conversas:purgar_conversas`
+     (spec 021 — registro das conversas pra análise) —
      ver `docs/plataforma/03-api-contratos.md`).
    - `MAG - Evolution apikey` (Header Auth: `apikey` = `EVOLUTION_API_KEY`
      real do `.env.prod`).
    - `MAG - Gemini` (Google Gemini/PaLM API: chave de produção).
+   - `MAG - Redis Buffer (dev)` (Redis: host `n8n-redis`, porta 6379 — o
+     nome da credencial diz "dev" por ter nascido do buffer da spec 016,
+     mas ela é usada nos dois ambientes e agora serve **duas** funções:
+     o buffer de mensagens fragmentadas (spec 016) e a memória de conversa
+     dos dois agentes (spec 022). Já existe em prod desde o deploy de
+     24/07, criada manualmente — ver `ids-prod.json`).
 2. Import: editor n8n → Workflows → Import from File → escolher o `.json`.
 3. Abrir cada nó que usa credencial e conferir se casou sozinho pelo nome; se
    não casou, reselecionar manualmente (n8n as vezes exige isso mesmo com

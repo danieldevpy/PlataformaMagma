@@ -9,9 +9,10 @@ from django.utils import timezone
 
 from apps.avaliacoes.models import Avaliacao
 from apps.contas.models import Usuario
-from apps.cursos.models import Turma
+from apps.conversas.models import Conversa
+from apps.cursos.models import Curso, Turma
 from apps.leads.models import Lead
-from apps.nucleo.models import ContatoEscalado
+from apps.nucleo.models import ConfiguracaoSite, ContatoEscalado
 from apps.nucleo.testing import criar_curso_turma, criar_gestor, criar_instrutor, jwt_headers
 
 
@@ -53,6 +54,165 @@ class CriarLeadPublicoViewTests(TestCase):
         )
         self.assertEqual(resposta.status_code, 201)
         self.assertIsNone(Lead.objects.get().curso)
+
+
+class ResolverCursoSlugTests(TestCase):
+    """Spec 023 — a MAG mandou `curso_slug='socorrista-aph-120h'` (inventado
+    a partir do nome exibido) e o lead nascia sem curso, em silêncio."""
+
+    def criar(self, **dados):
+        return self.client.post(
+            reverse("leads-criar"), data=dados, content_type="application/json"
+        )
+
+    def test_slugs_que_a_mag_realmente_inventou_resolvem_o_curso(self):
+        """Os três valores abaixo saíram de execuções reais em dev — a MAG
+        nunca acertou o slug, sempre montou a partir do nome exibido."""
+        curso, _turma = criar_curso_turma(slug="socorrista-aph")
+
+        for i, inventado in enumerate(
+            ["socorrista-aph-120h", "aph-120h", "socorrista-aph-atendimento"]
+        ):
+            with self.subTest(curso_slug=inventado):
+                Lead.objects.all().delete()
+                self.criar(
+                    nome="Daniel",
+                    whatsapp=f"552199192033{i}",
+                    curso_slug=inventado,
+                )
+                self.assertEqual(Lead.objects.get().curso, curso)
+
+    def test_resolve_pelo_nome_do_curso_e_nao_so_pelo_slug(self):
+        curso, _turma = criar_curso_turma(slug="socorrista-aph")
+
+        self.criar(
+            nome="Daniel", whatsapp="5521991920338", curso_slug="Socorrista APH"
+        )
+
+        self.assertEqual(Lead.objects.get().curso, curso)
+
+    def test_slug_encurtado_tambem_resolve(self):
+        curso = Curso.objects.create(
+            slug="primeiros-socorros-lei-lucas",
+            nome="Primeiros Socorros — Lei Lucas",
+            titulo_venda="Primeiros Socorros",
+            subtitulo="Lei 13.722/2018",
+            carga_horaria=4,
+        )
+
+        self.criar(
+            nome="Daniel", whatsapp="5521991920338", curso_slug="primeiros-socorros"
+        )
+
+        self.assertEqual(Lead.objects.get().curso, curso)
+
+    def test_empate_nao_chuta_curso(self):
+        """Entre dois candidatos igualmente parecidos, melhor lead sem curso
+        que lead com o curso errado."""
+        criar_curso_turma(slug="socorrista-aph")
+        Curso.objects.create(
+            slug="socorrista-aph-avancado",
+            nome="Socorrista APH",
+            titulo_venda="Socorrista APH avançado",
+            subtitulo="Avançado",
+            carga_horaria=40,
+        )
+
+        self.criar(nome="Daniel", whatsapp="5521991920338", curso_slug="socorrista-aph-x")
+
+        self.assertIsNone(Lead.objects.get().curso)
+
+    def test_slug_sem_relacao_nenhuma_nao_quebra_a_captacao(self):
+        criar_curso_turma(slug="socorrista-aph")
+
+        resposta = self.criar(
+            nome="Daniel", whatsapp="5521991920338", curso_slug="curso-de-violao"
+        )
+
+        self.assertEqual(resposta.status_code, 201, "nunca perder o lead")
+        self.assertIsNone(Lead.objects.get().curso)
+
+
+class LeadDedupPorWhatsappTests(TestCase):
+    """Spec 023 — o agente MAG chamou `registrar_lead` 2× na mesma conversa
+    e criou 2 leads pra mesma pessoa (mesmo com o prompt pedindo "uma vez
+    só"). Quem garante a integridade da base é o backend, não o prompt."""
+
+    def criar(self, **dados):
+        resposta = self.client.post(
+            reverse("leads-criar"), data=dados, content_type="application/json"
+        )
+        self.assertEqual(resposta.status_code, 201, resposta.content)
+        return resposta
+
+    def test_mesmo_whatsapp_nao_vira_dois_leads(self):
+        self.criar(nome="Daniel", whatsapp="5521991920338")
+        self.criar(nome="Daniel", whatsapp="5521991920338")
+
+        self.assertEqual(Lead.objects.count(), 1)
+
+    def test_segunda_chamada_completa_o_que_faltava(self):
+        curso, _turma = criar_curso_turma(slug="aph-dedup")
+        self.criar(nome="Daniel", whatsapp="5521991920338")
+        self.criar(
+            nome="Daniel",
+            whatsapp="5521991920338",
+            curso_slug=curso.slug,
+            quando_pretende="agosto",
+        )
+
+        lead = Lead.objects.get()
+        self.assertEqual(lead.curso, curso)
+        self.assertEqual(lead.quando_pretende, "agosto")
+
+    def test_valor_vazio_na_segunda_chamada_nao_apaga_o_da_primeira(self):
+        curso, _turma = criar_curso_turma(slug="aph-preserva")
+        self.criar(
+            nome="Daniel",
+            whatsapp="5521991920338",
+            curso_slug=curso.slug,
+            quando_pretende="agosto",
+            utm_source="instagram",
+        )
+        self.criar(nome="Daniel", whatsapp="5521991920338", quando_pretende="")
+
+        lead = Lead.objects.get()
+        self.assertEqual(lead.curso, curso, "curso não pode sumir por vir vazio")
+        self.assertEqual(lead.quando_pretende, "agosto")
+        self.assertEqual(lead.utm_source, "instagram")
+
+    def test_leads_sem_whatsapp_continuam_distintos(self):
+        """Sem essa guarda, TODO lead sem número colapsaria num só."""
+        self.criar(nome="Anônimo Um")
+        self.criar(nome="Anônimo Dois")
+
+        self.assertEqual(Lead.objects.count(), 2)
+
+    def test_reencontro_preserva_criado_em_e_estado_da_nutridora(self):
+        """Reencontrar um lead não pode reiniciar a régua (spec 020) nem
+        inflar 'leads das últimas 24h' do Radar (spec 019)."""
+        self.criar(nome="Daniel", whatsapp="5521991920338")
+        lead = Lead.objects.get()
+        antigo = timezone.now() - timedelta(days=10)
+        Lead.objects.filter(pk=lead.pk).update(
+            criado_em=antigo, nutridora_ultimo_toque=Lead.ToqueNutridora.T3
+        )
+
+        self.criar(nome="Daniel", whatsapp="5521991920338", quando_pretende="setembro")
+
+        lead.refresh_from_db()
+        self.assertEqual(lead.nutridora_ultimo_toque, Lead.ToqueNutridora.T3)
+        self.assertLess(
+            (lead.criado_em - antigo).total_seconds(),
+            1,
+            "criado_em do lead original não pode ser atualizado no reencontro",
+        )
+
+    def test_whatsapps_diferentes_continuam_sendo_leads_diferentes(self):
+        self.criar(nome="Daniel", whatsapp="5521991920338")
+        self.criar(nome="Outra Pessoa", whatsapp="5521888887777")
+
+        self.assertEqual(Lead.objects.count(), 2)
 
 
 class LeadPainelViewSetTests(TestCase):
@@ -152,11 +312,58 @@ class ProcessarNutridoraTests(TestCase):
         lead.refresh_from_db()
         self.assertEqual(lead.nutridora_ultimo_toque, "")
 
-    def test_exclui_lead_nascido_de_conversa_whatsapp(self):
-        self._criar_lead(dias_atras=2, curso=self.curso, utm_source="whatsapp")
+    # --- 028-T20: a régua olha ATIVIDADE, não origem -------------------
+    # Antes destes testes a ação fazia `.exclude(utm_source="whatsapp")`, e
+    # como o `registrar_lead` do SDR carimba esse valor fixo no workflow,
+    # NENHUM lead nascido de conversa entrava na régua. A campanha do Meta
+    # é Click-to-WhatsApp, então isso deixava todo o lead pago sem nutrição.
+
+    def _conversar(self, numero, dias_atras=0):
+        return Conversa.objects.create(
+            numero=numero, ultima_atividade_em=timezone.now() - timedelta(days=dias_atras)
+        )
+
+    def test_lead_de_whatsapp_sem_conversa_recente_entra_na_regua(self):
+        lead = self._criar_lead(dias_atras=2, curso=self.curso, utm_source="whatsapp")
+
+        resultado = self._executar()
+        self.assertEqual(resultado["total"], 1)
+        lead.refresh_from_db()
+        self.assertEqual(lead.nutridora_ultimo_toque, Lead.ToqueNutridora.T1)
+
+    def test_exclui_quem_falou_com_a_mag_agora(self):
+        lead = self._criar_lead(dias_atras=2, curso=self.curso, utm_source="whatsapp")
+        self._conversar(lead.whatsapp, dias_atras=0)
 
         resultado = self._executar()
         self.assertEqual(resultado["total"], 0)
+        lead.refresh_from_db()
+        self.assertEqual(lead.nutridora_ultimo_toque, "")
+
+    def test_conversa_mais_velha_que_o_silencio_nao_exclui(self):
+        lead = self._criar_lead(dias_atras=4, curso=self.curso, utm_source="whatsapp")
+        self._conversar(lead.whatsapp, dias_atras=3)  # padrão do silêncio: 2 dias
+
+        resultado = self._executar()
+        self.assertEqual(resultado["total"], 1)
+
+    def test_silencio_zero_desliga_a_checagem_de_conversa(self):
+        config = ConfiguracaoSite.obter()
+        config.nutridora_silencio_dias = 0
+        config.save(update_fields=["nutridora_silencio_dias"])
+        lead = self._criar_lead(dias_atras=2, curso=self.curso)
+        self._conversar(lead.whatsapp, dias_atras=0)
+
+        resultado = self._executar()
+        self.assertEqual(resultado["total"], 1)
+
+    def test_conversa_de_outro_numero_nao_exclui(self):
+        lead = self._criar_lead(dias_atras=2, curso=self.curso)
+        self._conversar("5521900000000", dias_atras=0)
+
+        resultado = self._executar()
+        self.assertEqual(resultado["total"], 1)
+        self.assertEqual(resultado["processados"][0]["numero"], lead.whatsapp)
 
     def test_exclui_lead_escalado(self):
         lead = self._criar_lead(dias_atras=2, curso=self.curso)

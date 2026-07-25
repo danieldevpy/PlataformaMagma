@@ -1,0 +1,17 @@
+# Override de SIMULAÇÃO — usar só quando for rodar conversas de teste.
+#
+#   cd plataforma/n8n
+#   docker compose -f docker-compose.dev.yml -f simulacao/override.dev.yml up -d
+#
+# E pra devolver o dev ao normal quando terminar:
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Amplia o filtro de números de teste pra aceitar o prefixo 5500900000
+# (DDD 00), que não pode existir em WhatsApp real. É isso que garante que
+# uma bateria de simulação nunca entregue mensagem ao telefone de alguém
+# — a instância Evolution de dev está conectada de verdade.
+services:
+  n8n:
+    environment:
+      MAGMA_NUMEROS_TESTE_REGEX: "991920338|5521979070319|5521964946079|5500900000"

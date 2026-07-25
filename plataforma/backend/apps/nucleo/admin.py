@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.utils import timezone
 
 from apps.nucleo.models import (
     ConfiguracaoSite,
@@ -18,6 +19,7 @@ class ConfiguracaoSiteAdmin(admin.ModelAdmin):
         "exibir_nota_google",
         "total_alunos_formados",
         "exibir_total_formados",
+        "conversas_retencao_dias",
         "conteudo_origem",
         "atualizado_em",
     )
@@ -61,10 +63,44 @@ class TokenAgenteAdmin(admin.ModelAdmin):
 
 @admin.register(ContatoEscalado)
 class ContatoEscaladoAdmin(admin.ModelAdmin):
-    """Apagar aqui = liberar o contato (a MAG volta a responder)."""
+    """Resolver aqui = devolver o contato pro atendimento automático.
 
-    list_display = ("numero", "motivo", "criado_em")
+    Até a spec 025 a única saída era APAGAR o registro, o que liberava o
+    contato mas perdia o histórico de que houve handoff. Agora resolve-se
+    marcando `resolvido_em` — pela ação em lote, que é o caminho de 2
+    toques no celular.
+    """
+
+    list_display = ("numero", "motivo", "situacao", "criado_em", "expira_em")
     search_fields = ("numero", "motivo")
+    list_filter = ("resolvido_em",)
+    readonly_fields = ("criado_em", "atualizado_em")
+    actions = ["resolver", "reabrir"]
+
+    @admin.display(description="Situação", boolean=True)
+    def situacao(self, obj):
+        """Verdadeiro = ainda silenciando a MAG."""
+        return obj.ativo
+
+    @admin.action(description="Resolver — a MAG volta a atender estes contatos")
+    def resolver(self, request, queryset):
+        atualizados = queryset.filter(resolvido_em__isnull=True).update(
+            resolvido_em=timezone.now()
+        )
+        self.message_user(
+            request,
+            f"{atualizados} contato(s) devolvido(s) pro atendimento automático.",
+            level=messages.SUCCESS,
+        )
+
+    @admin.action(description="Reabrir — silenciar a MAG de novo")
+    def reabrir(self, request, queryset):
+        atualizados = queryset.update(resolvido_em=None)
+        self.message_user(
+            request,
+            f"{atualizados} contato(s) silenciado(s) de novo.",
+            level=messages.WARNING,
+        )
 
 
 @admin.register(LogAcao)

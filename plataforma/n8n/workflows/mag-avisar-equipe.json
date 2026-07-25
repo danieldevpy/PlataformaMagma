@@ -6,7 +6,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
         "httpMethod": "POST",
         "path": "avisar-equipe",
@@ -20,7 +23,10 @@
       "name": "Avisar: buscar gestores",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [224, 0],
+      "position": [
+        224,
+        0
+      ],
       "parameters": {
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
@@ -29,7 +35,10 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "X-Forwarded-Proto", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -38,7 +47,10 @@
         "options": {}
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -46,7 +58,10 @@
       "name": "Avisar: separar gestores",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [448, 0],
+      "position": [
+        448,
+        0
+      ],
       "parameters": {
         "fieldToSplitOut": "resultado",
         "options": {}
@@ -57,7 +72,10 @@
       "name": "Avisar: enviar no WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [672, 0],
+      "position": [
+        672,
+        0
+      ],
       "parameters": {
         "method": "POST",
         "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
@@ -65,33 +83,73 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"number\": $json.whatsapp, \"text\": $('Webhook').first().json.body.mensagem } }}",
+        "jsonBody": "={{ { \"number\": $json.whatsapp, \"text\": $('Avisar: montar aviso').first().json.textoAviso } }}",
         "options": {}
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
+      }
+    },
+    {
+      "id": "avisar-montar",
+      "name": "Avisar: montar aviso",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Monta o texto final do aviso de handoff (spec 025-T10).\n//\n// O QUE veio da IA é só o `mensagem` (por que está escalando). O COMO\n// responder é fixo aqui, não no prompt: pedido do Daniel de que o gestor\n// continue a conversa pelo WhatsApp da Magma, e não pelo número pessoal\n// dele — senão o contato passa a ter duas vias abertas com a escola, o\n// histórico da spec 021 registra metade da conversa, e se o gestor sair\n// da empresa o relacionamento vai junto no aparelho dele.\n//\n// `numero_contato` vem do CONTEXTO da execução (fieldValue no tool), não\n// da IA — o gestor precisa do número certo pra achar a conversa, e\n// identificador redigitado por modelo é a classe de erro da spec 023.\nconst body = $json.body || {};\nconst numero = String(body.numero_contato || '').trim();\n\nconst partes = [String(body.mensagem || '').trim()];\nif (numero) {\n  // Linha própria = copiável de um toque no celular.\n  partes.push('Contato: ' + numero);\n}\npartes.push(\n  '⚠️ Responda pelo WhatsApp da Magma, não por este número — assim a ' +\n  'pessoa fala com um canal só.'\n);\n\nreturn [{ json: { textoAviso: partes.join('\\n\\n') } }];"
       }
     }
   ],
   "connections": {
-    "Webhook": {
-      "main": [
-        [
-          { "node": "Avisar: buscar gestores", "type": "main", "index": 0 }
-        ]
-      ]
-    },
     "Avisar: buscar gestores": {
       "main": [
         [
-          { "node": "Avisar: separar gestores", "type": "main", "index": 0 }
+          {
+            "node": "Avisar: separar gestores",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Avisar: separar gestores": {
       "main": [
         [
-          { "node": "Avisar: enviar no WhatsApp", "type": "main", "index": 0 }
+          {
+            "node": "Avisar: enviar no WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Avisar: montar aviso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar: montar aviso": {
+      "main": [
+        [
+          {
+            "node": "Avisar: buscar gestores",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }

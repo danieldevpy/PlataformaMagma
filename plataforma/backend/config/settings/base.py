@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.midia",
     "apps.ia",
     "apps.financeiro",
+    "apps.conversas",
 ]
 
 MIDDLEWARE = [
@@ -175,6 +176,8 @@ JAZZMIN_SETTINGS = {
         "contas.Usuario": "fas fa-user",
         "nucleo": "fas fa-sliders-h",
         "nucleo.ConfiguracaoSite": "fas fa-cog",
+        "conversas": "fas fa-comments",
+        "conversas.Conversa": "fas fa-comment-dots",
         "cursos": "fas fa-graduation-cap",
         "cursos.Curso": "fas fa-book-medical",
         "cursos.Turma": "fas fa-chalkboard-teacher",

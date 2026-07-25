@@ -11,14 +11,22 @@
       "name": "WhatsApp In",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [0, -320],
+      "position": [
+        0,
+        -320
+      ],
       "webhookId": "bbd69a1d-ca99-464d-a5ff-e549868c4618"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "b1", "name": "recebidoEm", "type": "string", "value": "={{ $now.toISO() }}" }
+            {
+              "id": "b1",
+              "name": "recebidoEm",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
           ]
         },
         "includeOtherFields": true,
@@ -28,37 +36,59 @@
       "name": "Log payload cru",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [224, -320]
+      "position": [
+        224,
+        -320
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
           "combinator": "and",
           "conditions": [
             {
               "id": "cond-event",
               "leftValue": "={{ $json.body.event }}",
               "rightValue": "messages.upsert",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             },
             {
               "id": "cond-fromme",
               "leftValue": "={{ $json.body.data.key.fromMe }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "false", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
             },
             {
               "id": "cond-text",
               "leftValue": "={{ $json.body.data.message.conversation }}",
               "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
             },
             {
               "id": "cond-numero-permitido",
               "leftValue": "={{ $json.body.data.key.remoteJid }}",
               "rightValue": "={{ $env.MAGMA_NUMEROS_TESTE_REGEX }}",
-              "operator": { "type": "string", "operation": "regex" }
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
             }
           ]
         },
@@ -68,7 +98,10 @@
       "name": "É mensagem de texto recebida?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [448, -320]
+      "position": [
+        448,
+        -320
+      ]
     },
     {
       "parameters": {
@@ -100,7 +133,10 @@
       "name": "Extrair dados",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [672, -320]
+      "position": [
+        672,
+        -320
+      ]
     },
     {
       "parameters": {
@@ -111,7 +147,10 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "X-Forwarded-Proto", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -123,28 +162,45 @@
       "name": "Identificar Contato",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [896, -320],
+      "position": [
+        896,
+        -320
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
           "combinator": "or",
           "conditions": [
             {
               "id": "c1",
               "leftValue": "={{ $json.papel }}",
               "rightValue": "gestor",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             },
             {
               "id": "c2",
               "leftValue": "={{ $json.papel }}",
               "rightValue": "instrutor",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ]
         },
@@ -154,7 +210,10 @@
       "name": "É gestor ou instrutor?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1568, -320]
+      "position": [
+        1568,
+        -320
+      ]
     },
     {
       "parameters": {
@@ -162,7 +221,7 @@
         "text": "={{ \"Numero do contato: \" + $json.numero + \"\\nPapel do contato: \" + $json.papel + \". Nome (se já souber): \" + ($json.nome || \"desconhecido\") + \".\\nMensagem: \" + $json.texto }}",
         "hasOutputParser": false,
         "options": {
-          "systemMessage": "Você é a MAG, atendente virtual da Magma Cursos, escola de cursos profissionalizantes de saúde na Baixada Fluminense (RJ) — carro-chefe: Socorrista APH 120h. Agora você está no papel de SDR (\"Capitã de Matrículas\"), atendendo quem pergunta sobre cursos pelo WhatsApp.\n\nREGRAS QUE VOCÊ NUNCA QUEBRA:\n- Nunca invente preço, data, vaga, endereço/cidade ou qualquer dado de curso — toda informação vem SEMPRE das tools listar_cursos/detalhes_curso. Sem ter chamado a tool, diga que vai confirmar com a equipe.\n- Se a tool devolver preço vazio/nulo, diga 'consulte condições' — nunca chute valor.\n- Se perguntarem se você é humana, seja honesta: você é a assistente virtual da Magma.\n- Tom caloroso, direto, profissional; no máximo 1 emoji por mensagem.\n\nHANDOFF (chamar um humano) — sempre que a conversa tiver: intenção clara de fechar matrícula (\"quero pagar\", \"como faço pra me matricular\"), reclamação, assunto de saúde sensível, ou pedido explícito de falar com um humano: chame AS DUAS tools `escalar_contato` E `avisar_equipe` (nessa ordem, com o mesmo motivo curto), e responda pro contato avisando que alguém da equipe já foi chamado e vai falar com ele em breve — pare de vender, não insista, não continue qualificando.\n\nSEU OBJETIVO (fora do handoff):\n1. Entender qual curso interessa (use listar_cursos se não souber o slug).\n2. Responder preço/data/carga horária/vaga/requisitos/endereço usando detalhes_curso.\n3. Criar senso de urgência LEGÍTIMO só com dado real (ex.: 'restam 8 vagas').\n4. Quando souber nome + curso de interesse, registre o lead com registrar_lead (uma vez só por conversa).\n5. Nunca prometa emprego, resultado ou vaga garantida.",
+          "systemMessage": "Você é a MAG, atendente virtual da Magma Cursos, escola de cursos profissionalizantes de saúde na Baixada Fluminense (RJ) — carro-chefe: Socorrista APH 120h. Agora você está no papel de SDR (\"Capitã de Matrículas\"), atendendo quem pergunta sobre cursos pelo WhatsApp.\n\nREGRAS QUE VOCÊ NUNCA QUEBRA:\n- Nunca invente preço, data, vaga, endereço/cidade ou qualquer dado de curso — toda informação vem SEMPRE das tools listar_cursos/detalhes_curso. Sem ter chamado a tool, diga que vai confirmar com a equipe.\n- Se a tool devolver preço vazio/nulo, diga 'consulte condições' — nunca chute valor.\n- Se perguntarem se você é humana, seja honesta: você é a assistente virtual da Magma.\n- Tom caloroso, direto, profissional; no máximo 1 emoji por mensagem.\n- Escreva como quem digita no celular, não como quem preenche formulário: no máximo umas 4-5 linhas (cerca de 600 caracteres) e UMA pergunta por mensagem, sempre no fim. Se o assunto não couber, corte e guarde o resto pra próxima mensagem — muro de texto no WhatsApp não é lido.\n\nHANDOFF (chamar um humano) — sempre que a conversa tiver: intenção clara de fechar matrícula em QUALQUER formulação (\"quero pagar\", \"como faço pra me matricular\", \"quero essa turma\", \"é essa mesmo\", \"quero garantir minha vaga\"), reclamação, assunto de saúde sensível, ou pedido explícito de falar com um humano: chame AS DUAS tools `escalar_contato` E `avisar_equipe` (nessa ordem, com o mesmo motivo curto), e responda pro contato avisando que alguém da equipe já foi chamado e vai falar com ele em breve — pare de vender, não insista, não continue qualificando.\n- PAGAMENTO é duas coisas diferentes, não confunda. Pergunta neutra sobre COMO pagar (\"aceita PIX?\", \"dá pra parcelar no cartão?\", \"em quantas vezes?\", \"como faço pra pagar?\") você RESPONDE pelo FAQ do curso, sem escalar — é informação que você tem. Resistência ao PREÇO (\"tá caro\", \"tá salgado\", \"tem desconto?\", \"consegue fazer por menos?\", \"achei mais barato em outro lugar\") você ESCALA, porque quem decide preço é a escola, não você. O teste é o que a pessoa está pedindo: forma de pagamento é informação, abatimento é decisão.\n- Ao escalar, mande no `escalar_contato` o nome e o curso se a conversa já revelou — mesmo que você ainda não tenha chamado o `registrar_lead`. Deixe vazio só o que você realmente não sabe; nunca invente pra preencher.\n- REGRA ABSOLUTA DO HANDOFF: se você DISSER ao contato que vai chamar alguém, passar pra um consultor, acionar a equipe ou dar retorno, você TEM que chamar `escalar_contato` e `avisar_equipe` NO MESMO TURNO. Prometer atendimento humano sem chamar as tools é o pior erro possível: o contato fica esperando alguém que nunca foi avisado. Se por qualquer motivo você não for chamar as tools, então NÃO prometa que alguém vai falar com ele.\n\nSEU OBJETIVO (fora do handoff):\n1. Descobrir qual curso interessa — use listar_cursos se não souber o slug. Se o que a pessoa pediu não existe na nossa grade, diga isso com clareza E, na mesma mensagem, LISTE PELO NOME TODOS os cursos que vieram de listar_cursos — todos mesmo, não só o APH — começando pelo Socorrista APH 120h, que é o carro-chefe. Responder \"nosso foco é o APH\" e parar por aí é exatamente o erro: a pessoa vai embora sem saber que os outros existem. Não force adequação (\"esse aqui serve pra você\"): só mostre o que há e deixe ela escolher.\n2. Leia o tipo de interesse antes de responder. Interesse GENÉRICO (\"vi a propaganda\", \"quero saber do curso\"): responda o que foi perguntado, dê UM motivo concreto pra pessoa querer aquilo (o que ela vai saber fazer no fim, onde isso é usado) e convide a conhecer melhor — não despeje data, horário, preço e vagas de uma vez, isso é ficha técnica e não conversa. Interesse ESPECÍFICO (perguntou preço, data, horário, requisito, endereço, carga horária): responda direto e completo com detalhes_curso, sem devolver pergunta antes de entregar a resposta.\n3. Vagas: só cite o número de vagas quando forem 3 ou menos — aí é aperto de verdade e vale dizer. Com mais de 3, NÃO mencione vagas de forma nenhuma (nem o número, nem \"ainda temos vagas\", nem \"corre que está acabando\"). Dizer que restam 14 de 15 é o contrário de urgência: entrega que a turma está vazia e soa desesperado.\n4. Quando souber nome + curso de interesse, registre o lead com registrar_lead (uma vez só por conversa) — e SEMPRE mande o `curso_slug` do curso que a pessoa demonstrou interesse; só deixe vazio se ela realmente não disse qual curso quer.\n5. Nunca prometa emprego, resultado ou vaga garantida.\n6. Sobre o nome: se ele já veio no contexto, USE — não pergunte de novo (se for claramente um apelido, confirme leve: \"posso te chamar de Rafa?\"). Se não souber, pergunte \"como você se chama?\" e mais nada: não dê motivo nenhum pra estar perguntando, porque qualquer justificativa soa como cadastro, e cadastro assusta. Nunca peça sobrenome — primeiro nome basta, e chamar alguém pelo sobrenome soa como cobrança. O que acontece nos bastidores não é assunto de conversa: não narre, não anuncie, não cite nome de ferramenta. O que a pessoa recebe de volta é o sinal de que você entendeu o interesse dela (ex.: \"boa escolha, Daniel! O APH é justamente pra quem está começando do zero\"). Única exceção: o handoff — aí você AVISA que a equipe vai falar com ele, porque isso é promessa feita a ele, não mecânica interna.\n7. NUNCA ofereça NEM PROMETA o que não veio de uma tool. Não pergunte \"prefere ver outras datas?\" sem ter visto outras turmas abertas em detalhes_curso/listar_cursos, e não diga que vai verificar, consultar ou levantar nada que nenhuma ferramenta sua responde (calendário de turmas futuras, por exemplo). Oferecer saída inexistente convida a pessoa a adiar; prometer apuração que não vem mata a matrícula de hoje por uma resposta que nunca chega. Se só há uma turma aberta, a pergunta de fechamento aponta pra ela (ex.: \"quer garantir sua vaga nessa turma?\"). Se a pessoa insistir em informação que você não tem, isso é caso de humano.",
           "maxIterations": 8,
           "returnIntermediateSteps": true
         }
@@ -171,7 +230,10 @@
       "name": "SDR - Capitã de Matrículas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.3,
-      "position": [1792, 1728]
+      "position": [
+        1792,
+        1728
+      ]
     },
     {
       "parameters": {
@@ -182,22 +244,16 @@
       "name": "Gemini Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
-      "position": [3312, 880],
+      "position": [
+        3312,
+        880
+      ],
       "credentials": {
-        "googlePalmApi": { "id": "2hfz9nsgW5VRmX93", "name": "MAG - Gemini" }
+        "googlePalmApi": {
+          "id": "2hfz9nsgW5VRmX93",
+          "name": "MAG - Gemini"
+        }
       }
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $json.numero }}",
-        "contextWindowLength": 10
-      },
-      "id": "sdr-memoria",
-      "name": "Memória da conversa",
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-      "typeVersion": 1.4,
-      "position": [1584, 2352]
     },
     {
       "parameters": {
@@ -206,7 +262,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         }
       },
@@ -214,7 +274,10 @@
       "name": "listar_cursos",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 1472]
+      "position": [
+        1584,
+        1472
+      ]
     },
     {
       "parameters": {
@@ -223,7 +286,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "placeholderDefinitions": {
@@ -240,7 +307,10 @@
       "name": "detalhes_curso",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 1648]
+      "position": [
+        1584,
+        1648
+      ]
     },
     {
       "parameters": {
@@ -250,18 +320,44 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
         "parametersBody": {
           "values": [
-            { "name": "nome" },
-            { "name": "curso_slug" },
-            { "name": "quando_pretende", "valueProvider": "modelOptional" },
-            { "name": "whatsapp", "valueProvider": "fieldValue", "value": "={{ $json.numero }}" },
-            { "name": "utm_source", "valueProvider": "fieldValue", "value": "whatsapp" },
-            { "name": "pagina_origem", "valueProvider": "fieldValue", "value": "whatsapp" }
+            {
+              "name": "nome",
+              "description": "Nome da pessoa, como ela se apresentou na conversa."
+            },
+            {
+              "name": "curso_slug",
+              "description": "Slug do curso de interesse, EXATAMENTE como veio no campo 'slug' de listar_cursos/detalhes_curso (ex.: socorrista-aph). Preencha SEMPRE que a pessoa demonstrou interesse em algum curso — deixar vazio faz o lead nascer sem curso e quebra o acompanhamento dela depois."
+            },
+            {
+              "name": "quando_pretende",
+              "valueProvider": "modelOptional",
+              "description": "Quando a pessoa pretende comecar, com as palavras dela (ex.: 'agosto', 'ano que vem'). Deixe vazio se ela nao disse."
+            },
+            {
+              "name": "whatsapp",
+              "valueProvider": "fieldValue",
+              "value": "={{ $json.numero }}"
+            },
+            {
+              "name": "utm_source",
+              "valueProvider": "fieldValue",
+              "value": "whatsapp"
+            },
+            {
+              "name": "pagina_origem",
+              "valueProvider": "fieldValue",
+              "value": "whatsapp"
+            }
           ]
         }
       },
@@ -269,7 +365,10 @@
       "name": "registrar_lead",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 1824]
+      "position": [
+        1584,
+        1824
+      ]
     },
     {
       "parameters": {
@@ -286,9 +385,15 @@
       "name": "Responder no WhatsApp (SDR)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [2016, 1728],
+      "position": [
+        2016,
+        1728
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
       }
     },
     {
@@ -307,8 +412,18 @@
               "type": "string",
               "value": "={{ $('Consolidar mensagens').item.json.texto }}"
             },
-            { "id": "p3", "name": "papel", "type": "string", "value": "={{ $json.resultado.papel }}" },
-            { "id": "p4", "name": "nome", "type": "string", "value": "={{ $json.resultado.nome }}" },
+            {
+              "id": "p3",
+              "name": "papel",
+              "type": "string",
+              "value": "={{ $json.resultado.papel }}"
+            },
+            {
+              "id": "p4",
+              "name": "nome",
+              "type": "string",
+              "value": "={{ $json.resultado.nome || $('Consolidar mensagens').item.json.nome }}"
+            },
             {
               "id": "p5",
               "name": "escalado",
@@ -323,18 +438,30 @@
       "name": "Preparar contexto SDR",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1120, -320]
+      "position": [
+        1120,
+        -320
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
           "conditions": [
             {
               "id": "e1",
               "leftValue": "={{ $json.escalado }}",
               "rightValue": "",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
           ],
           "combinator": "and"
@@ -345,11 +472,14 @@
       "name": "Está escalado?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1344, -320]
+      "position": [
+        1344,
+        -320
+      ]
     },
     {
       "parameters": {
-        "toolDescription": "Marca o contato como escalado pro humano. Chame com o numero do contato (mencionado no início da mensagem do usuário como 'Numero do contato') e um motivo curto. Chame junto com avisar_equipe sempre que: intenção clara de fechar matrícula, reclamação, assunto de saúde sensível, ou pedido explícito de humano.",
+        "toolDescription": "Marca o contato como escalado pro humano E garante que ele exista na base de leads (mesmo sem nome e sem curso). Chame com o numero do contato (mencionado no inicio da mensagem do usuario como 'Numero do contato'), um motivo curto, e o nome/curso se a conversa ja revelou. Chame junto com avisar_equipe sempre que: resistencia ao preco, reclamacao, assunto de saude sensivel, pedido explicito de humano, ou intencao clara de fechar matricula.",
         "method": "POST",
         "url": "http://magma-backend-interno:8000/api/acoes/executar/",
         "authentication": "genericCredentialType",
@@ -357,12 +487,16 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\"acao\": \"escalar_contato\", \"params\": {\"numero\": \"{numero_esc}\", \"motivo\": \"{motivo_esc}\"}}",
+        "jsonBody": "{\"acao\": \"escalar_contato\", \"params\": {\"numero\": \"{numero_esc}\", \"motivo\": \"{motivo_esc}\", \"nome\": \"{nome_esc}\", \"curso_slug\": \"{curso_esc}\"}}",
         "placeholderDefinitions": {
           "values": [
             {
@@ -374,6 +508,16 @@
               "name": "motivo_esc",
               "description": "Motivo curto do encaminhamento pra humano",
               "type": "string"
+            },
+            {
+              "name": "nome_esc",
+              "description": "Primeiro nome do contato, se a conversa ja revelou; deixe VAZIO se ainda nao sabe (nao invente)",
+              "type": "string"
+            },
+            {
+              "name": "curso_esc",
+              "description": "Slug do curso de interesse, como veio de listar_cursos/detalhes_curso; deixe VAZIO se a pessoa nao disse qual curso quer",
+              "type": "string"
             }
           ]
         }
@@ -382,27 +526,35 @@
       "name": "escalar_contato",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 2000],
+      "position": [
+        1584,
+        2000
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
       "parameters": {
-        "toolDescription": "Avisa a equipe (WhatsApp do gestor) que um contato precisa de atenção humana. Chame com o numero do contato (mencionado no início da mensagem do usuário como 'Numero do contato') e um motivo curto. Chame sempre junto com escalar_contato.",
+        "toolDescription": "Avisa a equipe (WhatsApp dos gestores) que um contato precisa de atenção humana. Passe só o MOTIVO em 1-2 frases curtas — o número do contato e a instrução de por onde responder são anexados automaticamente, não os escreva. Chame sempre junto com escalar_contato.",
         "method": "POST",
         "url": "http://localhost:5678/webhook/avisar-equipe",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\"mensagem\": \"{mensagem}\"}",
-        "placeholderDefinitions": {
+        "parametersBody": {
           "values": [
             {
               "name": "mensagem",
-              "description": "Mensagem completa em português pra mandar ao gestor via WhatsApp — deve incluir o numero do contato (mencionado no prompt como 'Numero do contato') e o motivo do encaminhamento, em 1-2 frases curtas.",
-              "type": "string"
+              "description": "Por que este contato precisa de gente, em 1-2 frases curtas e em português (ex.: 'A Bianca quer fechar matrícula no Socorrista APH'). NÃO inclua o número do contato nem diga por onde responder — isso é anexado automaticamente."
+            },
+            {
+              "name": "numero_contato",
+              "valueProvider": "fieldValue",
+              "value": "={{ $json.numero }}"
             }
           ]
         }
@@ -411,9 +563,15 @@
       "name": "avisar_equipe",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 2176],
+      "position": [
+        1584,
+        2176
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
       }
     },
     {
@@ -430,19 +588,10 @@
       "name": "Operadora - Secretária Digital",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.3,
-      "position": [2480, 560]
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $json.numero }}",
-        "contextWindowLength": 10
-      },
-      "id": "operadora-memoria",
-      "name": "Memória da conversa (Operadora)",
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-      "typeVersion": 1.4,
-      "position": [2288, 592]
+      "position": [
+        2480,
+        560
+      ]
     },
     {
       "parameters": {
@@ -454,7 +603,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -474,9 +627,15 @@
       "name": "status_turma",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, -336],
+      "position": [
+        2976,
+        -336
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -489,7 +648,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -509,9 +672,15 @@
       "name": "gerar_link_avaliacao",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 16],
+      "position": [
+        2976,
+        16
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -524,7 +693,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -549,9 +722,15 @@
       "name": "listar_leads",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 192],
+      "position": [
+        2976,
+        192
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -569,9 +748,15 @@
       "name": "Responder no WhatsApp (Operadora)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [2560, 768],
+      "position": [
+        2560,
+        768
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
       }
     },
     {
@@ -584,7 +769,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -604,9 +793,15 @@
       "name": "gerar_link_matricula",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 368],
+      "position": [
+        2976,
+        368
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -619,7 +814,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -639,9 +838,15 @@
       "name": "listar_turmas",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, -128],
+      "position": [
+        1584,
+        -128
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -654,7 +859,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -674,9 +883,15 @@
       "name": "buscar_aluno",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 544],
+      "position": [
+        2976,
+        544
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -689,7 +904,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -702,7 +921,11 @@
               "description": "Token do aluno devolvido por buscar_aluno",
               "type": "string"
             },
-            { "name": "turma_codigo", "description": "Código da turma", "type": "string" }
+            {
+              "name": "turma_codigo",
+              "description": "Código da turma",
+              "type": "string"
+            }
           ]
         }
       },
@@ -710,9 +933,15 @@
       "name": "matricular_aluno",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, -160],
+      "position": [
+        2976,
+        -160
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -720,7 +949,10 @@
       "name": "listar_matriculas_turma",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1408, 448],
+      "position": [
+        1408,
+        448
+      ],
       "parameters": {
         "toolDescription": "Lista os alunos matriculados numa turma pelo código — nome, status da matrícula e data. Use quando o gestor perguntar quem está matriculado, ou pedir a lista/relação de alunos de uma turma.",
         "method": "POST",
@@ -742,12 +974,19 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         }
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -755,7 +994,10 @@
       "name": "consultar_pagamento",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 896],
+      "position": [
+        2976,
+        896
+      ],
       "parameters": {
         "toolDescription": "Consulta as cobranças e status de pagamento (pendente, paga, vencida, cancelada, estornada) de um aluno numa turma. Use quando perguntarem se alguém já pagou.",
         "method": "POST",
@@ -765,7 +1007,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -787,7 +1033,10 @@
         }
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -795,7 +1044,10 @@
       "name": "gerar_cobranca",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [2976, 720],
+      "position": [
+        2976,
+        720
+      ],
       "parameters": {
         "toolDescription": "Gera uma cobrança real no Asaas (PIX, boleto, cartão ou vazio = aluno escolhe) pra uma matrícula existente e devolve o link de pagamento. NUNCA chame sem repetir valor e destinatário pro gestor e receber confirmação explícita ('confirma?' -> 'sim').",
         "method": "POST",
@@ -805,7 +1057,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -837,7 +1093,10 @@
         }
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
     },
     {
@@ -845,7 +1104,10 @@
       "name": "Buffer: guardar mensagem",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [896, -80],
+      "position": [
+        896,
+        -80
+      ],
       "parameters": {
         "operation": "push",
         "list": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}",
@@ -853,7 +1115,10 @@
         "tail": true
       },
       "credentials": {
-        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
       }
     },
     {
@@ -861,7 +1126,10 @@
       "name": "Buffer: marcar visto",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1120, -80],
+      "position": [
+        1120,
+        -80
+      ],
       "parameters": {
         "operation": "set",
         "key": "={{ \"wpp:lastseen:\" + $('Extrair dados').item.json.numero }}",
@@ -870,7 +1138,10 @@
         "ttl": 30
       },
       "credentials": {
-        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
       }
     },
     {
@@ -878,8 +1149,15 @@
       "name": "Buffer: aguardar debounce",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1344, -80],
-      "parameters": { "resume": "timeInterval", "amount": 5, "unit": "seconds" },
+      "position": [
+        1344,
+        -80
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 5,
+        "unit": "seconds"
+      },
       "webhookId": "bb4c9c6f-9d4c-4b9b-8e6a-18969ed4e6b5"
     },
     {
@@ -887,7 +1165,10 @@
       "name": "Buffer: consultar visto",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1568, -80],
+      "position": [
+        1568,
+        -80
+      ],
       "parameters": {
         "operation": "get",
         "key": "={{ \"wpp:lastseen:\" + $('Extrair dados').item.json.numero }}",
@@ -895,7 +1176,10 @@
         "propertyName": "lastSeenAtual"
       },
       "credentials": {
-        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
       }
     },
     {
@@ -903,17 +1187,28 @@
       "name": "Buffer: sou a última mensagem?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1792, -80],
+      "position": [
+        1792,
+        -80
+      ],
       "parameters": {
         "conditions": {
-          "options": { "version": 2, "leftValue": "", "caseSensitive": true, "typeValidation": "strict" },
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
           "combinator": "and",
           "conditions": [
             {
               "id": "buf1",
               "leftValue": "={{ $json.lastSeenAtual }}",
               "rightValue": "={{ $execution.id }}",
-              "operator": { "type": "string", "operation": "equals" }
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ]
         },
@@ -925,7 +1220,10 @@
       "name": "Buffer: ler mensagens",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2016, -160],
+      "position": [
+        2016,
+        -160
+      ],
       "parameters": {
         "operation": "get",
         "key": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}",
@@ -933,7 +1231,10 @@
         "propertyName": "mensagens"
       },
       "credentials": {
-        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
       }
     },
     {
@@ -941,13 +1242,19 @@
       "name": "Buffer: limpar",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2240, -160],
+      "position": [
+        2240,
+        -160
+      ],
       "parameters": {
         "operation": "delete",
         "key": "={{ \"wpp:buffer:\" + $('Extrair dados').item.json.numero }}"
       },
       "credentials": {
-        "redis": { "id": "2tBiS9rJlw88WEfj", "name": "MAG - Redis Buffer (dev)" }
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
       }
     },
     {
@@ -955,7 +1262,10 @@
       "name": "Consolidar mensagens",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2464, -160],
+      "position": [
+        2464,
+        -160
+      ],
       "parameters": {
         "language": "javaScript",
         "jsCode": "const raw = $json.mensagens || [];\nconst parsed = raw.map(x => {\n  try { return typeof x === 'string' ? JSON.parse(x) : x; } catch (e) { return null; }\n}).filter(Boolean);\nparsed.sort((a, b) => new Date(a.recebidoEm) - new Date(b.recebidoEm));\nconst texto = parsed.map(m => (m.texto || '').trim()).filter(Boolean).join(' ');\nreturn [{\n  json: {\n    numero: $('Extrair dados').item.json.numero,\n    texto,\n    nome: $('Extrair dados').item.json.nome,\n  }\n}];"
@@ -966,7 +1276,10 @@
       "name": "Buffer: descartar (mensagem já absorvida)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [2016, 80],
+      "position": [
+        2016,
+        80
+      ],
       "parameters": {}
     },
     {
@@ -974,7 +1287,10 @@
       "name": "info_institucional",
       "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "typeVersion": 1.1,
-      "position": [1584, 2528],
+      "position": [
+        1584,
+        2528
+      ],
       "parameters": {
         "toolDescription": "Devolve dados institucionais da Magma (endereço, WhatsApp principal, Instagram, e-mail, e nota do Google/total de alunos formados quando a escola liga a exibição). Use pra responder perguntas gerais tipo 'onde fica a escola?', 'tem Instagram?', 'qual o email?'. Se nota_google ou total_alunos_formados vierem nulos, NÃO mencione — a escola optou por não exibir esse dado.",
         "method": "POST",
@@ -984,7 +1300,11 @@
         "sendHeaders": true,
         "parametersHeaders": {
           "values": [
-            { "name": "X-Forwarded-Proto", "valueProvider": "fieldValue", "value": "https" }
+            {
+              "name": "X-Forwarded-Proto",
+              "valueProvider": "fieldValue",
+              "value": "https"
+            }
           ]
         },
         "sendBody": true,
@@ -992,275 +1312,721 @@
         "jsonBody": "{\"acao\": \"info_institucional\", \"params\": {}}"
       },
       "credentials": {
-        "httpHeaderAuth": { "id": "9aPJmxbhrMSs5qYJ", "name": "MAG - X-Agente-Token" }
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
       }
+    },
+    {
+      "id": "6b56a18a-aea1-41d7-8c71-061d0c58bd30",
+      "name": "Registrar conversa (SDR)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        1728
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"acao\": \"registrar_turnos\", \"params\": { \"numero\": $('Preparar contexto SDR').first().json.numero, \"texto_contato\": $('Preparar contexto SDR').first().json.texto, \"texto_agente\": $('SDR - Capitã de Matrículas').first().json.output, \"agente\": \"sdr\", \"papel\": $('Preparar contexto SDR').first().json.papel, \"nome\": $('Preparar contexto SDR').first().json.nome, \"execucao_n8n\": $execution.id, \"ferramentas\": ($('SDR - Capitã de Matrículas').first().json.intermediateSteps || []).map(p => ({ \"nome\": p.action.tool, \"params\": p.action.toolInput })) } } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8541fed3-26b0-4e14-98ae-9ac409358c99",
+      "name": "Registrar conversa (Operadora)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2784,
+        768
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"acao\": \"registrar_turnos\", \"params\": { \"numero\": $('Preparar contexto SDR').first().json.numero, \"texto_contato\": $('Preparar contexto SDR').first().json.texto, \"texto_agente\": $('Operadora - Secretária Digital').first().json.output, \"agente\": \"operadora\", \"papel\": $('Preparar contexto SDR').first().json.papel, \"nome\": $('Preparar contexto SDR').first().json.nome, \"execucao_n8n\": $execution.id, \"ferramentas\": ($('Operadora - Secretária Digital').first().json.intermediateSteps || []).map(p => ({ \"nome\": p.action.tool, \"params\": p.action.toolInput })) } } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "d470fd90-80da-4f22-8fae-45ec2ac5e412",
+      "name": "Memória da conversa",
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        1584,
+        2352
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=mag:sdr:{{ $json.numero }}",
+        "sessionTTL": 21600,
+        "contextWindowLength": 20
+      },
+      "credentials": {
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
+      }
+    },
+    {
+      "id": "cbb9417d-dc67-4663-8f1c-1e0fc6bf0bf3",
+      "name": "Memória da conversa (Operadora)",
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        2288,
+        592
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=mag:operadora:{{ $json.numero }}",
+        "sessionTTL": 21600,
+        "contextWindowLength": 10
+      },
+      "credentials": {
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
+      }
+    },
+    {
+      "id": "cortesia-get",
+      "name": "Cortesia: já respondi?",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -560
+      ],
+      "parameters": {
+        "operation": "get",
+        "key": "={{ \"mag:cortesia:\" + $('Preparar contexto SDR').first().json.numero }}",
+        "keyType": "string",
+        "propertyName": "cortesiaJaEnviada"
+      },
+      "credentials": {
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
+      }
+    },
+    {
+      "id": "cortesia-if",
+      "name": "Cortesia: primeira vez?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        -560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cort1",
+              "leftValue": "={{ $json.cortesiaJaEnviada }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cortesia-marcar",
+      "name": "Cortesia: marcar",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        -640
+      ],
+      "parameters": {
+        "operation": "set",
+        "key": "={{ \"mag:cortesia:\" + $('Preparar contexto SDR').first().json.numero }}",
+        "value": "={{ $execution.id }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "credentials": {
+        "redis": {
+          "id": "2tBiS9rJlw88WEfj",
+          "name": "MAG - Redis Buffer (dev)"
+        }
+      }
+    },
+    {
+      "id": "cortesia-responder",
+      "name": "Cortesia: responder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2240,
+        -640
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution-api:8080/message/sendText/Agente Whatsapp",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $('Preparar contexto SDR').first().json.numero, \"text\": \"Oi! Já avisei a equipe sobre você e alguém vai falar por aqui mesmo. Não precisa reenviar — assim que estiverem livres, te respondem. 🙂\" } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
     "WhatsApp In": {
       "main": [
         [
-          { "node": "Log payload cru", "type": "main", "index": 0 }
+          {
+            "node": "Log payload cru",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Log payload cru": {
       "main": [
         [
-          { "node": "É mensagem de texto recebida?", "type": "main", "index": 0 }
+          {
+            "node": "É mensagem de texto recebida?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "\u00c9 mensagem de texto recebida?": {
+    "É mensagem de texto recebida?": {
       "main": [
         [
-          { "node": "Extrair dados", "type": "main", "index": 0 }
+          {
+            "node": "Extrair dados",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "\u00c9 gestor ou instrutor?": {
+    "É gestor ou instrutor?": {
       "main": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "main", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "main", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Gemini Chat Model": {
       "ai_languageModel": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_languageModel", "index": 0 },
-          { "node": "Operadora - Secretária Digital", "type": "ai_languageModel", "index": 0 }
-        ]
-      ]
-    },
-    "Mem\u00f3ria da conversa": {
-      "ai_memory": [
-        [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_memory", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_languageModel",
+            "index": 0
+          }
         ]
       ]
     },
     "listar_cursos": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "detalhes_curso": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "registrar_lead": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
-    "SDR - Capit\u00e3 de Matr\u00edculas": {
+    "SDR - Capitã de Matrículas": {
       "main": [
         [
-          { "node": "Responder no WhatsApp (SDR)", "type": "main", "index": 0 }
+          {
+            "node": "Responder no WhatsApp (SDR)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Identificar Contato": {
       "main": [
         [
-          { "node": "Preparar contexto SDR", "type": "main", "index": 0 }
+          {
+            "node": "Preparar contexto SDR",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Preparar contexto SDR": {
       "main": [
         [
-          { "node": "Está escalado?", "type": "main", "index": 0 }
+          {
+            "node": "Está escalado?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Est\u00e1 escalado?": {
+    "Está escalado?": {
       "main": [
-        [],
         [
-          { "node": "É gestor ou instrutor?", "type": "main", "index": 0 }
+          {
+            "node": "Cortesia: já respondi?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "É gestor ou instrutor?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "escalar_contato": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "avisar_equipe": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
-        ]
-      ]
-    },
-    "Mem\u00f3ria da conversa (Operadora)": {
-      "ai_memory": [
-        [
-          { "node": "Operadora - Secretária Digital", "type": "ai_memory", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "status_turma": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "gerar_link_avaliacao": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "listar_leads": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
-    "Operadora - Secret\u00e1ria Digital": {
+    "Operadora - Secretária Digital": {
       "main": [
         [
-          { "node": "Responder no WhatsApp (Operadora)", "type": "main", "index": 0 }
+          {
+            "node": "Responder no WhatsApp (Operadora)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "gerar_link_matricula": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "listar_turmas": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "buscar_aluno": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "matricular_aluno": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "listar_matriculas_turma": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "consultar_pagamento": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "gerar_cobranca": {
       "ai_tool": [
         [
-          { "node": "Operadora - Secretária Digital", "type": "ai_tool", "index": 0 }
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_tool",
+            "index": 0
+          }
         ]
       ]
     },
     "Extrair dados": {
       "main": [
         [
-          { "node": "Buffer: guardar mensagem", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: guardar mensagem",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: guardar mensagem": {
       "main": [
         [
-          { "node": "Buffer: marcar visto", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: marcar visto",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: marcar visto": {
       "main": [
         [
-          { "node": "Buffer: aguardar debounce", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: aguardar debounce",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: aguardar debounce": {
       "main": [
         [
-          { "node": "Buffer: consultar visto", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: consultar visto",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: consultar visto": {
       "main": [
         [
-          { "node": "Buffer: sou a última mensagem?", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: sou a última mensagem?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
-    "Buffer: sou a \u00faltima mensagem?": {
+    "Buffer: sou a última mensagem?": {
       "main": [
         [
-          { "node": "Buffer: ler mensagens", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: ler mensagens",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Buffer: descartar (mensagem já absorvida)", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: descartar (mensagem já absorvida)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: ler mensagens": {
       "main": [
         [
-          { "node": "Buffer: limpar", "type": "main", "index": 0 }
+          {
+            "node": "Buffer: limpar",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Buffer: limpar": {
       "main": [
         [
-          { "node": "Consolidar mensagens", "type": "main", "index": 0 }
+          {
+            "node": "Consolidar mensagens",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Consolidar mensagens": {
       "main": [
         [
-          { "node": "Identificar Contato", "type": "main", "index": 0 }
+          {
+            "node": "Identificar Contato",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "info_institucional": {
       "ai_tool": [
         [
-          { "node": "SDR - Capitã de Matrículas", "type": "ai_tool", "index": 0 }
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder no WhatsApp (SDR)": {
+      "main": [
+        [
+          {
+            "node": "Registrar conversa (SDR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder no WhatsApp (Operadora)": {
+      "main": [
+        [
+          {
+            "node": "Registrar conversa (Operadora)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memória da conversa": {
+      "ai_memory": [
+        [
+          {
+            "node": "SDR - Capitã de Matrículas",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memória da conversa (Operadora)": {
+      "ai_memory": [
+        [
+          {
+            "node": "Operadora - Secretária Digital",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cortesia: já respondi?": {
+      "main": [
+        [
+          {
+            "node": "Cortesia: primeira vez?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cortesia: primeira vez?": {
+      "main": [
+        [
+          {
+            "node": "Cortesia: marcar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cortesia: marcar": {
+      "main": [
+        [
+          {
+            "node": "Cortesia: responder",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -1271,6 +2037,7 @@
     "saveDataSuccessExecution": "all",
     "saveManualExecutions": true,
     "saveExecutionProgress": true,
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "executionTimeout": 60
   }
 }

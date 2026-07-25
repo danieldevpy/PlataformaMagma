@@ -11,7 +11,10 @@
       "name": "Lead Novo",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "webhookId": "b9c38a37-a921-46f6-b6f8-a8cdcbc605e0"
     },
     {
@@ -28,19 +31,29 @@
               "id": "c1",
               "leftValue": "={{ $json.body.whatsapp }}",
               "rightValue": "",
-              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
             },
             {
               "id": "c2",
               "leftValue": "={{ $json.body.whatsapp }}",
               "rightValue": "={{ $env.MAGMA_NUMEROS_TESTE_REGEX }}",
-              "operator": { "type": "string", "operation": "regex" }
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
             },
             {
               "id": "c3",
               "leftValue": "={{ $json.body.utm_source }}",
               "rightValue": "whatsapp",
-              "operator": { "type": "string", "operation": "notEquals" }
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
             }
           ],
           "combinator": "and"
@@ -51,7 +64,10 @@
       "name": "Deve mandar boas-vindas?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [224, 0]
+      "position": [
+        224,
+        0
+      ]
     },
     {
       "parameters": {
@@ -77,7 +93,10 @@
       "name": "Montar mensagem",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [448, -80]
+      "position": [
+        448,
+        -80
+      ]
     },
     {
       "parameters": {
@@ -94,21 +113,99 @@
       "name": "Enviar boas-vindas",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [672, -80],
+      "position": [
+        672,
+        -80
+      ],
       "credentials": {
-        "httpHeaderAuth": { "id": "TSnVCrBQ2XfFnj5N", "name": "MAG - Evolution apikey" }
+        "httpHeaderAuth": {
+          "id": "TSnVCrBQ2XfFnj5N",
+          "name": "MAG - Evolution apikey"
+        }
       }
+    },
+    {
+      "id": "25d5d5f8-7d6f-4205-b04c-df6f30b3393b",
+      "name": "Registrar toque (T+0)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        -80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://magma-backend-interno:8000/api/acoes/executar/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Forwarded-Proto",
+              "value": "https"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"acao\": \"registrar_turnos\", \"params\": { \"numero\": $('Montar mensagem').first().json.numero, \"texto_agente\": $('Montar mensagem').first().json.mensagem, \"agente\": \"nutridora\", \"papel\": \"lead\", \"nome\": $('Lead Novo').first().json.body.nome, \"proativo\": true, \"execucao_n8n\": $execution.id } } }}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9aPJmxbhrMSs5qYJ",
+          "name": "MAG - X-Agente-Token"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
     "Lead Novo": {
-      "main": [[{ "node": "Deve mandar boas-vindas?", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Deve mandar boas-vindas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Deve mandar boas-vindas?": {
-      "main": [[{ "node": "Montar mensagem", "type": "main", "index": 0 }], []]
+      "main": [
+        [
+          {
+            "node": "Montar mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
     },
     "Montar mensagem": {
-      "main": [[{ "node": "Enviar boas-vindas", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Enviar boas-vindas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar boas-vindas": {
+      "main": [
+        [
+          {
+            "node": "Registrar toque (T+0)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
